@@ -7,5 +7,14 @@
         "pgsql",
         "sqlite3",
         "sqlsrv"
+    ],
+    "additional_checks": [
+        {
+            "name": "PHPStan",
+            "job": {
+                "php": "8.3",
+                "command": "composer static-analysis"
+            }
+        }
     ]
 }
