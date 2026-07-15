@@ -10,8 +10,16 @@ class TableIdentifier
 
     protected ?string $schema = null;
 
-    public function __construct(string $table, ?string $schema = null)
-    {
+    protected ?string $prefix = null;
+
+    protected string $separator = '_';
+
+    public function __construct(
+        string $table,
+        ?string $schema = null,
+        ?string $prefix = null,
+        string $separator = '_',
+    ) {
         if ('' === $table) {
             throw new Exception\InvalidArgumentException(
                 '$table must be a valid table name, empty string given'
@@ -29,11 +37,49 @@ class TableIdentifier
 
             $this->schema = $schema;
         }
+
+        if ($prefix !== null) {
+            if ('' === $prefix) {
+                throw new Exception\InvalidArgumentException(
+                    '$prefix must be a valid table prefix or null, empty string given'
+                );
+            }
+
+            $this->prefix = $prefix;
+        }
+
+        $this->separator = $separator;
     }
 
+    /**
+     * Returns the table name with the prefix and separator applied, when a
+     * prefix is set.
+     */
     public function getTable(): string
     {
+        if ($this->prefix === null) {
+            return $this->table;
+        }
+
+        return $this->prefix . $this->separator . $this->table;
+    }
+
+    /**
+     * Returns the table name as given, without the prefix applied.
+     */
+    public function getUnprefixedTable(): string
+    {
         return $this->table;
+    }
+
+    public function getPrefix(): ?string
+    {
+        return $this->prefix;
+    }
+
+    public function getSeparator(): string
+    {
+        return $this->separator;
     }
 
     public function getSchema(): ?string
@@ -44,6 +90,6 @@ class TableIdentifier
     /** @return array{0: string, 1: null|string} */
     public function getTableAndSchema(): array
     {
-        return [$this->table, $this->schema];
+        return [$this->getTable(), $this->schema];
     }
 }

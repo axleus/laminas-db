@@ -7,6 +7,7 @@ namespace PhpDbTest;
 use PhpDb\Adapter;
 use PhpDb\ConfigProvider;
 use PhpDb\Container;
+use PhpDb\Sql;
 use PHPUnit\Framework\TestCase;
 
 class ConfigProviderTest extends TestCase
@@ -29,7 +30,8 @@ class ConfigProviderTest extends TestCase
                 Adapter\AdapterInterface::class => Adapter\Adapter::class,
             ],
             'factories'          => [
-                Adapter\Adapter::class => Container\AdapterInterfaceFactory::class,
+                Adapter\Adapter::class            => Container\AdapterInterfaceFactory::class,
+                Sql\TableIdentifierFactory::class => Container\TableIdentifierFactoryFactory::class,
             ],
         ],
     ];
