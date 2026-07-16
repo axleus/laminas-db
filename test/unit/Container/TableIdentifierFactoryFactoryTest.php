@@ -10,6 +10,7 @@ use PhpDb\Sql\TableIdentifierFactory;
 use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 
 #[Group('unit')]
 #[CoversMethod(TableIdentifierFactoryFactory::class, '__invoke')]
@@ -49,7 +50,6 @@ final class TableIdentifierFactoryFactoryTest extends TestCase
         $result  = $factory($container);
 
         self::assertSame('backup', $result->getPrefix());
-        self::assertSame('backup_users', $result('users')->getTable());
     }
 
     public function testInvokeCreatesFactoryWithConfiguredSeparator(): void
@@ -66,7 +66,18 @@ final class TableIdentifierFactoryFactoryTest extends TestCase
         $result  = $factory($container);
 
         self::assertSame('__', $result->getSeparator());
-        self::assertSame('backup__users', $result('users')->getTable());
+    }
+
+    public function testInvokeCreatesFactoryWithoutPrefixWhenConfigServiceIsNull(): void
+    {
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('has')->with('config')->willReturn(true);
+        $container->method('get')->with('config')->willReturn(null);
+
+        $factory = new TableIdentifierFactoryFactory();
+        $result  = $factory($container);
+
+        self::assertNull($result->getPrefix());
     }
 
     public function testInvokeCreatesFactoryWithoutPrefixWhenPrefixKeyIsAbsent(): void

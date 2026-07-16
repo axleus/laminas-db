@@ -8,8 +8,12 @@ use PhpDb\Adapter;
 use PhpDb\ConfigProvider;
 use PhpDb\Container;
 use PhpDb\Sql;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[CoversClass(ConfigProvider::class)]
+#[Group('unit')]
 class ConfigProviderTest extends TestCase
 {
     /**

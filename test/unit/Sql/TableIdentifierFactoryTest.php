@@ -14,28 +14,28 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(TableIdentifierFactory::class)]
 final class TableIdentifierFactoryTest extends TestCase
 {
-    public function testGetDefaultPrefix(): void
+    public function testPrefixIsNullByDefault(): void
     {
         $factory = new TableIdentifierFactory();
 
         self::assertNull($factory->getPrefix());
     }
 
-    public function testGetPrefix(): void
+    public function testReturnsConfiguredPrefix(): void
     {
         $factory = new TableIdentifierFactory('backup');
 
         self::assertSame('backup', $factory->getPrefix());
     }
 
-    public function testGetDefaultSeparator(): void
+    public function testSeparatorDefaultsToUnderscore(): void
     {
         $factory = new TableIdentifierFactory('backup');
 
         self::assertSame('_', $factory->getSeparator());
     }
 
-    public function testGetSeparator(): void
+    public function testReturnsConfiguredSeparator(): void
     {
         $factory = new TableIdentifierFactory('backup', '__');
 

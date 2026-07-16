@@ -9,6 +9,7 @@ use PhpDb\Sql\TableIdentifier;
 use PhpDbTest\TestAsset\ObjectToString;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use TypeError;
@@ -19,6 +20,7 @@ use function array_merge;
  * Tests for {@see TableIdentifier}
  */
 #[CoversClass(TableIdentifier::class)]
+#[Group('unit')]
 class TableIdentifierTest extends TestCase
 {
     public function testGetTable(): void
@@ -148,7 +150,7 @@ class TableIdentifierTest extends TestCase
         new TableIdentifier($invalidTable);
     }
 
-    #[DataProvider('invalidSchemaProvider')]
+    #[DataProvider('invalidNameArgumentProvider')]
     public function testRejectsInvalidSchema(mixed $invalidSchema): void
     {
         $this->expectException($invalidSchema === '' ? InvalidArgumentException::class : TypeError::class);
@@ -156,7 +158,7 @@ class TableIdentifierTest extends TestCase
         new TableIdentifier('foo', $invalidSchema);
     }
 
-    #[DataProvider('invalidSchemaProvider')]
+    #[DataProvider('invalidNameArgumentProvider')]
     public function testRejectsInvalidPrefix(mixed $invalidPrefix): void
     {
         $this->expectException($invalidPrefix === '' ? InvalidArgumentException::class : TypeError::class);
@@ -172,8 +174,8 @@ class TableIdentifierTest extends TestCase
     public static function invalidTableProvider(): array
     {
         return array_merge(
-            [[null]],
-            self::invalidSchemaProvider()
+            ['null' => [null]],
+            self::invalidNameArgumentProvider()
         );
     }
 
@@ -182,12 +184,12 @@ class TableIdentifierTest extends TestCase
      *
      * @return array[]
      */
-    public static function invalidSchemaProvider(): array
+    public static function invalidNameArgumentProvider(): array
     {
         return [
-            [''],
-            [new stdClass()],
-            [[]],
+            'empty string' => [''],
+            'object'       => [new stdClass()],
+            'array'        => [[]],
         ];
     }
 }
