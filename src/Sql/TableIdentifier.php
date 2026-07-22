@@ -6,13 +6,15 @@ namespace PhpDb\Sql;
 
 class TableIdentifier
 {
+    public const SEPARATOR = '_';
+
     protected string $table;
 
     protected ?string $schema = null;
 
     protected ?string $prefix = null;
 
-    protected string $separator = '_';
+    protected string $separator = self::SEPARATOR;
 
     public function __construct(
         string $table,

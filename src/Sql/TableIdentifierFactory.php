@@ -13,21 +13,17 @@ namespace PhpDb\Sql;
  * factory share the same prefix — convenient for creating backup_* tables
  * during a migration.
  */
-final class TableIdentifierFactory
+final readonly class TableIdentifierFactory
 {
-    private readonly ?string $prefix;
-
     public function __construct(
-        ?string $prefix = null,
-        private readonly string $separator = '_',
+        private ?string $prefix = null,
+        private ?string $separator = TableIdentifier::SEPARATOR,
     ) {
         if ('' === $prefix) {
             throw new Exception\InvalidArgumentException(
                 '$prefix must be a valid table prefix or null, empty string given'
             );
         }
-
-        $this->prefix = $prefix;
     }
 
     public function getPrefix(): ?string
