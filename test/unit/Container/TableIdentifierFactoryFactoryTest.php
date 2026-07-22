@@ -6,6 +6,7 @@ namespace PhpDbTest\Container;
 
 use Laminas\ServiceManager\ServiceManager;
 use PhpDb\Container\TableIdentifierFactoryFactory;
+use PhpDb\Sql\Exception\InvalidArgumentException;
 use PhpDb\Sql\TableIdentifierFactory;
 use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Group;
@@ -78,6 +79,53 @@ final class TableIdentifierFactoryFactoryTest extends TestCase
         $result  = $factory($container);
 
         self::assertNull($result->getPrefix());
+    }
+
+    public function testInvokeCreatesFactoryWithConfiguredSeparatorWithoutPrefix(): void
+    {
+        $container = new ServiceManager();
+        $container->setService('config', [
+            TableIdentifierFactory::class => [
+                'separator' => '__',
+            ],
+        ]);
+
+        $factory = new TableIdentifierFactoryFactory();
+        $result  = $factory($container);
+
+        self::assertNull($result->getPrefix());
+        self::assertSame('__', $result->getSeparator());
+    }
+
+    public function testInvokeUsesDefaultSeparatorWhenSeparatorKeyIsAbsent(): void
+    {
+        $container = new ServiceManager();
+        $container->setService('config', [
+            TableIdentifierFactory::class => [
+                'prefix' => 'backup',
+            ],
+        ]);
+
+        $factory = new TableIdentifierFactoryFactory();
+        $result  = $factory($container);
+
+        self::assertSame('_', $result->getSeparator());
+    }
+
+    public function testInvokeRejectsEmptyStringSeparatorFromConfig(): void
+    {
+        $container = new ServiceManager();
+        $container->setService('config', [
+            TableIdentifierFactory::class => [
+                'separator' => '',
+            ],
+        ]);
+
+        $factory = new TableIdentifierFactoryFactory();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('$separator must be a valid table separator, empty string given');
+        $factory($container);
     }
 
     public function testInvokeCreatesFactoryWithoutPrefixWhenPrefixKeyIsAbsent(): void

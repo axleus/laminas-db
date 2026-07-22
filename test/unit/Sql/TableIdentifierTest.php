@@ -107,13 +107,6 @@ class TableIdentifierTest extends TestCase
         self::assertSame('backup__foo', $tableIdentifier->getTable());
     }
 
-    public function testGetTableAppliesPrefixWithEmptySeparator(): void
-    {
-        $tableIdentifier = new TableIdentifier('foo', null, 'backup', '');
-
-        self::assertSame('backupfoo', $tableIdentifier->getTable());
-    }
-
     public function testGetTableIgnoresSeparatorWithoutPrefix(): void
     {
         $tableIdentifier = new TableIdentifier('foo', null, null, '__');
@@ -164,6 +157,21 @@ class TableIdentifierTest extends TestCase
         $this->expectException($invalidPrefix === '' ? InvalidArgumentException::class : TypeError::class);
         /** @psalm-suppress MixedArgument */
         new TableIdentifier('foo', 'bar', $invalidPrefix);
+    }
+
+    #[DataProvider('invalidNameArgumentProvider')]
+    public function testRejectsInvalidSeparator(mixed $invalidSeparator): void
+    {
+        $this->expectException($invalidSeparator === '' ? InvalidArgumentException::class : TypeError::class);
+        /** @psalm-suppress MixedArgument */
+        new TableIdentifier('foo', 'bar', 'backup', $invalidSeparator);
+    }
+
+    public function testRejectsEmptyStringSeparatorWithoutPrefix(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('$separator must be a valid table separator, empty string given');
+        new TableIdentifier('foo', null, null, '');
     }
 
     /**

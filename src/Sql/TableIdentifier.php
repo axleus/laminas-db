@@ -16,6 +16,9 @@ class TableIdentifier
 
     protected string $separator = self::SEPARATOR;
 
+    /**
+     * @throws Exception\InvalidArgumentException If $table, $schema, $prefix or $separator is an empty string.
+     */
     public function __construct(
         string $table,
         ?string $schema = null,
@@ -48,6 +51,12 @@ class TableIdentifier
             }
 
             $this->prefix = $prefix;
+        }
+
+        if ('' === $separator) {
+            throw new Exception\InvalidArgumentException(
+                '$separator must be a valid table separator, empty string given'
+            );
         }
 
         $this->separator = $separator;

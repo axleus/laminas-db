@@ -15,6 +15,10 @@ namespace PhpDb\Sql;
  */
 final readonly class TableIdentifierFactory
 {
+    /**
+     * @param null|string $separator Null falls back to {@see TableIdentifier::SEPARATOR}.
+     * @throws Exception\InvalidArgumentException If $prefix or $separator is an empty string.
+     */
     public function __construct(
         private ?string $prefix = null,
         private ?string $separator = TableIdentifier::SEPARATOR,
@@ -22,6 +26,12 @@ final readonly class TableIdentifierFactory
         if ('' === $prefix) {
             throw new Exception\InvalidArgumentException(
                 '$prefix must be a valid table prefix or null, empty string given'
+            );
+        }
+
+        if ('' === $separator) {
+            throw new Exception\InvalidArgumentException(
+                '$separator must be a valid table separator, empty string given'
             );
         }
     }
@@ -33,7 +43,7 @@ final readonly class TableIdentifierFactory
 
     public function getSeparator(): string
     {
-        return $this->separator;
+        return $this->separator ?? TableIdentifier::SEPARATOR;
     }
 
     /**
@@ -41,6 +51,8 @@ final readonly class TableIdentifierFactory
      *
      * A prefix or separator passed at call time takes precedence over the
      * configured one.
+     *
+     * @throws Exception\InvalidArgumentException If $prefix or $separator is an empty string.
      */
     public function __invoke(
         string $table,
@@ -48,6 +60,6 @@ final readonly class TableIdentifierFactory
         ?string $prefix = null,
         ?string $separator = null,
     ): TableIdentifier {
-        return new TableIdentifier($table, $schema, $prefix ?? $this->prefix, $separator ?? $this->separator);
+        return new TableIdentifier($table, $schema, $prefix ?? $this->prefix, $separator ?? $this->getSeparator());
     }
 }

@@ -448,8 +448,9 @@ $identifier = new TableIdentifier('users', null, 'backup', '__');
 $identifier->getTable();           // 'backup__users'
 ```
 
-The prefix must be a non-empty string or `null`; the separator defaults to
-`'_'`.
+The prefix must be a non-empty string or `null`. The separator defaults to
+`'_'` and must also be a non-empty string; passing `''` for either throws
+`PhpDb\Sql\Exception\InvalidArgumentException`.
 
 ### The TableIdentifierFactory
 
@@ -467,6 +468,12 @@ $factory('orders', 'sales')->getTable(); // 'backup_orders'
 // A prefix or separator passed at call time overrides the configured one
 $factory('users', null, 'archive')->getTable(); // 'archive_users'
 ```
+
+The configured separator is only applied when a prefix is passed, so a factory
+created with a separator but no prefix produces unprefixed identifiers. Passing
+`null` as the separator falls back to the default `'_'`; passing `''` — at
+construction or at call time — throws
+`PhpDb\Sql\Exception\InvalidArgumentException`.
 
 `PhpDb\ConfigProvider` registers the factory as a container service. Configure
 the prefix and separator through the application config:
