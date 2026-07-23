@@ -4,26 +4,18 @@ declare(strict_types=1);
 
 namespace PhpDb\Sql;
 
-class TableIdentifier
+final readonly class TableIdentifier
 {
     public const SEPARATOR = '_';
-
-    protected string $table;
-
-    protected ?string $schema = null;
-
-    protected ?string $prefix = null;
-
-    protected string $separator = self::SEPARATOR;
 
     /**
      * @throws Exception\InvalidArgumentException If $table, $schema, $prefix or $separator is an empty string.
      */
     public function __construct(
-        string $table,
-        ?string $schema = null,
-        ?string $prefix = null,
-        string $separator = '_',
+        protected string $table,
+        protected ?string $schema = null,
+        protected ?string $prefix = null,
+        protected ?string $separator = self::SEPARATOR,
     ) {
         if ('' === $table) {
             throw new Exception\InvalidArgumentException(
@@ -31,26 +23,16 @@ class TableIdentifier
             );
         }
 
-        $this->table = $table;
-
-        if ($schema !== null) {
-            if ('' === $schema) {
-                throw new Exception\InvalidArgumentException(
-                    '$schema must be a valid schema name or null, empty string given'
-                );
-            }
-
-            $this->schema = $schema;
+        if ('' === $schema) {
+            throw new Exception\InvalidArgumentException(
+                '$schema must be a valid schema name or null, empty string given'
+            );
         }
 
-        if ($prefix !== null) {
-            if ('' === $prefix) {
-                throw new Exception\InvalidArgumentException(
-                    '$prefix must be a valid table prefix or null, empty string given'
-                );
-            }
-
-            $this->prefix = $prefix;
+        if ('' === $prefix) {
+            throw new Exception\InvalidArgumentException(
+                '$prefix must be a valid table prefix or null, empty string given'
+            );
         }
 
         if ('' === $separator) {
@@ -58,8 +40,6 @@ class TableIdentifier
                 '$separator must be a valid table separator, empty string given'
             );
         }
-
-        $this->separator = $separator;
     }
 
     /**

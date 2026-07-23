@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb;
 
-final class ConfigProvider
+final readonly class ConfigProvider
 {
     public const NAMED_ADAPTER_KEY = 'adapters';
 

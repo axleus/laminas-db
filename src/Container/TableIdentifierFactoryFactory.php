@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\Container;
 
+use PhpDb\Sql\TableIdentifier;
 use PhpDb\Sql\TableIdentifierFactory;
 use Psr\Container\ContainerInterface;
 
@@ -37,7 +38,7 @@ final class TableIdentifierFactoryFactory
 
         return new TableIdentifierFactory(
             $factoryConfig['prefix'] ?? null,
-            $factoryConfig['separator'] ?? '_',
+            $factoryConfig['separator'] ?? TableIdentifier::SEPARATOR,
         );
     }
 }
