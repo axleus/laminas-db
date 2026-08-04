@@ -5,6 +5,9 @@ php-version = "8.2.0"
 paths = ["src", "test"]
 includes = ["vendor"]
 
+[formatter]
+parentheses-around-new-in-member-access = true
+
 [linter]
 baseline = "lint-baseline.toml"
 
