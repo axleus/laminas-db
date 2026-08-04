@@ -18,9 +18,6 @@
         "sort-packages": true,
         "platform": {
             "php": "8.2.99"
-        },
-        "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true
         }
     },
     "extra": {
@@ -34,12 +31,10 @@
         "laminas/laminas-stdlib": "^3.20.0"
     },
     "require-dev": {
-        "laminas/laminas-coding-standard": "^3.0.1",
         "laminas/laminas-eventmanager": "^3.14.0",
         "laminas/laminas-hydrator": "^4.6.0",
+        "php-db/phpdb-qa-tools": "0.1.x-dev",
         "phpbench/phpbench": "^1.4",
-        "phpstan/phpstan": "^2.1",
-        "phpstan/phpstan-phpunit": "^2.0",
         "phpunit/phpunit": "^11.5.42",
         "rector/rector": "^2.0"
     },
@@ -63,18 +58,21 @@
     "scripts": {
         "check": [
             "@cs-check",
-            "@sa",
-            "@test",
-            "@test-integration"
+            "@static-analysis",
+            "@test"
         ],
-        "cs-check": "phpcs",
-        "cs-fix": "phpcbf",
+        "cs-check": [
+            "mago format --check",
+            "mago lint"
+        ],
+        "cs-fix": [
+            "mago format",
+            "mago lint --fix"
+        ],
+        "static-analysis": "mago analyze",
         "test": "phpunit --colors=always --testsuite \"unit test\"",
         "test-coverage": "phpunit --colors=always --coverage-clover clover.xml",
         "test-integration": "phpunit --colors=always --testsuite \"integration test\"",
-        "sa": "vendor/bin/phpstan analyse --memory-limit=256M",
-        "sa-gen-baseline": "vendor/bin/phpstan analyse --memory-limit=256M --generate-baseline",
-        "sa-verbose": "vendor/bin/phpstan analyse --memory-limit=256M -vv",
         "upload-coverage": "coveralls -v"
     },
     "conflict": {

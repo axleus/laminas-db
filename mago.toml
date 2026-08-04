@@ -1,0 +1,11 @@
+extends = "vendor/php-db/phpdb-qa-tools/mago.toml"
+php-version = "8.2.0"
+
+[source]
+paths = ["src", "test"]
+includes = ["vendor"]
+
+[analyzer]
+class-initializers = [
+    "PhpDb\\ResultSet\\AbstractResultSet::initialize",
+]
