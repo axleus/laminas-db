@@ -20,6 +20,7 @@ use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\Attributes\RequiresPhp;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -58,7 +59,8 @@ final class AbstractSourceTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    public function testConstructorWithNullSchemaUsesDefaultConstant(): void
+    #[Test]
+    public function constructorWithNullSchemaUsesDefaultConstant(): void
     {
         $adapter = $this->createMockForIntersectionOfInterfaces([AdapterInterface::class, SchemaAwareInterface::class]);
         $adapter->method('getCurrentSchema')->willReturn(false);
@@ -71,13 +73,14 @@ final class AbstractSourceTest extends TestCase
         $refProp = new ReflectionProperty($source, 'defaultSchema');
 
         // Verify default constant is used when adapter returns false
-        self::assertSame(AbstractSource::DEFAULT_SCHEMA, $refProp->getValue($source));
+        static::assertSame(AbstractSource::DEFAULT_SCHEMA, $refProp->getValue($source));
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testConstructorWithSchemaFromAdapter(): void
+    #[Test]
+    public function constructorWithSchemaFromAdapter(): void
     {
         $adapter = $this->createMockForIntersectionOfInterfaces([AdapterInterface::class, SchemaAwareInterface::class]);
         $adapter->method('getCurrentSchema')->willReturn('my_schema');
@@ -90,14 +93,15 @@ final class AbstractSourceTest extends TestCase
         $refProp = new ReflectionProperty($source, 'defaultSchema');
 
         // Verify schema is retrieved from adapter
-        self::assertSame('my_schema', $refProp->getValue($source));
+        static::assertSame('my_schema', $refProp->getValue($source));
     }
 
     /**
      * @throws ReflectionException
      * @throws Exception
      */
-    public function testGetColumn(): void
+    #[Test]
+    public function getColumn(): void
     {
         $this->setMockData([
             'columns' => [
@@ -123,20 +127,20 @@ final class AbstractSourceTest extends TestCase
         $column = $this->abstractSourceMock->getColumn('username', 'users', 'public');
         // Verify getColumn returns ColumnObject with all properties
 
-        self::assertInstanceOf(ColumnObject::class, $column);
-        self::assertSame('username', $column->getName());
-        self::assertSame('users', $column->getTableName());
-        self::assertSame('public', $column->getSchemaName());
-        self::assertSame(2, $column->getOrdinalPosition());
-        self::assertSame('', $column->getColumnDefault());
-        self::assertFalse($column->getIsNullable());
-        self::assertSame('VARCHAR', $column->getDataType());
-        self::assertSame(255, $column->getCharacterMaximumLength());
-        self::assertSame(1024, $column->getCharacterOctetLength());
-        self::assertNull($column->getNumericPrecision());
-        self::assertNull($column->getNumericScale());
-        self::assertNull($column->getNumericUnsigned());
-        self::assertSame('utf8_general_ci', $column->getErrata('collation'));
+        static::assertInstanceOf(ColumnObject::class, $column);
+        static::assertSame('username', $column->getName());
+        static::assertSame('users', $column->getTableName());
+        static::assertSame('public', $column->getSchemaName());
+        static::assertSame(2, $column->getOrdinalPosition());
+        static::assertSame('', $column->getColumnDefault());
+        static::assertFalse($column->getIsNullable());
+        static::assertSame('VARCHAR', $column->getDataType());
+        static::assertSame(255, $column->getCharacterMaximumLength());
+        static::assertSame(1024, $column->getCharacterOctetLength());
+        static::assertNull($column->getNumericPrecision());
+        static::assertNull($column->getNumericScale());
+        static::assertNull($column->getNumericUnsigned());
+        static::assertSame('utf8_general_ci', $column->getErrata('collation'));
     }
 
     /**
@@ -145,7 +149,8 @@ final class AbstractSourceTest extends TestCase
      * @throws ReflectionException
      * @throws Exception
      */
-    public function testGetColumnNames(): void
+    #[Test]
+    public function getColumnNames(): void
     {
         $this->setMockData([
             'columns' => [
@@ -162,10 +167,11 @@ final class AbstractSourceTest extends TestCase
         $columnNames = $this->abstractSourceMock->getColumnNames('users', 'public');
         // Verify getColumnNames returns array of column names
 
-        self::assertSame(['id', 'username', 'email'], $columnNames);
+        static::assertSame(['id', 'username', 'email'], $columnNames);
     }
 
-    public function testGetColumnNamesThrowsWhenLoadColumnDataDoesNotPopulate(): void
+    #[Test]
+    public function getColumnNamesThrowsWhenLoadColumnDataDoesNotPopulate(): void
     {
         $adapter = $this->createMockForIntersectionOfInterfaces([
             AdapterInterface::class,
@@ -183,7 +189,8 @@ final class AbstractSourceTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    public function testGetColumnNamesUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getColumnNamesUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -201,13 +208,14 @@ final class AbstractSourceTest extends TestCase
 
         $names = $this->abstractSourceMock->getColumnNames('users', null);
 
-        self::assertSame(['id', 'name'], $names);
+        static::assertSame(['id', 'name'], $names);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetColumns(): void
+    #[Test]
+    public function getColumns(): void
     {
         $this->setMockData([
             'columns' => [
@@ -233,15 +241,16 @@ final class AbstractSourceTest extends TestCase
         $columns = $this->abstractSourceMock->getColumns('users', 'public');
         // Verify getColumns returns array of ColumnObject instances
 
-        self::assertCount(1, $columns);
-        self::assertInstanceOf(ColumnObject::class, $columns[0]);
-        self::assertSame('id', $columns[0]->getName());
+        static::assertCount(1, $columns);
+        static::assertInstanceOf(ColumnObject::class, $columns[0]);
+        static::assertSame('id', $columns[0]->getName());
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetColumnsUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getColumnsUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -269,14 +278,15 @@ final class AbstractSourceTest extends TestCase
 
         $columns = $this->abstractSourceMock->getColumns('users', null);
 
-        self::assertCount(1, $columns);
-        self::assertInstanceOf(ColumnObject::class, $columns[0]);
+        static::assertCount(1, $columns);
+        static::assertInstanceOf(ColumnObject::class, $columns[0]);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetColumnThrowsExceptionForNonExistentColumn(): void
+    #[Test]
+    public function getColumnThrowsExceptionForNonExistentColumn(): void
     {
         $this->setMockData([
             'columns' => [
@@ -297,7 +307,8 @@ final class AbstractSourceTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    public function testGetColumnUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getColumnUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -325,14 +336,15 @@ final class AbstractSourceTest extends TestCase
 
         $column = $this->abstractSourceMock->getColumn('id', 'users', null);
 
-        self::assertInstanceOf(ColumnObject::class, $column);
+        static::assertInstanceOf(ColumnObject::class, $column);
     }
 
     /**
      * @throws ReflectionException
      * @throws Exception
      */
-    public function testGetConstraint(): void
+    #[Test]
+    public function getConstraint(): void
     {
         $this->setMockData([
             'constraints' => [
@@ -356,18 +368,18 @@ final class AbstractSourceTest extends TestCase
         $constraint = $this->abstractSourceMock->getConstraint('fk_orders_user', 'orders', 'public');
         // Verify getConstraint returns ConstraintObject with all properties
 
-        self::assertInstanceOf(ConstraintObject::class, $constraint);
-        self::assertSame('fk_orders_user', $constraint->getName());
-        self::assertSame('orders', $constraint->getTableName());
-        self::assertSame('public', $constraint->getSchemaName());
-        self::assertSame('FOREIGN KEY', $constraint->getType());
-        self::assertSame(['user_id'], $constraint->getColumns());
-        self::assertSame('public', $constraint->getReferencedTableSchema());
-        self::assertSame('users', $constraint->getReferencedTableName());
-        self::assertSame(['id'], $constraint->getReferencedColumns());
-        self::assertSame('SIMPLE', $constraint->getMatchOption());
-        self::assertSame('CASCADE', $constraint->getUpdateRule());
-        self::assertSame('RESTRICT', $constraint->getDeleteRule());
+        static::assertInstanceOf(ConstraintObject::class, $constraint);
+        static::assertSame('fk_orders_user', $constraint->getName());
+        static::assertSame('orders', $constraint->getTableName());
+        static::assertSame('public', $constraint->getSchemaName());
+        static::assertSame('FOREIGN KEY', $constraint->getType());
+        static::assertSame(['user_id'], $constraint->getColumns());
+        static::assertSame('public', $constraint->getReferencedTableSchema());
+        static::assertSame('users', $constraint->getReferencedTableName());
+        static::assertSame(['id'], $constraint->getReferencedColumns());
+        static::assertSame('SIMPLE', $constraint->getMatchOption());
+        static::assertSame('CASCADE', $constraint->getUpdateRule());
+        static::assertSame('RESTRICT', $constraint->getDeleteRule());
     }
 
     /**
@@ -375,7 +387,8 @@ final class AbstractSourceTest extends TestCase
      *
      * @throws ReflectionException
      */
-    public function testGetConstraintKeys(): void
+    #[Test]
+    public function getConstraintKeys(): void
     {
         // internal data
         $data = [
@@ -405,25 +418,26 @@ final class AbstractSourceTest extends TestCase
         $this->setMockData($data);
         // Verify getConstraintKeys returns ConstraintKeyObject with references
         $constraints = $this->abstractSourceMock->getConstraintKeys('bam_constraint', 'bar_table', 'foo_schema');
-        self::assertCount(1, $constraints);
+        static::assertCount(1, $constraints);
 
         $constraintKeyObj = $constraints[0];
-        self::assertInstanceOf(ConstraintKeyObject::class, $constraintKeyObj);
+        static::assertInstanceOf(ConstraintKeyObject::class, $constraintKeyObj);
 
         // check value object is mapped correctly
-        self::assertEquals('a', $constraintKeyObj->getColumnName());
+        static::assertEquals('a', $constraintKeyObj->getColumnName());
         // Verify value object is mapped correctly
-        self::assertEquals(1, $constraintKeyObj->getOrdinalPosition());
-        self::assertEquals('another_table', $constraintKeyObj->getReferencedTableName());
-        self::assertEquals('another_column', $constraintKeyObj->getReferencedColumnName());
-        self::assertEquals('UP', $constraintKeyObj->getForeignKeyUpdateRule());
-        self::assertEquals('DOWN', $constraintKeyObj->getForeignKeyDeleteRule());
+        static::assertEquals(1, $constraintKeyObj->getOrdinalPosition());
+        static::assertEquals('another_table', $constraintKeyObj->getReferencedTableName());
+        static::assertEquals('another_column', $constraintKeyObj->getReferencedColumnName());
+        static::assertEquals('UP', $constraintKeyObj->getForeignKeyUpdateRule());
+        static::assertEquals('DOWN', $constraintKeyObj->getForeignKeyDeleteRule());
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetConstraintKeysUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getConstraintKeysUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -446,14 +460,15 @@ final class AbstractSourceTest extends TestCase
 
         $keys = $this->abstractSourceMock->getConstraintKeys('pk', 'users', null);
 
-        self::assertCount(1, $keys);
-        self::assertInstanceOf(ConstraintKeyObject::class, $keys[0]);
+        static::assertCount(1, $keys);
+        static::assertInstanceOf(ConstraintKeyObject::class, $keys[0]);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetConstraintKeysWithMultipleKeys(): void
+    #[Test]
+    public function getConstraintKeysWithMultipleKeys(): void
     {
         $data = [
             'constraint_references' => [
@@ -489,15 +504,16 @@ final class AbstractSourceTest extends TestCase
         // Verify composite constraint keys are returned in order
         $keys = $this->abstractSourceMock->getConstraintKeys('fk_composite', 'my_table', 'public');
 
-        self::assertCount(2, $keys);
-        self::assertSame('col1', $keys[0]->getColumnName());
-        self::assertSame('col2', $keys[1]->getColumnName());
+        static::assertCount(2, $keys);
+        static::assertSame('col1', $keys[0]->getColumnName());
+        static::assertSame('col2', $keys[1]->getColumnName());
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetConstraintKeysWithoutReferences(): void
+    #[Test]
+    public function getConstraintKeysWithoutReferences(): void
     {
         $data = [
             'constraint_references' => [
@@ -519,9 +535,9 @@ final class AbstractSourceTest extends TestCase
         // Verify constraint keys without references have null references
         $keys = $this->abstractSourceMock->getConstraintKeys('pk_users', 'users', 'public');
 
-        self::assertCount(1, $keys);
-        self::assertSame('id', $keys[0]->getColumnName());
-        self::assertNull($keys[0]->getReferencedTableName());
+        static::assertCount(1, $keys);
+        static::assertSame('id', $keys[0]->getColumnName());
+        static::assertNull($keys[0]->getReferencedTableName());
     }
 
     /**
@@ -529,7 +545,8 @@ final class AbstractSourceTest extends TestCase
      *
      * @throws ReflectionException
      */
-    public function testGetConstraints(): void
+    #[Test]
+    public function getConstraints(): void
     {
         $this->setMockData([
             'constraints' => [
@@ -551,15 +568,16 @@ final class AbstractSourceTest extends TestCase
         $constraints = $this->abstractSourceMock->getConstraints('users', 'public');
         // Verify getConstraints returns array of ConstraintObject instances
 
-        self::assertCount(2, $constraints);
-        self::assertInstanceOf(ConstraintObject::class, $constraints[0]);
-        self::assertInstanceOf(ConstraintObject::class, $constraints[1]);
+        static::assertCount(2, $constraints);
+        static::assertInstanceOf(ConstraintObject::class, $constraints[0]);
+        static::assertInstanceOf(ConstraintObject::class, $constraints[1]);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetConstraintsUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getConstraintsUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -579,13 +597,14 @@ final class AbstractSourceTest extends TestCase
 
         $constraints = $this->abstractSourceMock->getConstraints('users', null);
 
-        self::assertCount(1, $constraints);
+        static::assertCount(1, $constraints);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetConstraintThrowsExceptionForNonExistent(): void
+    #[Test]
+    public function getConstraintThrowsExceptionForNonExistent(): void
     {
         $this->setMockData([
             'constraints' => [
@@ -606,7 +625,8 @@ final class AbstractSourceTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    public function testGetConstraintUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getConstraintUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -626,14 +646,15 @@ final class AbstractSourceTest extends TestCase
 
         $constraint = $this->abstractSourceMock->getConstraint('pk', 'users', null);
 
-        self::assertInstanceOf(ConstraintObject::class, $constraint);
+        static::assertInstanceOf(ConstraintObject::class, $constraint);
     }
 
     /**
      * @throws ReflectionException
      * @throws Exception
      */
-    public function testGetConstraintWithCheckClause(): void
+    #[Test]
+    public function getConstraintWithCheckClause(): void
     {
         $this->setMockData([
             'constraints' => [
@@ -651,8 +672,8 @@ final class AbstractSourceTest extends TestCase
         $constraint = $this->abstractSourceMock->getConstraint('chk_age', 'users', 'public');
         // Verify getConstraint returns constraint with check clause
 
-        self::assertSame('CHECK', $constraint->getType());
-        self::assertSame('age >= 18', $constraint->getCheckClause());
+        static::assertSame('CHECK', $constraint->getType());
+        static::assertSame('age >= 18', $constraint->getCheckClause());
     }
 
     /**
@@ -660,7 +681,8 @@ final class AbstractSourceTest extends TestCase
      *
      * @throws ReflectionException
      */
-    public function testGetSchemasCallsLoadSchemaData(): void
+    #[Test]
+    public function getSchemasCallsLoadSchemaData(): void
     {
         $this->abstractSourceMock->expects($this->once())->method('loadSchemaData');
 
@@ -668,14 +690,15 @@ final class AbstractSourceTest extends TestCase
 
         // Verify getSchemas loads and returns schema list
         $schemas = $this->abstractSourceMock->getSchemas();
-        self::assertSame(['schema1', 'schema2'], $schemas);
+        static::assertSame(['schema1', 'schema2'], $schemas);
     }
 
     /**
      * @throws ReflectionException
      * @throws Exception
      */
-    public function testGetTableForBaseTable(): void
+    #[Test]
+    public function getTableForBaseTable(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -698,15 +721,16 @@ final class AbstractSourceTest extends TestCase
         // Verify getTable returns TableObject for base table
         $table = $this->abstractSourceMock->getTable('users', 'public');
 
-        self::assertInstanceOf(TableObject::class, $table);
-        self::assertSame('users', $table->getName());
+        static::assertInstanceOf(TableObject::class, $table);
+        static::assertSame('users', $table->getName());
     }
 
     /**
      * @throws ReflectionException
      * @throws Exception
      */
-    public function testGetTableForView(): void
+    #[Test]
+    public function getTableForView(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -734,17 +758,18 @@ final class AbstractSourceTest extends TestCase
         $view = $this->abstractSourceMock->getTable('user_summary', 'public');
         // Verify getTable returns ViewObject for view type
 
-        self::assertInstanceOf(ViewObject::class, $view);
-        self::assertSame('user_summary', $view->getName());
-        self::assertSame('SELECT id, name FROM users', $view->getViewDefinition());
-        self::assertSame('CASCADED', $view->getCheckOption());
-        self::assertFalse($view->getIsUpdatable());
+        static::assertInstanceOf(ViewObject::class, $view);
+        static::assertSame('user_summary', $view->getName());
+        static::assertSame('SELECT id, name FROM users', $view->getViewDefinition());
+        static::assertSame('CASCADED', $view->getCheckOption());
+        static::assertFalse($view->getIsUpdatable());
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetTableNamesExcludesViewsByDefault(): void
+    #[Test]
+    public function getTableNamesExcludesViewsByDefault(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -759,13 +784,14 @@ final class AbstractSourceTest extends TestCase
         // Verify views are excluded by default
         $tableNames = $this->abstractSourceMock->getTableNames('public');
 
-        self::assertSame(['users', 'orders'], $tableNames);
+        static::assertSame(['users', 'orders'], $tableNames);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetTableNamesIncludesViewsWhenRequested(): void
+    #[Test]
+    public function getTableNamesIncludesViewsWhenRequested(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -779,7 +805,7 @@ final class AbstractSourceTest extends TestCase
         // Verify views are included when flag is true
         $tableNames = $this->abstractSourceMock->getTableNames('public', true);
 
-        self::assertSame(['users', 'user_summary'], $tableNames);
+        static::assertSame(['users', 'user_summary'], $tableNames);
     }
 
     /**
@@ -788,7 +814,8 @@ final class AbstractSourceTest extends TestCase
      * @throws ReflectionException
      * @throws ReflectionException
      */
-    public function testGetTableNamesWithNullSchemaUsesDefault(): void
+    #[Test]
+    public function getTableNamesWithNullSchemaUsesDefault(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'default_schema');
@@ -805,13 +832,14 @@ final class AbstractSourceTest extends TestCase
         // Verify default schema is used when none provided
         $tableNames = $this->abstractSourceMock->getTableNames();
 
-        self::assertSame(['users', 'orders'], $tableNames);
+        static::assertSame(['users', 'orders'], $tableNames);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetTableNamesWithSpecificSchema(): void
+    #[Test]
+    public function getTableNamesWithSpecificSchema(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -824,7 +852,7 @@ final class AbstractSourceTest extends TestCase
         // Verify table names for specific schema
         $tableNames = $this->abstractSourceMock->getTableNames('public');
 
-        self::assertSame(['products'], $tableNames);
+        static::assertSame(['products'], $tableNames);
     }
 
     /**
@@ -832,7 +860,8 @@ final class AbstractSourceTest extends TestCase
      *
      * @throws ReflectionException
      */
-    public function testGetTables(): void
+    #[Test]
+    public function getTables(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -858,15 +887,16 @@ final class AbstractSourceTest extends TestCase
         // Verify getTables returns array of TableObject instances
         $tables = $this->abstractSourceMock->getTables('public');
 
-        self::assertCount(2, $tables);
-        self::assertInstanceOf(TableObject::class, $tables[0]);
-        self::assertInstanceOf(TableObject::class, $tables[1]);
+        static::assertCount(2, $tables);
+        static::assertInstanceOf(TableObject::class, $tables[0]);
+        static::assertInstanceOf(TableObject::class, $tables[1]);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetTablesUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getTablesUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -891,14 +921,15 @@ final class AbstractSourceTest extends TestCase
 
         $tables = $this->abstractSourceMock->getTables(null);
 
-        self::assertCount(1, $tables);
-        self::assertInstanceOf(TableObject::class, $tables[0]);
+        static::assertCount(1, $tables);
+        static::assertInstanceOf(TableObject::class, $tables[0]);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetTableThrowsExceptionForNonExistentTable(): void
+    #[Test]
+    public function getTableThrowsExceptionForNonExistentTable(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -917,7 +948,8 @@ final class AbstractSourceTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    public function testGetTableThrowsExceptionForUnsupportedTableType(): void
+    #[Test]
+    public function getTableThrowsExceptionForUnsupportedTableType(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -938,7 +970,8 @@ final class AbstractSourceTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    public function testGetTableUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getTableUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -963,14 +996,15 @@ final class AbstractSourceTest extends TestCase
 
         $table = $this->abstractSourceMock->getTable('users', null);
 
-        self::assertInstanceOf(TableObject::class, $table);
+        static::assertInstanceOf(TableObject::class, $table);
     }
 
     /**
      * @throws ReflectionException
      * @throws Exception
      */
-    public function testGetTrigger(): void
+    #[Test]
+    public function getTrigger(): void
     {
         $this->setMockData([
             'triggers' => [
@@ -998,22 +1032,22 @@ final class AbstractSourceTest extends TestCase
         $trigger = $this->abstractSourceMock->getTrigger('my_trigger', 'public');
         // Verify getTrigger returns TriggerObject with all properties
 
-        self::assertInstanceOf(TriggerObject::class, $trigger);
-        self::assertSame('my_trigger', $trigger->getName());
-        self::assertSame('UPDATE', $trigger->getEventManipulation());
-        self::assertSame('main', $trigger->getEventObjectCatalog());
-        self::assertSame('public', $trigger->getEventObjectSchema());
-        self::assertSame('orders', $trigger->getEventObjectTable());
-        self::assertSame('1', $trigger->getActionOrder());
-        self::assertSame('WHEN (NEW.status != OLD.status)', $trigger->getActionCondition());
-        self::assertSame('EXECUTE PROCEDURE log_change()', $trigger->getActionStatement());
-        self::assertSame('ROW', $trigger->getActionOrientation());
-        self::assertSame('AFTER', $trigger->getActionTiming());
-        self::assertSame('old_table', $trigger->getActionReferenceOldTable());
-        self::assertSame('new_table', $trigger->getActionReferenceNewTable());
-        self::assertSame('OLD', $trigger->getActionReferenceOldRow());
-        self::assertSame('NEW', $trigger->getActionReferenceNewRow());
-        self::assertNull($trigger->getCreated());
+        static::assertInstanceOf(TriggerObject::class, $trigger);
+        static::assertSame('my_trigger', $trigger->getName());
+        static::assertSame('UPDATE', $trigger->getEventManipulation());
+        static::assertSame('main', $trigger->getEventObjectCatalog());
+        static::assertSame('public', $trigger->getEventObjectSchema());
+        static::assertSame('orders', $trigger->getEventObjectTable());
+        static::assertSame('1', $trigger->getActionOrder());
+        static::assertSame('WHEN (NEW.status != OLD.status)', $trigger->getActionCondition());
+        static::assertSame('EXECUTE PROCEDURE log_change()', $trigger->getActionStatement());
+        static::assertSame('ROW', $trigger->getActionOrientation());
+        static::assertSame('AFTER', $trigger->getActionTiming());
+        static::assertSame('old_table', $trigger->getActionReferenceOldTable());
+        static::assertSame('new_table', $trigger->getActionReferenceNewTable());
+        static::assertSame('OLD', $trigger->getActionReferenceOldRow());
+        static::assertSame('NEW', $trigger->getActionReferenceNewRow());
+        static::assertNull($trigger->getCreated());
     }
 
     /**
@@ -1021,7 +1055,8 @@ final class AbstractSourceTest extends TestCase
      *
      * @throws ReflectionException
      */
-    public function testGetTriggerNames(): void
+    #[Test]
+    public function getTriggerNames(): void
     {
         $this->setMockData([
             'triggers' => [
@@ -1035,13 +1070,14 @@ final class AbstractSourceTest extends TestCase
         $triggerNames = $this->abstractSourceMock->getTriggerNames('public');
         // Verify getTriggerNames returns array of trigger names
 
-        self::assertSame(['audit_trigger', 'update_timestamp'], $triggerNames);
+        static::assertSame(['audit_trigger', 'update_timestamp'], $triggerNames);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetTriggerNamesUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getTriggerNamesUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -1056,13 +1092,14 @@ final class AbstractSourceTest extends TestCase
 
         $names = $this->abstractSourceMock->getTriggerNames(null);
 
-        self::assertSame(['trig1'], $names);
+        static::assertSame(['trig1'], $names);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetTriggers(): void
+    #[Test]
+    public function getTriggers(): void
     {
         $this->setMockData([
             'triggers' => [
@@ -1090,14 +1127,15 @@ final class AbstractSourceTest extends TestCase
         $triggers = $this->abstractSourceMock->getTriggers('public');
         // Verify getTriggers returns array of TriggerObject instances
 
-        self::assertCount(1, $triggers);
-        self::assertInstanceOf(TriggerObject::class, $triggers[0]);
+        static::assertCount(1, $triggers);
+        static::assertInstanceOf(TriggerObject::class, $triggers[0]);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetTriggersUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getTriggersUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -1127,14 +1165,15 @@ final class AbstractSourceTest extends TestCase
 
         $triggers = $this->abstractSourceMock->getTriggers(null);
 
-        self::assertCount(1, $triggers);
-        self::assertInstanceOf(TriggerObject::class, $triggers[0]);
+        static::assertCount(1, $triggers);
+        static::assertInstanceOf(TriggerObject::class, $triggers[0]);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetTriggerThrowsExceptionForNonExistent(): void
+    #[Test]
+    public function getTriggerThrowsExceptionForNonExistent(): void
     {
         $this->setMockData([
             'triggers' => [
@@ -1153,7 +1192,8 @@ final class AbstractSourceTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    public function testGetTriggerUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getTriggerUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -1183,15 +1223,16 @@ final class AbstractSourceTest extends TestCase
 
         $trigger = $this->abstractSourceMock->getTrigger('trig1', null);
 
-        self::assertInstanceOf(TriggerObject::class, $trigger);
-        self::assertSame('trig1', $trigger->getName());
+        static::assertInstanceOf(TriggerObject::class, $trigger);
+        static::assertSame('trig1', $trigger->getName());
     }
 
     /**
      * @throws ReflectionException
      * @throws Exception
      */
-    public function testGetViewForExistingView(): void
+    #[Test]
+    public function getViewForExistingView(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -1219,8 +1260,8 @@ final class AbstractSourceTest extends TestCase
         $view = $this->abstractSourceMock->getView('my_view', 'public');
         // Verify getView returns ViewObject with all properties
 
-        self::assertInstanceOf(ViewObject::class, $view);
-        self::assertSame('my_view', $view->getName());
+        static::assertInstanceOf(ViewObject::class, $view);
+        static::assertSame('my_view', $view->getName());
     }
 
     /**
@@ -1228,7 +1269,8 @@ final class AbstractSourceTest extends TestCase
      *
      * @throws ReflectionException
      */
-    public function testGetViewNames(): void
+    #[Test]
+    public function getViewNames(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -1243,13 +1285,14 @@ final class AbstractSourceTest extends TestCase
         $viewNames = $this->abstractSourceMock->getViewNames('public');
 
         // Verify getViewNames filters only view types
-        self::assertSame(['user_summary', 'order_summary'], $viewNames);
+        static::assertSame(['user_summary', 'order_summary'], $viewNames);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetViewNamesUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getViewNamesUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -1264,13 +1307,14 @@ final class AbstractSourceTest extends TestCase
 
         $names = $this->abstractSourceMock->getViewNames(null);
 
-        self::assertSame(['v1'], $names);
+        static::assertSame(['v1'], $names);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetViews(): void
+    #[Test]
+    public function getViews(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -1298,14 +1342,15 @@ final class AbstractSourceTest extends TestCase
         $views = $this->abstractSourceMock->getViews('public');
 
         // Verify getViews returns array of ViewObject instances
-        self::assertCount(1, $views);
-        self::assertInstanceOf(ViewObject::class, $views[0]);
+        static::assertCount(1, $views);
+        static::assertInstanceOf(ViewObject::class, $views[0]);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetViewsUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getViewsUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -1327,13 +1372,14 @@ final class AbstractSourceTest extends TestCase
 
         $views = $this->abstractSourceMock->getViews(null);
 
-        self::assertCount(1, $views);
+        static::assertCount(1, $views);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testGetViewThrowsExceptionForNonExistentView(): void
+    #[Test]
+    public function getViewThrowsExceptionForNonExistentView(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -1352,7 +1398,8 @@ final class AbstractSourceTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    public function testGetViewThrowsExceptionForTable(): void
+    #[Test]
+    public function getViewThrowsExceptionForTable(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -1373,7 +1420,8 @@ final class AbstractSourceTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    public function testGetViewUsesDefaultSchemaWhenNull(): void
+    #[Test]
+    public function getViewUsesDefaultSchemaWhenNull(): void
     {
         $refProp = new ReflectionProperty($this->abstractSourceMock, 'defaultSchema');
         $refProp->setValue($this->abstractSourceMock, 'def');
@@ -1395,7 +1443,7 @@ final class AbstractSourceTest extends TestCase
 
         $view = $this->abstractSourceMock->getView('v1', null);
 
-        self::assertInstanceOf(ViewObject::class, $view);
+        static::assertInstanceOf(ViewObject::class, $view);
     }
 
     protected MockObject|AbstractSource $abstractSourceMock;
@@ -1405,21 +1453,23 @@ final class AbstractSourceTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    public function testLoadColumnDataCallsPrepareDataHierarchy(): void
+    #[Test]
+    public function loadColumnDataCallsPrepareDataHierarchy(): void
     {
         $method = new ReflectionMethod($this->abstractSourceMock, 'loadColumnData');
         $method->invoke($this->abstractSourceMock, 'users', 'test_schema');
 
         $data = $this->getMockData();
-        self::assertArrayHasKey('columns', $data);
-        self::assertArrayHasKey('test_schema', $data['columns']);
-        self::assertArrayHasKey('users', $data['columns']['test_schema']);
+        static::assertArrayHasKey('columns', $data);
+        static::assertArrayHasKey('test_schema', $data['columns']);
+        static::assertArrayHasKey('users', $data['columns']['test_schema']);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testLoadColumnDataEarlyReturnWhenDataExists(): void
+    #[Test]
+    public function loadColumnDataEarlyReturnWhenDataExists(): void
     {
         $this->setMockData([
             'columns' => [
@@ -1434,26 +1484,28 @@ final class AbstractSourceTest extends TestCase
 
         $data = $this->getMockData();
         // Verify method returns early when data exists
-        self::assertArrayHasKey('existing_column', $data['columns']['public']['users']);
+        static::assertArrayHasKey('existing_column', $data['columns']['public']['users']);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testLoadConstraintDataCallsPrepareDataHierarchy(): void
+    #[Test]
+    public function loadConstraintDataCallsPrepareDataHierarchy(): void
     {
         $method = new ReflectionMethod($this->abstractSourceMock, 'loadConstraintData');
         $method->invoke($this->abstractSourceMock, 'users', 'test_schema');
 
         $data = $this->getMockData();
-        self::assertArrayHasKey('constraints', $data);
-        self::assertArrayHasKey('test_schema', $data['constraints']);
+        static::assertArrayHasKey('constraints', $data);
+        static::assertArrayHasKey('test_schema', $data['constraints']);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testLoadConstraintDataEarlyReturnWhenDataExists(): void
+    #[Test]
+    public function loadConstraintDataEarlyReturnWhenDataExists(): void
     {
         $this->setMockData([
             'constraints' => [
@@ -1466,26 +1518,28 @@ final class AbstractSourceTest extends TestCase
 
         $data = $this->getMockData();
         // Verify method returns early when data exists
-        self::assertArrayHasKey('existing', $data['constraints']['public']);
+        static::assertArrayHasKey('existing', $data['constraints']['public']);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testLoadConstraintDataKeysCallsPrepareDataHierarchy(): void
+    #[Test]
+    public function loadConstraintDataKeysCallsPrepareDataHierarchy(): void
     {
         $method = new ReflectionMethod($this->abstractSourceMock, 'loadConstraintDataKeys');
         $method->invoke($this->abstractSourceMock, 'test_schema');
 
         $data = $this->getMockData();
-        self::assertArrayHasKey('constraint_keys', $data);
-        self::assertArrayHasKey('test_schema', $data['constraint_keys']);
+        static::assertArrayHasKey('constraint_keys', $data);
+        static::assertArrayHasKey('test_schema', $data['constraint_keys']);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testLoadConstraintDataKeysEarlyReturnWhenDataExists(): void
+    #[Test]
+    public function loadConstraintDataKeysEarlyReturnWhenDataExists(): void
     {
         $this->setMockData([
             'constraint_keys' => [
@@ -1498,26 +1552,28 @@ final class AbstractSourceTest extends TestCase
 
         $data = $this->getMockData();
         // Verify method returns early when data exists
-        self::assertArrayHasKey('existing', $data['constraint_keys']['public']);
+        static::assertArrayHasKey('existing', $data['constraint_keys']['public']);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testLoadConstraintReferencesCallsPrepareDataHierarchy(): void
+    #[Test]
+    public function loadConstraintReferencesCallsPrepareDataHierarchy(): void
     {
         $method = new ReflectionMethod($this->abstractSourceMock, 'loadConstraintReferences');
         $method->invoke($this->abstractSourceMock, 'users', 'test_schema');
 
         $data = $this->getMockData();
-        self::assertArrayHasKey('constraint_references', $data);
-        self::assertArrayHasKey('test_schema', $data['constraint_references']);
+        static::assertArrayHasKey('constraint_references', $data);
+        static::assertArrayHasKey('test_schema', $data['constraint_references']);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testLoadConstraintReferencesEarlyReturnWhenDataExists(): void
+    #[Test]
+    public function loadConstraintReferencesEarlyReturnWhenDataExists(): void
     {
         $this->setMockData([
             'constraint_references' => [
@@ -1530,26 +1586,28 @@ final class AbstractSourceTest extends TestCase
 
         $data = $this->getMockData();
         // Verify method returns early when data exists
-        self::assertArrayHasKey('existing', $data['constraint_references']['public']);
+        static::assertArrayHasKey('existing', $data['constraint_references']['public']);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testLoadTableNameDataCallsPrepareDataHierarchy(): void
+    #[Test]
+    public function loadTableNameDataCallsPrepareDataHierarchy(): void
     {
         $method = new ReflectionMethod($this->abstractSourceMock, 'loadTableNameData');
         $method->invoke($this->abstractSourceMock, 'test_schema');
 
         $data = $this->getMockData();
-        self::assertArrayHasKey('table_names', $data);
-        self::assertArrayHasKey('test_schema', $data['table_names']);
+        static::assertArrayHasKey('table_names', $data);
+        static::assertArrayHasKey('test_schema', $data['table_names']);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testLoadTableNameDataEarlyReturnWhenDataExists(): void
+    #[Test]
+    public function loadTableNameDataEarlyReturnWhenDataExists(): void
     {
         $this->setMockData([
             'table_names' => [
@@ -1562,26 +1620,28 @@ final class AbstractSourceTest extends TestCase
 
         $data = $this->getMockData();
         // Verify method returns early when data exists
-        self::assertArrayHasKey('existing', $data['table_names']['public']);
+        static::assertArrayHasKey('existing', $data['table_names']['public']);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testLoadTriggerDataCallsPrepareDataHierarchy(): void
+    #[Test]
+    public function loadTriggerDataCallsPrepareDataHierarchy(): void
     {
         $method = new ReflectionMethod($this->abstractSourceMock, 'loadTriggerData');
         $method->invoke($this->abstractSourceMock, 'test_schema');
 
         $data = $this->getMockData();
-        self::assertArrayHasKey('triggers', $data);
-        self::assertArrayHasKey('test_schema', $data['triggers']);
+        static::assertArrayHasKey('triggers', $data);
+        static::assertArrayHasKey('test_schema', $data['triggers']);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testLoadTriggerDataEarlyReturnWhenDataExists(): void
+    #[Test]
+    public function loadTriggerDataEarlyReturnWhenDataExists(): void
     {
         $this->setMockData([
             'triggers' => [
@@ -1594,13 +1654,14 @@ final class AbstractSourceTest extends TestCase
 
         $data = $this->getMockData();
         // Verify method returns early when data exists
-        self::assertArrayHasKey('existing', $data['triggers']['public']);
+        static::assertArrayHasKey('existing', $data['triggers']['public']);
     }
 
     /**
      * @throws ReflectionException
      */
-    public function testPrepareDataHierarchyWithMultipleKeys(): void
+    #[Test]
+    public function prepareDataHierarchyWithMultipleKeys(): void
     {
         $source = $this->getMockBuilder(AbstractSource::class)
             ->setConstructorArgs([$this->adapterMock])
@@ -1615,9 +1676,9 @@ final class AbstractSourceTest extends TestCase
         $data = $refProp->getValue($source);
 
         // Verify nested hierarchy is created
-        self::assertArrayHasKey('level1', $data);
-        self::assertArrayHasKey('level2', $data['level1']);
-        self::assertArrayHasKey('level3', $data['level1']['level2']);
+        static::assertArrayHasKey('level1', $data);
+        static::assertArrayHasKey('level2', $data['level1']);
+        static::assertArrayHasKey('level3', $data['level1']['level2']);
     }
 
     /**
@@ -1627,7 +1688,8 @@ final class AbstractSourceTest extends TestCase
      * @throws ReflectionException
      * @throws ReflectionException
      */
-    public function testPrepareDataHierarchyWithSingleKey(): void
+    #[Test]
+    public function prepareDataHierarchyWithSingleKey(): void
     {
         $source = $this->getMockBuilder(AbstractSource::class)
             ->setConstructorArgs([$this->adapterMock])
@@ -1642,7 +1704,7 @@ final class AbstractSourceTest extends TestCase
         $data = $refProp->getValue($source);
 
         // Verify single key hierarchy is created
-        self::assertArrayHasKey('test_key', $data);
+        static::assertArrayHasKey('test_key', $data);
     }
 
     #[Override]
