@@ -5,7 +5,11 @@ php-version = "8.2.0"
 paths = ["src", "test"]
 includes = ["vendor"]
 
+[linter]
+baseline = "lint-baseline.toml"
+
 [analyzer]
+baseline = "analyzer-baseline.toml"
 class-initializers = [
     "PhpDb\\ResultSet\\AbstractResultSet::initialize",
 ]
