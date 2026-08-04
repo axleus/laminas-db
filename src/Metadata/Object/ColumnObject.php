@@ -6,46 +6,34 @@ namespace PhpDb\Metadata\Object;
 
 use function array_key_exists;
 
-class ColumnObject
+final class ColumnObject
 {
-    protected string $name;
+    private ?int $ordinalPosition = null;
 
-    protected string $tableName;
+    private string|int|bool|null $columnDefault = null;
 
-    protected ?string $schemaName = null;
+    private ?bool $isNullable = null;
 
-    protected ?int $ordinalPosition = null;
+    private ?string $dataType = null;
 
-    protected string|int|bool|null $columnDefault = null;
+    private ?int $characterMaximumLength = null;
 
-    protected ?bool $isNullable = null;
+    private ?int $characterOctetLength = null;
 
-    protected ?string $dataType = null;
+    private ?int $numericPrecision = null;
 
-    protected ?int $characterMaximumLength = null;
+    private ?int $numericScale = null;
 
-    protected ?int $characterOctetLength = null;
+    private ?bool $numericUnsigned = null;
 
-    protected ?int $numericPrecision = null;
+    /** @var array<string, mixed> */
+    private array $errata = [];
 
-    protected ?int $numericScale = null;
-
-    protected ?bool $numericUnsigned = null;
-
-    protected array $errata = [];
-
-    /**
-     * Constructor
-     */
-    public function __construct(string $name, string $tableName, ?string $schemaName = null)
-    {
-        $this->setName($name);
-        $this->setTableName($tableName);
-
-        if (null !== $schemaName) {
-            $this->setSchemaName($schemaName);
-        }
-    }
+    public function __construct(
+        private string $name,
+        private string $tableName,
+        private ?string $schemaName = null,
+    ) {}
 
     /**
      * @return int|null the $characterMaximumLength
@@ -64,9 +52,9 @@ class ColumnObject
     }
 
     /**
-     * @return null|string the $columnDefault
+     * @return string|int|bool|null the $columnDefault
      */
-    public function getColumnDefault(): ?string
+    public function getColumnDefault(): string|int|bool|null
     {
         return $this->columnDefault;
     }
@@ -89,7 +77,7 @@ class ColumnObject
     }
 
     /**
-     * @return array the $errata
+     * @return array<string, mixed> the $errata
      */
     public function getErratas(): array
     {
@@ -192,11 +180,12 @@ class ColumnObject
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $erratas
+     */
     public function setErratas(array $erratas): static
     {
-        foreach ($erratas as $name => $value) {
-            $this->setErrata($name, $value);
-        }
+        $this->errata = [...$this->errata, ...$erratas];
 
         return $this;
     }

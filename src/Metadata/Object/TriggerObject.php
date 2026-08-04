@@ -6,37 +6,40 @@ namespace PhpDb\Metadata\Object;
 
 use DateTime;
 
-class TriggerObject
+/**
+ * @mago-expect lint:too-many-properties
+ */
+final class TriggerObject
 {
-    protected ?string $name = null;
+    private ?string $name = null;
 
-    protected ?string $eventManipulation = null;
+    private ?string $eventManipulation = null;
 
-    protected ?string $eventObjectCatalog = null;
+    private ?string $eventObjectCatalog = null;
 
-    protected ?string $eventObjectSchema = null;
+    private ?string $eventObjectSchema = null;
 
-    protected ?string $eventObjectTable = null;
+    private ?string $eventObjectTable = null;
 
-    protected ?string $actionOrder = null;
+    private ?string $actionOrder = null;
 
-    protected ?string $actionCondition = null;
+    private ?string $actionCondition = null;
 
-    protected ?string $actionStatement = null;
+    private ?string $actionStatement = null;
 
-    protected ?string $actionOrientation = null;
+    private ?string $actionOrientation = null;
 
-    protected ?string $actionTiming = null;
+    private ?string $actionTiming = null;
 
-    protected ?string $actionReferenceOldTable = null;
+    private ?string $actionReferenceOldTable = null;
 
-    protected ?string $actionReferenceNewTable = null;
+    private ?string $actionReferenceNewTable = null;
 
-    protected ?string $actionReferenceOldRow = null;
+    private ?string $actionReferenceOldRow = null;
 
-    protected ?string $actionReferenceNewRow = null;
+    private ?string $actionReferenceNewRow = null;
 
-    protected ?DateTime $created = null;
+    private ?DateTime $created = null;
 
     /**
      * Get Action Condition.

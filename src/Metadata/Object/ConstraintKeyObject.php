@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\Metadata\Object;
 
-class ConstraintKeyObject
+final class ConstraintKeyObject
 {
     final public const FK_CASCADE = 'CASCADE';
 
@@ -16,25 +16,25 @@ class ConstraintKeyObject
 
     final public const FK_SET_DEFAULT = 'SET DEFAULT';
 
-    protected ?int $ordinalPosition = null;
+    private ?int $ordinalPosition = null;
 
-    protected ?bool $positionInUniqueConstraint = null;
+    private ?bool $positionInUniqueConstraint = null;
 
-    protected ?string $referencedTableSchema = null;
+    private ?string $referencedTableSchema = null;
 
-    protected ?string $referencedTableName = null;
+    private ?string $referencedTableName = null;
 
-    protected ?string $referencedColumnName = null;
+    private ?string $referencedColumnName = null;
 
-    protected ?string $foreignKeyUpdateRule = null;
+    private ?string $foreignKeyUpdateRule = null;
 
-    protected ?string $foreignKeyDeleteRule = null;
+    private ?string $foreignKeyDeleteRule = null;
 
     /**
      * Constructor
      */
     public function __construct(
-        protected string $columnName,
+        private string $columnName,
     ) {}
 
     /**
