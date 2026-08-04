@@ -18,21 +18,6 @@ final class AbstractConstraintTest extends TestCase
 {
     protected MockObject $ac;
 
-    /**
-     * @throws Exception
-     */
-    #[Override]
-    protected function setUp(): void
-    {
-        $this->ac = $this->getMockBuilder(AbstractConstraint::class)->onlyMethods([])->getMock();
-    }
-
-    public function testSetColumns(): void
-    {
-        self::assertSame($this->ac, $this->ac->setColumns(['foo', 'bar']));
-        self::assertEquals(['foo', 'bar'], $this->ac->getColumns());
-    }
-
     public function testAddColumn(): void
     {
         self::assertSame($this->ac, $this->ac->addColumn('foo'));
@@ -43,5 +28,20 @@ final class AbstractConstraintTest extends TestCase
     {
         $this->ac->setColumns(['foo', 'bar']);
         self::assertEquals(['foo', 'bar'], $this->ac->getColumns());
+    }
+
+    public function testSetColumns(): void
+    {
+        self::assertSame($this->ac, $this->ac->setColumns(['foo', 'bar']));
+        self::assertEquals(['foo', 'bar'], $this->ac->getColumns());
+    }
+
+    /**
+     * @throws Exception
+     */
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->ac = $this->getMockBuilder(AbstractConstraint::class)->onlyMethods([])->getMock();
     }
 }

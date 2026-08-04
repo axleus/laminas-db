@@ -63,34 +63,6 @@ class CreateTable extends AbstractSql
         $this->setTemporary($isTemporary);
     }
 
-    public function ifNotExists(bool $ifNotExists = true): static
-    {
-        $this->ifNotExists = $ifNotExists;
-        return $this;
-    }
-
-    public function getIfNotExists(): bool
-    {
-        return $this->ifNotExists;
-    }
-
-    public function setTemporary(string|int|bool $temporary): static
-    {
-        $this->isTemporary = (bool) $temporary;
-        return $this;
-    }
-
-    public function isTemporary(): bool
-    {
-        return $this->isTemporary;
-    }
-
-    public function setTable(string $name): static
-    {
-        $this->table = $name;
-        return $this;
-    }
-
     public function addColumn(Column\ColumnInterface $column): static
     {
         $this->columns[] = $column;
@@ -103,16 +75,9 @@ class CreateTable extends AbstractSql
         return $this;
     }
 
-    public function setOption(string $name, Literal|bool|int|string $value): static
+    public function getIfNotExists(): bool
     {
-        $this->options[$name] = $value;
-        return $this;
-    }
-
-    public function setOptions(array $options): static
-    {
-        $this->options = $options;
-        return $this;
+        return $this->ifNotExists;
     }
 
     public function getOptions(): array
@@ -136,16 +101,39 @@ class CreateTable extends AbstractSql
         return isset($key) && array_key_exists($key, $rawState) ? $rawState[$key] : $rawState;
     }
 
-    /**
-     * @return string[]
-     */
-    protected function processTable(?PlatformInterface $adapterPlatform = null): array
+    public function ifNotExists(bool $ifNotExists = true): static
     {
-        return [
-            $this->isTemporary ? 'TEMPORARY ' : '',
-            $this->ifNotExists ? 'IF NOT EXISTS ' : '',
-            $this->resolveTable($this->table, $adapterPlatform),
-        ];
+        $this->ifNotExists = $ifNotExists;
+        return $this;
+    }
+
+    public function isTemporary(): bool
+    {
+        return $this->isTemporary;
+    }
+
+    public function setOption(string $name, Literal|bool|int|string $value): static
+    {
+        $this->options[$name] = $value;
+        return $this;
+    }
+
+    public function setOptions(array $options): static
+    {
+        $this->options = $options;
+        return $this;
+    }
+
+    public function setTable(string $name): static
+    {
+        $this->table = $name;
+        return $this;
+    }
+
+    public function setTemporary(string|int|bool $temporary): static
+    {
+        $this->isTemporary = (bool) $temporary;
+        return $this;
     }
 
     /**
@@ -166,7 +154,7 @@ class CreateTable extends AbstractSql
         return [$sqls];
     }
 
-    protected function processCombinedby(?PlatformInterface $adapterPlatform = null): string|null
+    protected function processCombinedby(?PlatformInterface $adapterPlatform = null): ?string
     {
         if ($this->constraints && $this->columns) {
             return $this->specifications['combinedBy'];
@@ -202,6 +190,18 @@ class CreateTable extends AbstractSql
     }
 
     /**
+     * @return string[]
+     */
+    protected function processTable(?PlatformInterface $adapterPlatform = null): array
+    {
+        return [
+            $this->isTemporary ? 'TEMPORARY ' : '',
+            $this->ifNotExists ? 'IF NOT EXISTS ' : '',
+            $this->resolveTable($this->table, $adapterPlatform),
+        ];
+    }
+
+    /**
      * @return string[]|null
      */
     protected function processTableOptions(?PlatformInterface $adapterPlatform = null): ?array
@@ -222,7 +222,7 @@ class CreateTable extends AbstractSql
             } else {
                 $value = $adapterPlatform->quoteTrustedValue($value);
             }
-            $parts[] = $key . ' = ' . $value;
+            $parts[] = "{$key} = {$value}";
         }
 
         return [implode(' ', $parts)];

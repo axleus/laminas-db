@@ -14,14 +14,14 @@ final class ContainerException extends SplRuntimeException implements ContainerE
     public static function forService(
         string $serviceName,
         string $factoryClass,
-        string $reason
+        string $reason,
     ): self {
         return new self(
             sprintf(
                 'Failed to create service "%s" in factory %s Reason: %s',
                 $serviceName,
                 $factoryClass,
-                $reason
+                $reason,
             ),
             0,
         );

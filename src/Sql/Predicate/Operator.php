@@ -40,96 +40,29 @@ class Operator extends AbstractExpression implements PredicateInterface
 
     final public const OP_GTE = '>=';
 
-    protected ?ArgumentInterface $left  = null;
-    protected ?ArgumentInterface $right = null;
-    protected string $operator          = self::OPERATOR_EQUAL_TO;
+    protected ?ArgumentInterface $left     = null;
+    protected ?ArgumentInterface $right    = null;
+    protected string             $operator = self::OPERATOR_EQUAL_TO;
 
     /**
      * Constructor
      */
     public function __construct(
-        null|string|ArgumentInterface|ExpressionInterface|SqlInterface $left = null,
+        string|ArgumentInterface|ExpressionInterface|SqlInterface|null $left = null,
         string $operator = self::OPERATOR_EQUAL_TO,
-        null|bool|string|int|float|ArgumentInterface|ExpressionInterface|SqlInterface $right = null
+        bool|string|int|float|ArgumentInterface|ExpressionInterface|SqlInterface|null $right = null,
     ) {
-        if ($left !== null) {
+        if (null !== $left) {
             $this->setLeft($left);
         }
 
-        if ($operator !== self::OPERATOR_EQUAL_TO) {
+        if (self::OPERATOR_EQUAL_TO !== $operator) {
             $this->setOperator($operator);
         }
 
-        if ($right !== null) {
+        if (null !== $right) {
             $this->setRight($right);
         }
-    }
-
-    /**
-     * Get left side of operator
-     */
-    public function getLeft(): ?ArgumentInterface
-    {
-        return $this->left;
-    }
-
-    /**
-     * Set left side of operator
-     */
-    public function setLeft(string|ArgumentInterface|ExpressionInterface|SqlInterface $left): static
-    {
-        if ($left instanceof ArgumentInterface) {
-            $this->left = $left;
-        } elseif ($left instanceof ExpressionInterface || $left instanceof SqlInterface) {
-            $this->left = new Select($left);
-        } else {
-            $this->left = new Identifier($left);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Get operator string
-     */
-    public function getOperator(): string
-    {
-        return $this->operator;
-    }
-
-    /**
-     * Set operator string
-     */
-    public function setOperator(string $operator): static
-    {
-        $this->operator = $operator;
-
-        return $this;
-    }
-
-    /**
-     * Get right side of operator
-     */
-    public function getRight(): ?ArgumentInterface
-    {
-        return $this->right;
-    }
-
-    /**
-     * Set right side of operator
-     */
-    public function setRight(
-        null|bool|string|int|float|ArgumentInterface|ExpressionInterface|SqlInterface $right
-    ): static {
-        if ($right instanceof ArgumentInterface) {
-            $this->right = $right;
-        } elseif ($right instanceof ExpressionInterface || $right instanceof SqlInterface) {
-            $this->right = new Select($right);
-        } else {
-            $this->right = new Value($right);
-        }
-
-        return $this;
     }
 
     /** @inheritDoc */
@@ -151,5 +84,72 @@ class Operator extends AbstractExpression implements PredicateInterface
             'spec'   => $this->specification ?? "{$leftSpec} {$this->operator} {$rightSpec}",
             'values' => [$this->left, $this->right],
         ];
+    }
+
+    /**
+     * Get left side of operator
+     */
+    public function getLeft(): ?ArgumentInterface
+    {
+        return $this->left;
+    }
+
+    /**
+     * Get operator string
+     */
+    public function getOperator(): string
+    {
+        return $this->operator;
+    }
+
+    /**
+     * Get right side of operator
+     */
+    public function getRight(): ?ArgumentInterface
+    {
+        return $this->right;
+    }
+
+    /**
+     * Set left side of operator
+     */
+    public function setLeft(string|ArgumentInterface|ExpressionInterface|SqlInterface $left): static
+    {
+        if ($left instanceof ArgumentInterface) {
+            $this->left = $left;
+        } elseif ($left instanceof ExpressionInterface || $left instanceof SqlInterface) {
+            $this->left = new Select($left);
+        } else {
+            $this->left = new Identifier($left);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set operator string
+     */
+    public function setOperator(string $operator): static
+    {
+        $this->operator = $operator;
+
+        return $this;
+    }
+
+    /**
+     * Set right side of operator
+     */
+    public function setRight(
+        bool|string|int|float|ArgumentInterface|ExpressionInterface|SqlInterface|null $right,
+    ): static {
+        if ($right instanceof ArgumentInterface) {
+            $this->right = $right;
+        } elseif ($right instanceof ExpressionInterface || $right instanceof SqlInterface) {
+            $this->right = new Select($right);
+        } else {
+            $this->right = new Value($right);
+        }
+
+        return $this;
     }
 }

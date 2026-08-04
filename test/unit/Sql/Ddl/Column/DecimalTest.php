@@ -19,20 +19,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversMethod(AbstractPrecisionColumn::class, 'getLengthExpression')]
 final class DecimalTest extends TestCase
 {
-    public function testGetExpressionData(): void
-    {
-        $column = new Decimal('foo', 10, 5);
-
-        $expressionData = $column->getExpressionData();
-
-        self::assertEquals('%s %s(%s) NOT NULL', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('foo'),
-            Argument::literal('DECIMAL'),
-            Argument::literal('10,5'),
-        ], $expressionData['values']);
-    }
-
     public function testConstructorSetsDigitsAndDecimal(): void
     {
         $column = new Decimal('price', 10, 2);
@@ -41,22 +27,21 @@ final class DecimalTest extends TestCase
         self::assertEquals(2, $column->getDecimal());
     }
 
-    public function testSetDigitsAndGetDigits(): void
+    public function testGetExpressionData(): void
     {
-        $column = new Decimal('amount');
-        $result = $column->setDigits(15);
+        $column = new Decimal('foo', 10, 5);
 
-        self::assertSame($column, $result); // Fluent interface
-        self::assertEquals(15, $column->getDigits());
-    }
+        $expressionData = $column->getExpressionData();
 
-    public function testSetDecimalAndGetDecimal(): void
-    {
-        $column = new Decimal('value');
-        $result = $column->setDecimal(4);
-
-        self::assertSame($column, $result); // Fluent interface
-        self::assertEquals(4, $column->getDecimal());
+        self::assertEquals('%s %s(%s) NOT NULL', $expressionData['spec']);
+        self::assertEquals(
+            [
+                Argument::identifier('foo'),
+                Argument::literal('DECIMAL'),
+                Argument::literal('10,5'),
+            ],
+            $expressionData['values'],
+        );
     }
 
     public function testGetExpressionDataWithNullDecimal(): void
@@ -79,5 +64,23 @@ final class DecimalTest extends TestCase
     {
         $column = new Decimal('test');
         self::assertInstanceOf(AbstractPrecisionColumn::class, $column);
+    }
+
+    public function testSetDecimalAndGetDecimal(): void
+    {
+        $column = new Decimal('value');
+        $result = $column->setDecimal(4);
+
+        self::assertSame($column, $result); // Fluent interface
+        self::assertEquals(4, $column->getDecimal());
+    }
+
+    public function testSetDigitsAndGetDigits(): void
+    {
+        $column = new Decimal('amount');
+        $result = $column->setDigits(15);
+
+        self::assertSame($column, $result); // Fluent interface
+        self::assertEquals(15, $column->getDigits());
     }
 }

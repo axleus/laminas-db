@@ -16,13 +16,9 @@ class StatementContainer implements StatementContainerInterface
         $this->parameterContainer = $parameterContainer;
     }
 
-    /**
-     * @param string $sql
-     */
-    public function setSql($sql): StatementContainerInterface
+    public function getParameterContainer(): ?ParameterContainer
     {
-        $this->sql = $sql;
-        return $this;
+        return $this->parameterContainer;
     }
 
     public function getSql(): ?string
@@ -36,8 +32,12 @@ class StatementContainer implements StatementContainerInterface
         return $this;
     }
 
-    public function getParameterContainer(): ?ParameterContainer
+    /**
+     * @param string $sql
+     */
+    public function setSql($sql): StatementContainerInterface
     {
-        return $this->parameterContainer;
+        $this->sql = $sql;
+        return $this;
     }
 }

@@ -33,9 +33,9 @@ class ConstraintKeyObject
     /**
      * Constructor
      */
-    public function __construct(protected string $columnName)
-    {
-    }
+    public function __construct(
+        protected string $columnName,
+    ) {}
 
     /**
      * Get column name
@@ -43,6 +43,62 @@ class ConstraintKeyObject
     public function getColumnName(): string
     {
         return $this->columnName;
+    }
+
+    /**
+     * get foreign key delete rule
+     */
+    public function getForeignKeyDeleteRule(): ?string
+    {
+        return $this->foreignKeyDeleteRule;
+    }
+
+    /**
+     * Get foreign key update rule
+     */
+    public function getForeignKeyUpdateRule(): ?string
+    {
+        return $this->foreignKeyUpdateRule;
+    }
+
+    /**
+     * Get ordinal position
+     */
+    public function getOrdinalPosition(): ?int
+    {
+        return $this->ordinalPosition;
+    }
+
+    /**
+     * Get position in unique constraint
+     */
+    public function getPositionInUniqueConstraint(): ?bool
+    {
+        return $this->positionInUniqueConstraint;
+    }
+
+    /**
+     * Get referenced column name
+     */
+    public function getReferencedColumnName(): ?string
+    {
+        return $this->referencedColumnName;
+    }
+
+    /**
+     * Get referenced table name
+     */
+    public function getReferencedTableName(): ?string
+    {
+        return $this->referencedTableName;
+    }
+
+    /**
+     * Get referenced table schema
+     */
+    public function getReferencedTableSchema(): ?string
+    {
+        return $this->referencedTableSchema;
     }
 
     /**
@@ -55,11 +111,19 @@ class ConstraintKeyObject
     }
 
     /**
-     * Get ordinal position
+     * Set foreign key delete rule
      */
-    public function getOrdinalPosition(): ?int
+    public function setForeignKeyDeleteRule(string $foreignKeyDeleteRule): void
     {
-        return $this->ordinalPosition;
+        $this->foreignKeyDeleteRule = $foreignKeyDeleteRule;
+    }
+
+    /**
+     * set foreign key update rule
+     */
+    public function setForeignKeyUpdateRule(string $foreignKeyUpdateRule): void
+    {
+        $this->foreignKeyUpdateRule = $foreignKeyUpdateRule;
     }
 
     /**
@@ -72,62 +136,12 @@ class ConstraintKeyObject
     }
 
     /**
-     * Get position in unique constraint
-     */
-    public function getPositionInUniqueConstraint(): ?bool
-    {
-        return $this->positionInUniqueConstraint;
-    }
-
-    /**
      * Set position in unique constraint
      */
     public function setPositionInUniqueConstraint(bool $positionInUniqueConstraint): static
     {
         $this->positionInUniqueConstraint = $positionInUniqueConstraint;
         return $this;
-    }
-
-    /**
-     * Get referenced table schema
-     */
-    public function getReferencedTableSchema(): ?string
-    {
-        return $this->referencedTableSchema;
-    }
-
-    /**
-     * Set referenced table schema
-     */
-    public function setReferencedTableSchema(string $referencedTableSchema): static
-    {
-        $this->referencedTableSchema = $referencedTableSchema;
-        return $this;
-    }
-
-    /**
-     * Get referenced table name
-     */
-    public function getReferencedTableName(): ?string
-    {
-        return $this->referencedTableName;
-    }
-
-    /**
-     * Set Referenced table name
-     */
-    public function setReferencedTableName(string $referencedTableName): static
-    {
-        $this->referencedTableName = $referencedTableName;
-        return $this;
-    }
-
-    /**
-     * Get referenced column name
-     */
-    public function getReferencedColumnName(): ?string
-    {
-        return $this->referencedColumnName;
     }
 
     /**
@@ -140,34 +154,20 @@ class ConstraintKeyObject
     }
 
     /**
-     * set foreign key update rule
+     * Set Referenced table name
      */
-    public function setForeignKeyUpdateRule(string $foreignKeyUpdateRule): void
+    public function setReferencedTableName(string $referencedTableName): static
     {
-        $this->foreignKeyUpdateRule = $foreignKeyUpdateRule;
+        $this->referencedTableName = $referencedTableName;
+        return $this;
     }
 
     /**
-     * Get foreign key update rule
+     * Set referenced table schema
      */
-    public function getForeignKeyUpdateRule(): ?string
+    public function setReferencedTableSchema(string $referencedTableSchema): static
     {
-        return $this->foreignKeyUpdateRule;
-    }
-
-    /**
-     * Set foreign key delete rule
-     */
-    public function setForeignKeyDeleteRule(string $foreignKeyDeleteRule): void
-    {
-        $this->foreignKeyDeleteRule = $foreignKeyDeleteRule;
-    }
-
-    /**
-     * get foreign key delete rule
-     */
-    public function getForeignKeyDeleteRule(): ?string
-    {
-        return $this->foreignKeyDeleteRule;
+        $this->referencedTableSchema = $referencedTableSchema;
+        return $this;
     }
 }

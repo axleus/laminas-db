@@ -8,13 +8,6 @@ final class ConfigProvider
 {
     public const NAMED_ADAPTER_KEY = 'adapters';
 
-    public function __invoke(): array
-    {
-        return [
-            'dependencies' => $this->getDependencies(),
-        ];
-    }
-
     public function getDependencies(): array
     {
         return [
@@ -27,6 +20,13 @@ final class ConfigProvider
             'factories'          => [
                 Adapter\Adapter::class => Container\AdapterInterfaceFactory::class,
             ],
+        ];
+    }
+
+    public function __invoke(): array
+    {
+        return [
+            'dependencies' => $this->getDependencies(),
         ];
     }
 }

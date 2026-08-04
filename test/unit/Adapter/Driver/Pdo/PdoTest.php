@@ -37,41 +37,6 @@ final class PdoTest extends TestCase
 {
     protected TestPdo $pdo;
 
-    /**
-     * Sets up the fixture, for example, opens a network connection.
-     * This method is called before a test is executed.
-     */
-    #[Override]
-    protected function setUp(): void
-    {
-        $this->pdo = new TestPdo([]);
-    }
-
-    /** @psalm-return array<array-key, array{0: int|string, 1: null|string, 2: string}> */
-    public static function getParamsAndType(): array
-    {
-        return [
-            ['foo', null, ':foo'],
-            ['foo_bar', null, ':foo_bar'],
-            ['123foo', null, ':123foo'],
-            [1, null, '?'],
-            ['1', null, '?'],
-            ['foo', DriverInterface::PARAMETERIZATION_NAMED, ':foo'],
-            ['foo_bar', DriverInterface::PARAMETERIZATION_NAMED, ':foo_bar'],
-            ['123foo', DriverInterface::PARAMETERIZATION_NAMED, ':123foo'],
-            [1, DriverInterface::PARAMETERIZATION_NAMED, ':1'],
-            ['1', DriverInterface::PARAMETERIZATION_NAMED, ':1'],
-            [':foo', null, ':foo'],
-        ];
-    }
-
-    #[DataProvider('getParamsAndType')]
-    public function testFormatParameterNameFormatsCorrectly(int|string $name, ?string $type, string $expected): void
-    {
-        $result = $this->pdo->formatParameterName($name, $type);
-        $this->assertEquals($expected, $result);
-    }
-
     /** @psalm-return array<array-key, array{0: string}> */
     public static function getInvalidParamName(): array
     {
@@ -83,18 +48,37 @@ final class PdoTest extends TestCase
         ];
     }
 
-    #[DataProvider('getInvalidParamName')]
-    public function testFormatParameterNameWithInvalidCharacters(string $name): void
+    /** @psalm-return array<array-key, array{0: int|string, 1: null|string, 2: string}> */
+    public static function getParamsAndType(): array
     {
-        $this->expectException(RuntimeException::class);
-        $this->pdo->formatParameterName($name);
+        return [
+            ['foo',     null,                                    ':foo'],
+            ['foo_bar', null,                                    ':foo_bar'],
+            ['123foo',  null,                                    ':123foo'],
+            [1,         null,                                    '?'],
+            ['1',       null,                                    '?'],
+            ['foo',     DriverInterface::PARAMETERIZATION_NAMED, ':foo'],
+            ['foo_bar', DriverInterface::PARAMETERIZATION_NAMED, ':foo_bar'],
+            ['123foo',  DriverInterface::PARAMETERIZATION_NAMED, ':123foo'],
+            [1,         DriverInterface::PARAMETERIZATION_NAMED, ':1'],
+            ['1',       DriverInterface::PARAMETERIZATION_NAMED, ':1'],
+            [':foo',    null,                                    ':foo'],
+        ];
     }
 
-    public function testGetResultPrototypeReturnsResult(): void
+    public function testCheckEnvironmentReturnsTrue(): void
     {
-        $resultPrototype = $this->pdo->getResultPrototype();
+        self::assertTrue($this->pdo->checkEnvironment());
+    }
 
-        self::assertInstanceOf(Result::class, $resultPrototype);
+    public function testConstructorAddsFeaturesWhenDriverSupportsFeatures(): void
+    {
+        $feature    = $this->createMock(DriverFeatureInterface::class);
+        $connection = new TestConnection(new SqliteMemoryPdo());
+
+        $pdo = new TestPdoWithFeatures($connection, features: [$feature]);
+
+        self::assertSame($feature, $pdo->getFeature($feature::class));
     }
 
     public function testConstructorSetsDriverOnConnection(): void
@@ -105,16 +89,26 @@ final class PdoTest extends TestCase
         self::assertSame($connection, $pdo->getConnection());
     }
 
-    public function testCheckEnvironmentReturnsTrue(): void
+    public function testCreateStatementWithNullConnectsAndInitializes(): void
     {
-        self::assertTrue($this->pdo->checkEnvironment());
+        $connection = new TestConnection(['dsn' => 'sqlite::memory:']);
+        $pdo        = new TestPdo($connection);
+
+        $statement = $pdo->createStatement();
+
+        self::assertInstanceOf(Statement::class, $statement);
     }
 
-    public function testGetConnectionReturnsConnectionInstance(): void
+    public function testCreateStatementWithPdoStatementResource(): void
     {
-        $connection = $this->pdo->getConnection();
+        $connection = new TestConnection(new SqliteMemoryPdo());
+        $pdo        = new TestPdo($connection);
 
-        self::assertInstanceOf(TestConnection::class, $connection);
+        $pdoStmt   = $this->createMock(PDOStatement::class);
+        $statement = $pdo->createStatement($pdoStmt);
+
+        self::assertInstanceOf(Statement::class, $statement);
+        self::assertSame($pdoStmt, $statement->getResource());
     }
 
     public function testCreateStatementWithSqlString(): void
@@ -128,19 +122,30 @@ final class PdoTest extends TestCase
         self::assertSame('SELECT 1', $statement->getSql());
     }
 
-    public function testCreateStatementWithNullConnectsAndInitializes(): void
+    #[DataProvider('getParamsAndType')]
+    public function testFormatParameterNameFormatsCorrectly(int|string $name, ?string $type, string $expected): void
     {
-        $connection = new TestConnection(['dsn' => 'sqlite::memory:']);
-        $pdo        = new TestPdo($connection);
-
-        $statement = $pdo->createStatement();
-
-        self::assertInstanceOf(Statement::class, $statement);
+        $result = $this->pdo->formatParameterName($name, $type);
+        $this->assertEquals($expected, $result);
     }
 
-    public function testGetPrepareTypeReturnsNamed(): void
+    public function testFormatParameterNameReturnsQuestionMarkForNumericWithoutType(): void
     {
-        self::assertSame(DriverInterface::PARAMETERIZATION_NAMED, $this->pdo->getPrepareType());
+        self::assertSame('?', $this->pdo->formatParameterName(42));
+    }
+
+    #[DataProvider('getInvalidParamName')]
+    public function testFormatParameterNameWithInvalidCharacters(string $name): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->pdo->formatParameterName($name);
+    }
+
+    public function testGetConnectionReturnsConnectionInstance(): void
+    {
+        $connection = $this->pdo->getConnection();
+
+        self::assertInstanceOf(TestConnection::class, $connection);
     }
 
     public function testGetLastGeneratedValueDelegatesToConnection(): void
@@ -151,6 +156,36 @@ final class PdoTest extends TestCase
         $value = $pdo->getLastGeneratedValue();
 
         self::assertSame('0', $value);
+    }
+
+    public function testGetPrepareTypeReturnsNamed(): void
+    {
+        self::assertSame(DriverInterface::PARAMETERIZATION_NAMED, $this->pdo->getPrepareType());
+    }
+
+    public function testGetProfilerReturnsSetProfiler(): void
+    {
+        $profiler = $this->createMock(ProfilerInterface::class);
+
+        $this->pdo->setProfiler($profiler);
+
+        self::assertSame($profiler, $this->pdo->getProfiler());
+    }
+
+    public function testGetProfilerThrowsWhenNotInitialized(): void
+    {
+        $pdo = new TestPdo([]);
+
+        $this->expectException(Error::class);
+
+        $unused = $pdo->getProfiler();
+    }
+
+    public function testGetResultPrototypeReturnsResult(): void
+    {
+        $resultPrototype = $this->pdo->getResultPrototype();
+
+        self::assertInstanceOf(Result::class, $resultPrototype);
     }
 
     public function testSetProfilerPropagatesProfilerToConnectionAndStatement(): void
@@ -167,48 +202,13 @@ final class PdoTest extends TestCase
         self::assertSame($profiler, $statement->getProfiler());
     }
 
-    public function testGetProfilerThrowsWhenNotInitialized(): void
+    /**
+     * Sets up the fixture, for example, opens a network connection.
+     * This method is called before a test is executed.
+     */
+    #[Override]
+    protected function setUp(): void
     {
-        $pdo = new TestPdo([]);
-
-        $this->expectException(Error::class);
-
-        $unused = $pdo->getProfiler();
-    }
-
-    public function testGetProfilerReturnsSetProfiler(): void
-    {
-        $profiler = $this->createMock(ProfilerInterface::class);
-
-        $this->pdo->setProfiler($profiler);
-
-        self::assertSame($profiler, $this->pdo->getProfiler());
-    }
-
-    public function testConstructorAddsFeaturesWhenDriverSupportsFeatures(): void
-    {
-        $feature    = $this->createMock(DriverFeatureInterface::class);
-        $connection = new TestConnection(new SqliteMemoryPdo());
-
-        $pdo = new TestPdoWithFeatures($connection, features: [$feature]);
-
-        self::assertSame($feature, $pdo->getFeature($feature::class));
-    }
-
-    public function testCreateStatementWithPdoStatementResource(): void
-    {
-        $connection = new TestConnection(new SqliteMemoryPdo());
-        $pdo        = new TestPdo($connection);
-
-        $pdoStmt   = $this->createMock(PDOStatement::class);
-        $statement = $pdo->createStatement($pdoStmt);
-
-        self::assertInstanceOf(Statement::class, $statement);
-        self::assertSame($pdoStmt, $statement->getResource());
-    }
-
-    public function testFormatParameterNameReturnsQuestionMarkForNumericWithoutType(): void
-    {
-        self::assertSame('?', $this->pdo->formatParameterName(42));
+        $this->pdo = new TestPdo([]);
     }
 }

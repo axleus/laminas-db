@@ -22,7 +22,7 @@ class Replace extends Insert
     protected function processreplace(
         PlatformInterface $platform,
         ?DriverInterface $driver = null,
-        ?ParameterContainer $parameterContainer = null
+        ?ParameterContainer $parameterContainer = null,
     ): ?string {
         return parent::processInsert($platform, $driver, $parameterContainer);
     }

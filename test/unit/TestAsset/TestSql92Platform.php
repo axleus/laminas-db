@@ -11,7 +11,6 @@ class TestSql92Platform extends Sql92
 {
     public function __construct(
         protected ?DriverInterface $driver = null,
-        protected bool $quoteIdentifiers = true
-    ) {
-    }
+        protected bool $quoteIdentifiers = true,
+    ) {}
 }

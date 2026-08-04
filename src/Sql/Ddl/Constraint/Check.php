@@ -28,17 +28,18 @@ class Check extends AbstractConstraint
     }
 
     /** @inheritDoc */
-    #[Override] public function getExpressionData(): array
+    #[Override]
+    public function getExpressionData(): array
     {
         $specParts = [];
         $values    = [];
 
-        if ($this->name !== '') {
+        if ('' !== $this->name) {
             $specParts[] = $this->namedSpecification;
             $values[]    = new Identifier($this->name);
         }
 
-        if ($this->expression !== '') {
+        if ('' !== $this->expression) {
             $specParts[] = $this->specification;
             $values[]    = new Literal($this->expression);
         }

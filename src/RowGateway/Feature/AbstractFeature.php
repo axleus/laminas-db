@@ -14,14 +14,15 @@ abstract class AbstractFeature extends AbstractRowGateway implements FeatureInte
 
     protected array $sharedData = [];
 
+    /** @return array<string, string[]> */
+    public function getMagicMethodSpecifications(): array
+    {
+        return [];
+    }
+
     public function getName(): string
     {
         return static::class;
-    }
-
-    public function setRowGateway(AbstractRowGateway $rowGateway): void
-    {
-        $this->rowGateway = $rowGateway;
     }
 
     /**
@@ -32,9 +33,8 @@ abstract class AbstractFeature extends AbstractRowGateway implements FeatureInte
         throw new Exception\RuntimeException('This method is not intended to be called on this object.');
     }
 
-    /** @return array<string, string[]> */
-    public function getMagicMethodSpecifications(): array
+    public function setRowGateway(AbstractRowGateway $rowGateway): void
     {
-        return [];
+        $this->rowGateway = $rowGateway;
     }
 }

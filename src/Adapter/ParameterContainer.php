@@ -65,9 +65,89 @@ class ParameterContainer implements Iterator, ArrayAccess, Countable
      */
     public function __construct(array $data = [])
     {
-        if ($data !== []) {
+        if ([] !== $data) {
             $this->setFromArray($data);
         }
+    }
+
+    /**
+     * count
+     */
+    #[Override]
+    #[ReturnTypeWillChange]
+    public function count(): int
+    {
+        return count($this->data);
+    }
+
+    /**
+     * Current
+     */
+    #[Override]
+    #[ReturnTypeWillChange]
+    public function current(): mixed
+    {
+        return current($this->data);
+    }
+
+    /**
+     * Get errata iterator
+     *
+     * @return ArrayIterator<string, mixed>
+     */
+    public function getErrataIterator(): ArrayIterator
+    {
+        return new ArrayIterator($this->errata);
+    }
+
+    /**
+     * Get max length iterator
+     *
+     * @return ArrayIterator<string, mixed>
+     */
+    public function getMaxLengthIterator(): ArrayIterator
+    {
+        return new ArrayIterator($this->maxLength);
+    }
+
+    /**
+     * getNamedArray
+     *
+     * @return array<string|int, mixed>
+     */
+    public function getNamedArray(): array
+    {
+        return $this->data;
+    }
+
+    /**
+     * getNamedArray
+     *
+     * @return array<int, mixed>
+     */
+    public function getPositionalArray(): array
+    {
+        return array_values($this->data);
+    }
+
+    /**
+     * Key
+     */
+    #[Override]
+    #[ReturnTypeWillChange]
+    public function key(): int|string|null
+    {
+        return key($this->data);
+    }
+
+    /**
+     * Next
+     */
+    #[Override]
+    #[ReturnTypeWillChange]
+    public function next(): void
+    {
+        next($this->data);
     }
 
     /**
@@ -97,8 +177,7 @@ class ParameterContainer implements Iterator, ArrayAccess, Countable
 
         $normalizedName = ltrim($name, ':');
         if (
-            isset($this->nameMapping[$normalizedName])
-            && isset($this->data[$this->nameMapping[$normalizedName]])
+            isset($this->nameMapping[$normalizedName], $this->data[$this->nameMapping[$normalizedName]])
         ) {
             return $this->data[$this->nameMapping[$normalizedName]];
         }
@@ -106,9 +185,58 @@ class ParameterContainer implements Iterator, ArrayAccess, Countable
         return null;
     }
 
-    public function offsetSetReference(string|int $name, string|int $from): void
+    /**
+     * Offset get errata
+     *
+     * @throws Exception\InvalidArgumentException
+     */
+    public function offsetGetErrata(string|int $name): mixed
     {
-        $this->data[$name] = &$this->data[$from];
+        if (is_int($name)) {
+            $name = $this->positions[$name];
+        }
+        if (! array_key_exists($name, $this->data)) {
+            throw new Exception\InvalidArgumentException('Data does not exist for this name/position');
+        }
+        return $this->errata[$name];
+    }
+
+    /**
+     * Offset get max length
+     *
+     * @throws Exception\InvalidArgumentException
+     */
+    public function offsetGetMaxLength(string|int $name): mixed
+    {
+        if (is_int($name)) {
+            $name = $this->positions[$name];
+        }
+        if (! array_key_exists($name, $this->data)) {
+            throw new Exception\InvalidArgumentException('Data does not exist for this name/position');
+        }
+        return $this->maxLength[$name];
+    }
+
+    /**
+     * Offset has errata
+     */
+    public function offsetHasErrata(string|int $name): bool
+    {
+        if (is_int($name)) {
+            $name = $this->positions[$name];
+        }
+        return isset($this->errata[$name]);
+    }
+
+    /**
+     * Offset has max length
+     */
+    public function offsetHasMaxLength(string|int $name): bool
+    {
+        if (is_int($name)) {
+            $name = $this->positions[$name];
+        }
+        return isset($this->maxLength[$name]);
     }
 
     /**
@@ -131,7 +259,7 @@ class ParameterContainer implements Iterator, ArrayAccess, Countable
                 $name = (string) $name;
             }
         } elseif (is_string($name)) {
-            if ($name[0] === ':') {
+            if (':' === $name[0]) {
                 $normalizedName = substr($name, 1);
                 if (isset($this->nameMapping[$normalizedName])) {
                     $name = $this->nameMapping[$normalizedName];
@@ -142,10 +270,10 @@ class ParameterContainer implements Iterator, ArrayAccess, Countable
 
             $isNewPosition = ! isset($this->data[$name]);
 
-            if (is_string($value) && isset($value[0]) && $value[0] === ':') {
+            if (is_string($value) && isset($value[0]) && ':' === $value[0]) {
                 $this->nameMapping[substr($value, 1)] = $name;
             }
-        } elseif ($name === null) {
+        } elseif (null === $name) {
             $name = (string) count($this->data);
         } else {
             throw new Exception\InvalidArgumentException('Keys must be string, integer or null');
@@ -157,101 +285,13 @@ class ParameterContainer implements Iterator, ArrayAccess, Countable
 
         $this->data[$name] = $value;
 
-        if ($errata !== null) {
+        if (null !== $errata) {
             $this->errata[$name] = $errata;
         }
 
-        if ($maxLength !== null) {
+        if (null !== $maxLength) {
             $this->maxLength[$name] = $maxLength;
         }
-    }
-
-    /**
-     * Offset unset
-     */
-    #[Override]
-    #[ReturnTypeWillChange]
-    public function offsetUnset(mixed $name): void
-    {
-        if (is_int($name) && isset($this->positions[$name])) {
-            $name = $this->positions[$name];
-        }
-        unset($this->data[$name]);
-    }
-
-    /**
-     * Set from array
-     */
-    public function setFromArray(array $data): static
-    {
-        foreach ($data as $n => $v) {
-            $this->offsetSet($n, $v);
-        }
-        return $this;
-    }
-
-    /**
-     * Offset set max length
-     */
-    public function offsetSetMaxLength(string|int $name, mixed $maxLength): void
-    {
-        if (is_int($name)) {
-            $name = $this->positions[$name];
-        }
-        $this->maxLength[$name] = $maxLength;
-    }
-
-    /**
-     * Offset get max length
-     *
-     * @throws Exception\InvalidArgumentException
-     */
-    public function offsetGetMaxLength(string|int $name): mixed
-    {
-        if (is_int($name)) {
-            $name = $this->positions[$name];
-        }
-        if (! array_key_exists($name, $this->data)) {
-            throw new Exception\InvalidArgumentException('Data does not exist for this name/position');
-        }
-        return $this->maxLength[$name];
-    }
-
-    /**
-     * Offset has max length
-     */
-    public function offsetHasMaxLength(string|int $name): bool
-    {
-        if (is_int($name)) {
-            $name = $this->positions[$name];
-        }
-        return isset($this->maxLength[$name]);
-    }
-
-    /**
-     * Offset unset max length
-     *
-     * @throws Exception\InvalidArgumentException
-     */
-    public function offsetUnsetMaxLength(string|int $name): void
-    {
-        if (is_int($name)) {
-            $name = $this->positions[$name];
-        }
-        if (! array_key_exists($name, $this->maxLength)) {
-            throw new Exception\InvalidArgumentException('Data does not exist for this name/position');
-        }
-        $this->maxLength[$name] = null;
-    }
-
-    /**
-     * Get max length iterator
-     *
-     * @return ArrayIterator<string, mixed>
-     */
-    public function getMaxLengthIterator(): ArrayIterator
-    {
-        return new ArrayIterator($this->maxLength);
     }
 
     /**
@@ -266,30 +306,32 @@ class ParameterContainer implements Iterator, ArrayAccess, Countable
     }
 
     /**
-     * Offset get errata
-     *
-     * @throws Exception\InvalidArgumentException
+     * Offset set max length
      */
-    public function offsetGetErrata(string|int $name): mixed
+    public function offsetSetMaxLength(string|int $name, mixed $maxLength): void
     {
         if (is_int($name)) {
             $name = $this->positions[$name];
         }
-        if (! array_key_exists($name, $this->data)) {
-            throw new Exception\InvalidArgumentException('Data does not exist for this name/position');
-        }
-        return $this->errata[$name];
+        $this->maxLength[$name] = $maxLength;
+    }
+
+    public function offsetSetReference(string|int $name, string|int $from): void
+    {
+        $this->data[$name] = &$this->data[$from];
     }
 
     /**
-     * Offset has errata
+     * Offset unset
      */
-    public function offsetHasErrata(string|int $name): bool
+    #[Override]
+    #[ReturnTypeWillChange]
+    public function offsetUnset(mixed $name): void
     {
-        if (is_int($name)) {
+        if (is_int($name) && isset($this->positions[$name])) {
             $name = $this->positions[$name];
         }
-        return isset($this->errata[$name]);
+        unset($this->data[$name]);
     }
 
     /**
@@ -309,83 +351,19 @@ class ParameterContainer implements Iterator, ArrayAccess, Countable
     }
 
     /**
-     * Get errata iterator
+     * Offset unset max length
      *
-     * @return ArrayIterator<string, mixed>
+     * @throws Exception\InvalidArgumentException
      */
-    public function getErrataIterator(): ArrayIterator
+    public function offsetUnsetMaxLength(string|int $name): void
     {
-        return new ArrayIterator($this->errata);
-    }
-
-    /**
-     * getNamedArray
-     *
-     * @return array<string|int, mixed>
-     */
-    public function getNamedArray(): array
-    {
-        return $this->data;
-    }
-
-    /**
-     * getNamedArray
-     *
-     * @return array<int, mixed>
-     */
-    public function getPositionalArray(): array
-    {
-        return array_values($this->data);
-    }
-
-    /**
-     * count
-     */
-    #[Override]
-    #[ReturnTypeWillChange]
-    public function count(): int
-    {
-        return count($this->data);
-    }
-
-    /**
-     * Current
-     */
-    #[Override]
-    #[ReturnTypeWillChange]
-    public function current(): mixed
-    {
-        return current($this->data);
-    }
-
-    /**
-     * Next
-     */
-    #[Override]
-    #[ReturnTypeWillChange]
-    public function next(): void
-    {
-        next($this->data);
-    }
-
-    /**
-     * Key
-     */
-    #[Override]
-    #[ReturnTypeWillChange]
-    public function key(): int|string|null
-    {
-        return key($this->data);
-    }
-
-    /**
-     * Valid
-     */
-    #[Override]
-    #[ReturnTypeWillChange]
-    public function valid(): bool
-    {
-        return current($this->data) !== false;
+        if (is_int($name)) {
+            $name = $this->positions[$name];
+        }
+        if (! array_key_exists($name, $this->maxLength)) {
+            throw new Exception\InvalidArgumentException('Data does not exist for this name/position');
+        }
+        $this->maxLength[$name] = null;
     }
 
     /**
@@ -396,5 +374,26 @@ class ParameterContainer implements Iterator, ArrayAccess, Countable
     public function rewind(): void
     {
         reset($this->data);
+    }
+
+    /**
+     * Set from array
+     */
+    public function setFromArray(array $data): static
+    {
+        foreach ($data as $n => $v) {
+            $this->offsetSet($n, $v);
+        }
+        return $this;
+    }
+
+    /**
+     * Valid
+     */
+    #[Override]
+    #[ReturnTypeWillChange]
+    public function valid(): bool
+    {
+        return current($this->data) !== false;
     }
 }

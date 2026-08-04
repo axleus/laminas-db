@@ -6,12 +6,12 @@ use PhpDb\Adapter\AdapterInterface;
 
 trait AdapterTrait
 {
-    protected ?AdapterInterface $adapter = null;
-    protected ?string $hostname          = 'localhost';
+    protected ?AdapterInterface $adapter  = null;
+    protected ?string           $hostname = 'localhost';
 
     public function getAdapter(): AdapterInterface
     {
-        if ($this->adapter === null) {
+        if (null === $this->adapter) {
             $this->fail('Adapter not initialized');
         }
 

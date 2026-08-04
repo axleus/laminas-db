@@ -16,8 +16,12 @@ use PhpDb\Sql\ArgumentType;
 final readonly class Literal implements ArgumentInterface
 {
     public function __construct(
-        private string $literal
-    ) {
+        private string $literal,
+    ) {}
+
+    public function getSpecification(): string
+    {
+        return '%s';
     }
 
     public function getType(): ArgumentType
@@ -28,10 +32,5 @@ final readonly class Literal implements ArgumentInterface
     public function getValue(): string
     {
         return $this->literal;
-    }
-
-    public function getSpecification(): string
-    {
-        return '%s';
     }
 }

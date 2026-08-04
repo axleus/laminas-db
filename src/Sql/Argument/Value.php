@@ -18,8 +18,12 @@ final readonly class Value implements ArgumentInterface
      * @param null|string|int|float|bool $value Scalar value, or null
      */
     public function __construct(
-        private null|string|int|float|bool $value
-    ) {
+        private string|int|float|bool|null $value,
+    ) {}
+
+    public function getSpecification(): string
+    {
+        return '%s';
     }
 
     public function getType(): ArgumentType
@@ -27,13 +31,8 @@ final readonly class Value implements ArgumentInterface
         return ArgumentType::Value;
     }
 
-    public function getValue(): null|string|int|float|bool
+    public function getValue(): string|int|float|bool|null
     {
         return $this->value;
-    }
-
-    public function getSpecification(): string
-    {
-        return '%s';
     }
 }

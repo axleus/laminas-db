@@ -15,53 +15,8 @@ class HydratingResultSet extends AbstractResultSet
 {
     public function __construct(
         private ?HydratorInterface $hydrator = null,
-        private ?object $rowPrototype = null
-    ) {
-    }
-
-    /**
-     * Set the hydrator to use for each row object
-     */
-    public function setHydrator(HydratorInterface $hydrator): ResultSetInterface
-    {
-        $this->hydrator = $hydrator;
-        return $this;
-    }
-
-    /**
-     * Get the hydrator to use for each row object
-     */
-    public function getHydrator(): HydratorInterface
-    {
-        return $this->hydrator ??= new ArraySerializableHydrator();
-    }
-
-    /** {@inheritDoc} */
-    #[Override]
-    public function setRowPrototype(object $rowPrototype): ResultSetInterface
-    {
-        $this->rowPrototype = $rowPrototype;
-        return $this;
-    }
-
-    /** {@inheritDoc} */
-    #[Override]
-    public function getRowPrototype(): object
-    {
-        return $this->rowPrototype ??= new ArrayObject();
-    }
-
-    /** @deprecated use setRowPrototype() */
-    public function setObjectPrototype(object $objectPrototype): ResultSetInterface
-    {
-        return $this->setRowPrototype($objectPrototype);
-    }
-
-    /** @deprecated use getRowPrototype() */
-    public function getObjectPrototype(): ?object
-    {
-        return $this->getRowPrototype();
-    }
+        private ?object $rowPrototype = null,
+    ) {}
 
     /**
      * Iterator: get current item
@@ -69,7 +24,7 @@ class HydratingResultSet extends AbstractResultSet
     #[Override]
     public function current(): ?object
     {
-        if ($this->buffer === null) {
+        if (null === $this->buffer) {
             $this->buffer = -2; // implicitly disable buffering from here on
         } elseif (is_array($this->buffer) && isset($this->buffer[$this->position])) {
             return $this->buffer[$this->position];
@@ -82,6 +37,50 @@ class HydratingResultSet extends AbstractResultSet
         }
 
         return $current;
+    }
+
+    /**
+     * Get the hydrator to use for each row object
+     */
+    public function getHydrator(): HydratorInterface
+    {
+        return $this->hydrator ??= new ArraySerializableHydrator();
+    }
+
+    /** @deprecated use getRowPrototype() */
+    public function getObjectPrototype(): ?object
+    {
+        return $this->getRowPrototype();
+    }
+
+    /** {@inheritDoc} */
+    #[Override]
+    public function getRowPrototype(): object
+    {
+        return $this->rowPrototype ??= new ArrayObject();
+    }
+
+    /**
+     * Set the hydrator to use for each row object
+     */
+    public function setHydrator(HydratorInterface $hydrator): ResultSetInterface
+    {
+        $this->hydrator = $hydrator;
+        return $this;
+    }
+
+    /** @deprecated use setRowPrototype() */
+    public function setObjectPrototype(object $objectPrototype): ResultSetInterface
+    {
+        return $this->setRowPrototype($objectPrototype);
+    }
+
+    /** {@inheritDoc} */
+    #[Override]
+    public function setRowPrototype(object $rowPrototype): ResultSetInterface
+    {
+        $this->rowPrototype = $rowPrototype;
+        return $this;
     }
 
     /**

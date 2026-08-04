@@ -9,6 +9,14 @@ abstract class AbstractExpression implements ExpressionInterface
     protected ?string $specification = null;
 
     /**
+     * Get specification override, or null if not set
+     */
+    public function getSpecification(): ?string
+    {
+        return $this->specification;
+    }
+
+    /**
      * Set specification string to override the default
      */
     public function setSpecification(string $specification): static
@@ -16,13 +24,5 @@ abstract class AbstractExpression implements ExpressionInterface
         $this->specification = $specification;
 
         return $this;
-    }
-
-    /**
-     * Get specification override, or null if not set
-     */
-    public function getSpecification(): ?string
-    {
-        return $this->specification;
     }
 }

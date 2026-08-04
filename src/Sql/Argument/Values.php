@@ -31,6 +31,14 @@ final readonly class Values implements ArgumentInterface
         $this->values = array_values($values);
     }
 
+    public function getSpecification(): string
+    {
+        $count = count($this->values);
+        return $count > 0
+            ? '(' . implode(', ', array_fill(0, $count, '%s')) . ')'
+            : '(NULL)';
+    }
+
     public function getType(): ArgumentType
     {
         return ArgumentType::Values;
@@ -42,13 +50,5 @@ final readonly class Values implements ArgumentInterface
     public function getValue(): array
     {
         return $this->values;
-    }
-
-    public function getSpecification(): string
-    {
-        $count = count($this->values);
-        return $count > 0
-            ? '(' . implode(', ', array_fill(0, $count, '%s')) . ')'
-            : '(NULL)';
     }
 }

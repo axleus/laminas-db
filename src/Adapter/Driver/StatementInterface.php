@@ -9,6 +9,9 @@ use PhpDb\Adapter\StatementContainerInterface;
 
 interface StatementInterface extends StatementContainerInterface
 {
+    /** Execute */
+    public function execute(ParameterContainer|array|null $parameters = null): ?ResultInterface;
+
     /**
      * Get resource
      *
@@ -16,12 +19,9 @@ interface StatementInterface extends StatementContainerInterface
      */
     public function getResource();
 
-    /** Prepare sql */
-    public function prepare(?string $sql = null): StatementInterface;
-
     /** Check if is prepared */
     public function isPrepared(): bool;
 
-    /** Execute */
-    public function execute(ParameterContainer|array|null $parameters = null): ?ResultInterface;
+    /** Prepare sql */
+    public function prepare(?string $sql = null): self;
 }

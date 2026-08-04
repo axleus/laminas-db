@@ -18,12 +18,6 @@ use PHPUnit\Framework\TestCase;
 #[Group('unit')]
 final class IntegerTest extends TestCase
 {
-    public function testObjectConstruction(): void
-    {
-        $integer = new Integer('foo');
-        self::assertEquals('foo', $integer->getName());
-    }
-
     public function testGetExpressionData(): void
     {
         $column = new Integer('foo');
@@ -31,10 +25,13 @@ final class IntegerTest extends TestCase
         $expressionData = $column->getExpressionData();
 
         self::assertEquals('%s %s NOT NULL', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('foo'),
-            Argument::literal('INTEGER'),
-        ], $expressionData['values']);
+        self::assertEquals(
+            [
+                Argument::identifier('foo'),
+                Argument::literal('INTEGER'),
+            ],
+            $expressionData['values'],
+        );
 
         $column = new Integer('foo');
         $column->addConstraint(new PrimaryKey());
@@ -42,10 +39,22 @@ final class IntegerTest extends TestCase
         $expressionData = $column->getExpressionData();
 
         self::assertEquals('%s %s NOT NULL PRIMARY KEY', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('foo'),
-            Argument::literal('INTEGER'),
-        ], $expressionData['values']);
+        self::assertEquals(
+            [
+                Argument::identifier('foo'),
+                Argument::literal('INTEGER'),
+            ],
+            $expressionData['values'],
+        );
+    }
+
+    public function testGetExpressionDataExcludesLengthWhenNotSet(): void
+    {
+        $column = new Integer('id');
+
+        $expressionData = $column->getExpressionData();
+
+        self::assertStringNotContainsString('(', $expressionData['spec']);
     }
 
     public function testGetExpressionDataIncludesLengthWhenOptionSet(): void
@@ -58,12 +67,9 @@ final class IntegerTest extends TestCase
         self::assertStringContainsString('(11)', $expressionData['spec']);
     }
 
-    public function testGetExpressionDataExcludesLengthWhenNotSet(): void
+    public function testObjectConstruction(): void
     {
-        $column = new Integer('id');
-
-        $expressionData = $column->getExpressionData();
-
-        self::assertStringNotContainsString('(', $expressionData['spec']);
+        $integer = new Integer('foo');
+        self::assertEquals('foo', $integer->getName());
     }
 }

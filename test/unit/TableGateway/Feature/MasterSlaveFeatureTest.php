@@ -25,24 +25,20 @@ final class MasterSlaveFeatureTest extends TestCase
     protected MasterSlaveFeature $feature;
     protected TableGateway&MockObject $table;
 
-    #[Override]
-    protected function setUp(): void
+    /**
+     * @throws Exception
+     */
+    public function testConstructorWithSlaveSql(): void
     {
-        $this->mockMasterAdapter = $this->getMockBuilder(AdapterInterface::class)->onlyMethods([])->getMock();
-        $this->mockSlaveAdapter  = $this->getMockBuilder(AdapterInterface::class)->onlyMethods([])->getMock();
-        $this->mockStatement     = $this->getMockBuilder(StatementInterface::class)->onlyMethods([])->getMock();
+        $slaveSql = new Sql($this->mockSlaveAdapter, 'foo');
+        $feature  = new MasterSlaveFeature($this->mockSlaveAdapter, $slaveSql);
 
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->onlyMethods([])->getMock();
-        $mockDriver->expects($this->any())->method('createStatement')->willReturn(clone $this->mockStatement);
-        $this->mockMasterAdapter->expects($this->any())->method('getDriver')->willReturn($mockDriver);
-        $this->mockMasterAdapter->expects($this->any())->method('getPlatform')->willReturn(new Sql92());
+        self::assertSame($slaveSql, $feature->getSlaveSql());
+    }
 
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->onlyMethods([])->getMock();
-        $mockDriver->expects($this->any())->method('createStatement')->willReturn(clone $this->mockStatement);
-        $this->mockSlaveAdapter->expects($this->any())->method('getDriver')->willReturn($mockDriver);
-        $this->mockSlaveAdapter->expects($this->any())->method('getPlatform')->willReturn(new Sql92());
-
-        $this->feature = new MasterSlaveFeature($this->mockSlaveAdapter);
+    public function testGetSlaveAdapter(): void
+    {
+        self::assertSame($this->mockSlaveAdapter, $this->feature->getSlaveAdapter());
     }
 
     /**
@@ -61,26 +57,18 @@ final class MasterSlaveFeatureTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testPreSelect(): void
+    public function testPostInitializeWithProvidedSlaveSql(): void
     {
-        $this->expectNotToPerformAssertions();
+        $slaveSql = new Sql($this->mockSlaveAdapter, 'foo');
+        $feature  = new MasterSlaveFeature($this->mockSlaveAdapter, $slaveSql);
 
-        $table = $this
-            ->getMockBuilder(TableGateway::class)
-            ->setConstructorArgs(['foo', $this->mockMasterAdapter, $this->feature])
-            ->onlyMethods([])->getMock();
+        $this->getMockBuilder(TableGateway::class)
+            ->setConstructorArgs(['foo', $this->mockMasterAdapter, $feature])
+            ->onlyMethods([])
+            ->getMock();
 
-        /** @var MockObject&StatementInterface $stmt */
-        $stmt = $this
-            ->mockSlaveAdapter
-            ->getDriver()
-            ->createStatement();
-
-        $stmt
-            ->expects($this->once())
-            ->method('execute')
-            ->willReturn($this->getMockBuilder(ResultInterface::class)->onlyMethods([])->getMock());
-        $table->select('foo = bar');
+        // The provided slaveSql should be used instead of creating a new one
+        self::assertSame($slaveSql, $feature->getSlaveSql());
     }
 
     /**
@@ -94,18 +82,16 @@ final class MasterSlaveFeatureTest extends TestCase
             ->getMock();
 
         /** @var MockObject&StatementInterface $stmt */
-        $stmt = $this
-            ->mockSlaveAdapter
+        $stmt = $this->mockSlaveAdapter
             ->getDriver()
             ->createStatement();
 
-        $stmt
-            ->expects($this->once())
+        $stmt->expects($this->once())
             ->method('execute')
             ->willReturn(
                 $this->getMockBuilder(ResultInterface::class)
                     ->onlyMethods([])
-                    ->getMock()
+                    ->getMock(),
             );
 
         $masterSql = $table->getSql();
@@ -115,36 +101,50 @@ final class MasterSlaveFeatureTest extends TestCase
         self::assertSame($masterSql, $table->getSql());
     }
 
-    public function testGetSlaveAdapter(): void
-    {
-        self::assertSame($this->mockSlaveAdapter, $this->feature->getSlaveAdapter());
-    }
-
     /**
      * @throws Exception
      */
-    public function testConstructorWithSlaveSql(): void
+    public function testPreSelect(): void
     {
-        $slaveSql = new Sql($this->mockSlaveAdapter, 'foo');
-        $feature  = new MasterSlaveFeature($this->mockSlaveAdapter, $slaveSql);
+        $this->expectNotToPerformAssertions();
 
-        self::assertSame($slaveSql, $feature->getSlaveSql());
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function testPostInitializeWithProvidedSlaveSql(): void
-    {
-        $slaveSql = new Sql($this->mockSlaveAdapter, 'foo');
-        $feature  = new MasterSlaveFeature($this->mockSlaveAdapter, $slaveSql);
-
-        $this->getMockBuilder(TableGateway::class)
-            ->setConstructorArgs(['foo', $this->mockMasterAdapter, $feature])
+        $table = $this->getMockBuilder(TableGateway::class)
+            ->setConstructorArgs(['foo', $this->mockMasterAdapter, $this->feature])
             ->onlyMethods([])
             ->getMock();
 
-        // The provided slaveSql should be used instead of creating a new one
-        self::assertSame($slaveSql, $feature->getSlaveSql());
+        /** @var MockObject&StatementInterface $stmt */
+        $stmt = $this->mockSlaveAdapter
+            ->getDriver()
+            ->createStatement();
+
+        $stmt->expects($this->once())
+            ->method('execute')
+            ->willReturn($this->getMockBuilder(ResultInterface::class)->onlyMethods([])->getMock());
+        $table->select('foo = bar');
+    }
+
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->mockMasterAdapter = $this->getMockBuilder(AdapterInterface::class)->onlyMethods([])->getMock();
+        $this->mockSlaveAdapter  = $this->getMockBuilder(AdapterInterface::class)->onlyMethods([])->getMock();
+        $this->mockStatement     = $this->getMockBuilder(StatementInterface::class)->onlyMethods([])->getMock();
+
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->onlyMethods([])->getMock();
+        $mockDriver->expects($this->any())
+            ->method('createStatement')
+            ->willReturn(clone $this->mockStatement);
+        $this->mockMasterAdapter->expects($this->any())->method('getDriver')->willReturn($mockDriver);
+        $this->mockMasterAdapter->expects($this->any())->method('getPlatform')->willReturn(new Sql92());
+
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->onlyMethods([])->getMock();
+        $mockDriver->expects($this->any())
+            ->method('createStatement')
+            ->willReturn(clone $this->mockStatement);
+        $this->mockSlaveAdapter->expects($this->any())->method('getDriver')->willReturn($mockDriver);
+        $this->mockSlaveAdapter->expects($this->any())->method('getPlatform')->willReturn(new Sql92());
+
+        $this->feature = new MasterSlaveFeature($this->mockSlaveAdapter);
     }
 }

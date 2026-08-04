@@ -17,8 +17,12 @@ use PhpDb\Sql\SqlInterface;
 final readonly class Select implements ArgumentInterface
 {
     public function __construct(
-        private ExpressionInterface|SqlInterface $select
-    ) {
+        private ExpressionInterface|SqlInterface $select,
+    ) {}
+
+    public function getSpecification(): string
+    {
+        return '%s';
     }
 
     public function getType(): ArgumentType
@@ -29,10 +33,5 @@ final readonly class Select implements ArgumentInterface
     public function getValue(): ExpressionInterface|SqlInterface
     {
         return $this->select;
-    }
-
-    public function getSpecification(): string
-    {
-        return '%s';
     }
 }

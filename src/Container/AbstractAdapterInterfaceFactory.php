@@ -40,13 +40,34 @@ final class AbstractAdapterInterfaceFactory implements AbstractFactoryInterface
     {
         $config = $this->getConfig($container);
 
-        if ($config === []) {
+        if ([] === $config) {
             return false;
         }
 
-        return isset($config[$requestedName])
-            && is_array($config[$requestedName])
-            && ! empty($config[$requestedName]);
+        return (
+            isset($config[$requestedName])
+                && is_array($config[$requestedName])
+                && ! empty($config[$requestedName])
+        );
+    }
+
+    /**
+     * Get db configuration, if any
+     */
+    protected function getConfig(ContainerInterface $container): array
+    {
+        if (null !== $this->config) {
+            return $this->config;
+        }
+
+        if (! $container->has('config')) {
+            $this->config = [];
+            return $this->config;
+        }
+
+        $config       = $container->get('config');
+        $this->config = $config[AdapterInterface::class][ConfigProvider::NAMED_ADAPTER_KEY] ?? [];
+        return $this->config;
     }
 
     /**
@@ -58,16 +79,16 @@ final class AbstractAdapterInterfaceFactory implements AbstractFactoryInterface
     public function __invoke(
         ContainerInterface|ServiceManager $container,
         $requestedName,
-        ?array $options = null
+        ?array $options = null,
     ): AdapterInterface&Adapter {
         /** @var class-string<DriverInterface>|class-string<PdoDriverInterface>|null $driverClass */
         $driverClass = $this->config[$requestedName]['driver'] ?? null;
 
-        if ($driverClass === null) {
+        if (null === $driverClass) {
             throw ContainerException::forService(
                 $requestedName,
                 self::class,
-                'no driver configured'
+                'no driver configured',
             );
         }
 
@@ -93,24 +114,5 @@ final class AbstractAdapterInterfaceFactory implements AbstractFactoryInterface
             queryResultSetPrototype: $resultSet,
             profiler: $profiler,
         );
-    }
-
-    /**
-     * Get db configuration, if any
-     */
-    protected function getConfig(ContainerInterface $container): array
-    {
-        if ($this->config !== null) {
-            return $this->config;
-        }
-
-        if (! $container->has('config')) {
-            $this->config = [];
-            return $this->config;
-        }
-
-        $config       = $container->get('config');
-        $this->config = $config[AdapterInterface::class][ConfigProvider::NAMED_ADAPTER_KEY] ?? [];
-        return $this->config;
     }
 }

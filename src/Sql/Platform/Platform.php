@@ -44,18 +44,35 @@ class Platform extends AbstractPlatform
         $this->defaultPlatform = $platform;
     }
 
-    public function setTypeDecorator(
-        string $type,
-        PlatformDecoratorInterface $decorator,
-        AdapterInterface|PlatformInterface|null $adapterOrPlatform = null
-    ): void {
-        $platformName                           = $this->resolvePlatformName($adapterOrPlatform);
-        $this->decorators[$platformName][$type] = $decorator;
+    public function getDecorators(): array
+    {
+        $platformName = $this->resolvePlatformName($this->getDefaultPlatform());
+
+        return $this->decorators[$platformName];
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws Exception\RuntimeException
+     */
+    public function getSqlString(?PlatformInterface $adapterPlatform = null): string
+    {
+        if (! $this->subject instanceof SqlInterface) {
+            throw new Exception\RuntimeException(
+                'The subject does not appear to implement PhpDb\Sql\SqlInterface, thus calling '
+                    . 'prepareStatement() has no effect',
+            );
+        }
+
+        $adapterPlatform = $this->resolvePlatform($adapterPlatform);
+
+        return $this->getTypeDecorator($this->subject, $adapterPlatform)->getSqlString($adapterPlatform);
     }
 
     public function getTypeDecorator(
         PreparableSqlInterface|SqlInterface $subject,
-        AdapterInterface|PlatformInterface|null $adapterOrPlatform = null
+        AdapterInterface|PlatformInterface|null $adapterOrPlatform = null,
     ): PlatformDecoratorInterface|PreparableSqlInterface|SqlInterface {
         $platformName = $this->resolvePlatformName($adapterOrPlatform);
 
@@ -72,20 +89,15 @@ class Platform extends AbstractPlatform
 
         /** @var PlatformDecoratorInterface $decorator */
         foreach ($this->decorators[$platformName] as $type => $decorator) {
-            if ($subject instanceof $type && is_a($decorator, $type, true)) {
-                $decorator->setSubject($subject);
-                return $decorator;
+            if (! ($subject instanceof $type && is_a($decorator, $type, true))) {
+                continue;
             }
+
+            $decorator->setSubject($subject);
+            return $decorator;
         }
 
         return $subject;
-    }
-
-    public function getDecorators(): array
-    {
-        $platformName = $this->resolvePlatformName($this->getDefaultPlatform());
-
-        return $this->decorators[$platformName];
     }
 
     /**
@@ -95,12 +107,12 @@ class Platform extends AbstractPlatform
      */
     public function prepareStatement(
         AdapterInterface $adapter,
-        StatementContainerInterface $statementContainer
+        StatementContainerInterface $statementContainer,
     ): StatementContainerInterface {
         if (! $this->subject instanceof PreparableSqlInterface) {
             throw new Exception\RuntimeException(
                 'The subject does not appear to implement PhpDb\Sql\PreparableSqlInterface, thus calling '
-                . 'prepareStatement() has no effect'
+                    . 'prepareStatement() has no effect',
             );
         }
 
@@ -109,39 +121,18 @@ class Platform extends AbstractPlatform
         return $statementContainer;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws Exception\RuntimeException
-     */
-    public function getSqlString(?PlatformInterface $adapterPlatform = null): string
-    {
-        if (! $this->subject instanceof SqlInterface) {
-            throw new Exception\RuntimeException(
-                'The subject does not appear to implement PhpDb\Sql\SqlInterface, thus calling '
-                . 'prepareStatement() has no effect'
-            );
-        }
-
-        $adapterPlatform = $this->resolvePlatform($adapterPlatform);
-
-        return $this->getTypeDecorator($this->subject, $adapterPlatform)->getSqlString($adapterPlatform);
+    public function setTypeDecorator(
+        string $type,
+        PlatformDecoratorInterface $decorator,
+        AdapterInterface|PlatformInterface|null $adapterOrPlatform = null,
+    ): void {
+        $platformName                           = $this->resolvePlatformName($adapterOrPlatform);
+        $this->decorators[$platformName][$type] = $decorator;
     }
 
-    protected function resolvePlatformName(PlatformInterface|AdapterInterface|null $adapterOrPlatform): string
+    protected function getDefaultPlatform(): PlatformInterface
     {
-        if ($adapterOrPlatform === null && $this->cachedPlatformName !== null) {
-            return $this->cachedPlatformName;
-        }
-
-        $platformName = $this->resolvePlatform($adapterOrPlatform)->getName();
-        $normalized   = str_replace([' ', '_'], '', strtolower($platformName));
-
-        if ($adapterOrPlatform === null) {
-            $this->cachedPlatformName = $normalized;
-        }
-
-        return $normalized;
+        return $this->defaultPlatform;
     }
 
     /**
@@ -149,7 +140,7 @@ class Platform extends AbstractPlatform
      */
     protected function resolvePlatform(PlatformInterface|AdapterInterface|null $adapterOrPlatform): PlatformInterface
     {
-        if ($adapterOrPlatform === null) {
+        if (null === $adapterOrPlatform) {
             return $this->getDefaultPlatform();
         }
 
@@ -160,8 +151,19 @@ class Platform extends AbstractPlatform
         return $adapterOrPlatform;
     }
 
-    protected function getDefaultPlatform(): PlatformInterface
+    protected function resolvePlatformName(PlatformInterface|AdapterInterface|null $adapterOrPlatform): string
     {
-        return $this->defaultPlatform;
+        if (null === $adapterOrPlatform && null !== $this->cachedPlatformName) {
+            return $this->cachedPlatformName;
+        }
+
+        $platformName = $this->resolvePlatform($adapterOrPlatform)->getName();
+        $normalized   = str_replace([' ', '_'], '', strtolower($platformName));
+
+        if (null === $adapterOrPlatform) {
+            $this->cachedPlatformName = $normalized;
+        }
+
+        return $normalized;
     }
 }

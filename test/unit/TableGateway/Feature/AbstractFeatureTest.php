@@ -14,12 +14,11 @@ class AbstractFeatureTest extends TestCase
 {
     private AbstractFeature&MockObject $feature;
 
-    protected function setUp(): void
+    public function testGetMagicMethodSpecificationsReturnsEmptyArray(): void
     {
-        $this->feature = $this->getMockBuilder(AbstractFeature::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods([])
-            ->getMock();
+        $result = $this->feature->getMagicMethodSpecifications();
+
+        self::assertEmpty($result);
     }
 
     public function testGetNameReturnsClassName(): void
@@ -27,6 +26,15 @@ class AbstractFeatureTest extends TestCase
         $name = $this->feature->getName();
 
         self::assertNotEmpty($name);
+    }
+
+    public function testInitializeDoesNothing(): void
+    {
+        // initialize() is a no-op, just verify it doesn't throw
+        $this->feature->initialize();
+
+        /** @phpstan-ignore staticMethod.alreadyNarrowedType */
+        self::assertTrue(true);
     }
 
     public function testSetTableGateway(): void
@@ -44,19 +52,11 @@ class AbstractFeatureTest extends TestCase
         self::assertSame($tableGateway, $value);
     }
 
-    public function testInitializeDoesNothing(): void
+    protected function setUp(): void
     {
-        // initialize() is a no-op, just verify it doesn't throw
-        $this->feature->initialize();
-
-        /** @phpstan-ignore staticMethod.alreadyNarrowedType */
-        self::assertTrue(true);
-    }
-
-    public function testGetMagicMethodSpecificationsReturnsEmptyArray(): void
-    {
-        $result = $this->feature->getMagicMethodSpecifications();
-
-        self::assertEmpty($result);
+        $this->feature = $this->getMockBuilder(AbstractFeature::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods([])
+            ->getMock();
     }
 }

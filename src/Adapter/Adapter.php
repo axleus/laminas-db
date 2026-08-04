@@ -21,110 +21,28 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
         protected Driver\DriverInterface $driver,
         protected Platform\PlatformInterface $platform,
         protected ResultSet\ResultSetInterface $queryResultSetPrototype = new ResultSet\ResultSet(),
-        protected ?Profiler\ProfilerInterface $profiler = null
+        protected ?Profiler\ProfilerInterface $profiler = null,
     ) {
         if ($profiler) {
             $this->setProfiler($profiler);
         }
     }
 
-    #[Override]
-    public function setProfiler(Profiler\ProfilerInterface $profiler): Profiler\ProfilerAwareInterface
-    {
-        $this->profiler = $profiler;
-        if ($this->driver instanceof Profiler\ProfilerAwareInterface) {
-            $this->driver->setProfiler($profiler);
-        }
-        return $this;
-    }
-
-    #[Override]
-    public function getDriver(): Driver\DriverInterface
-    {
-        return $this->driver;
-    }
-
-    #[Override]
-    public function getPlatform(): Platform\PlatformInterface
-    {
-        return $this->platform;
-    }
-
-    #[Override]
-    public function getProfiler(): ?Profiler\ProfilerInterface
-    {
-        return $this->profiler;
-    }
-
-    #[Override]
-    public function getQueryResultSetPrototype(): ResultSet\ResultSetInterface
-    {
-        return $this->queryResultSetPrototype;
-    }
-
-    #[Override]
-    public function getCurrentSchema(): string|false
-    {
-        return $this->driver->getConnection()->getCurrentSchema();
-    }
-
     /**
-     * query() is a convenience function
-     *
-     * @deprecated Use prepareQuery() and executeQuery() instead. query() will be removed in a future version.
-     *
-     * @throws Exception\InvalidArgumentException
-     * @throws Exception\RuntimeException When execution did not produce a result.
-     * @throws PhpException
+     * Create statement
      */
     #[Override]
-    public function query(
-        string $sql,
-        ParameterContainer|array|string $parametersOrQueryMode = self::QUERY_MODE_PREPARE,
-        ?ResultSet\ResultSetInterface $resultPrototype = null
-    ): Driver\StatementInterface|ResultSet\ResultSetInterface|Driver\ResultInterface {
-        if ($parametersOrQueryMode === self::QUERY_MODE_PREPARE) {
-            return $this->prepareQuery($sql);
-        }
-
-        $sql = match (true) {
-            $parametersOrQueryMode === self::QUERY_MODE_EXECUTE
-                => $sql,
-            $parametersOrQueryMode instanceof ParameterContainer,
-            is_array($parametersOrQueryMode)
-                => $this->prepareQuery($sql, $parametersOrQueryMode),
-            default => throw new Exception\InvalidArgumentException(
-                'Flag incorrectly set'
-            ),
-        };
-
-        $result = $this->executeQuery($sql);
-
-        return $result->isQueryResult()
-            ? $result->getQueryResult($resultPrototype ?? $this->queryResultSetPrototype)
-            : $result;
-    }
-
-    /**
-     * Prepare a statement for the given SQL, optionally binding parameters.
-     *
-     * Always prepares the statement; never executes it. Use executeQuery()
-     * to run the returned statement.
-     */
-    #[Override]
-    public function prepareQuery(
-        string $sql,
-        ParameterContainer|array $parameters = []
+    public function createStatement(
+        ?string $initialSql = null,
+        ParameterContainer|array $initialParameters = [],
     ): Driver\StatementInterface {
-        $statement = $this->driver->createStatement($sql);
-
-        if (is_array($parameters)) {
-            $parameters = new ParameterContainer($parameters);
+        $statement = $this->driver->createStatement($initialSql);
+        if (
+            is_array($initialParameters)
+        ) {
+            $initialParameters = new ParameterContainer($initialParameters);
         }
-
-        $statement->setParameterContainer($parameters);
-        $statement->prepare();
-
+        $statement->setParameterContainer($initialParameters);
         return $statement;
     }
 
@@ -151,22 +69,16 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
         return $result;
     }
 
-    /**
-     * Create statement
-     */
     #[Override]
-    public function createStatement(
-        ?string $initialSql = null,
-        ParameterContainer|array $initialParameters = []
-    ): Driver\StatementInterface {
-        $statement = $this->driver->createStatement($initialSql);
-        if (
-            is_array($initialParameters)
-        ) {
-            $initialParameters = new ParameterContainer($initialParameters);
-        }
-        $statement->setParameterContainer($initialParameters);
-        return $statement;
+    public function getCurrentSchema(): string|false
+    {
+        return $this->driver->getConnection()->getCurrentSchema();
+    }
+
+    #[Override]
+    public function getDriver(): Driver\DriverInterface
+    {
+        return $this->driver;
     }
 
     /**
@@ -179,18 +91,105 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
         foreach (func_get_args() as $arg) {
             switch ($arg) {
                 case self::FUNCTION_QUOTE_IDENTIFIER:
-                    $functions[] = function ($value) use ($platform) {
+                    $functions[] = static function ($value) use ($platform) {
                         return $platform->quoteIdentifier($value);
                     };
                     break;
                 case self::FUNCTION_QUOTE_VALUE:
-                    $functions[] = function ($value) use ($platform) {
+                    $functions[] = static function ($value) use ($platform) {
                         return $platform->quoteValue($value);
                     };
                     break;
             }
         }
         return $functions;
+    }
+
+    #[Override]
+    public function getPlatform(): Platform\PlatformInterface
+    {
+        return $this->platform;
+    }
+
+    #[Override]
+    public function getProfiler(): ?Profiler\ProfilerInterface
+    {
+        return $this->profiler;
+    }
+
+    #[Override]
+    public function getQueryResultSetPrototype(): ResultSet\ResultSetInterface
+    {
+        return $this->queryResultSetPrototype;
+    }
+
+    /**
+     * Prepare a statement for the given SQL, optionally binding parameters.
+     *
+     * Always prepares the statement; never executes it. Use executeQuery()
+     * to run the returned statement.
+     */
+    #[Override]
+    public function prepareQuery(
+        string $sql,
+        ParameterContainer|array $parameters = [],
+    ): Driver\StatementInterface {
+        $statement = $this->driver->createStatement($sql);
+
+        if (is_array($parameters)) {
+            $parameters = new ParameterContainer($parameters);
+        }
+
+        $statement->setParameterContainer($parameters);
+        $statement->prepare();
+
+        return $statement;
+    }
+
+    /**
+     * query() is a convenience function
+     *
+     * @deprecated Use prepareQuery() and executeQuery() instead. query() will be removed in a future version.
+     *
+     * @throws Exception\InvalidArgumentException
+     * @throws Exception\RuntimeException When execution did not produce a result.
+     * @throws PhpException
+     */
+    #[Override]
+    public function query(
+        string $sql,
+        ParameterContainer|array|string $parametersOrQueryMode = self::QUERY_MODE_PREPARE,
+        ?ResultSet\ResultSetInterface $resultPrototype = null,
+    ): Driver\StatementInterface|ResultSet\ResultSetInterface|Driver\ResultInterface {
+        if (self::QUERY_MODE_PREPARE === $parametersOrQueryMode) {
+            return $this->prepareQuery($sql);
+        }
+
+        $sql = match (true) {
+            self::QUERY_MODE_EXECUTE === $parametersOrQueryMode => $sql,
+            $parametersOrQueryMode instanceof ParameterContainer,
+            is_array($parametersOrQueryMode),
+                => $this->prepareQuery($sql, $parametersOrQueryMode),
+            default => throw new Exception\InvalidArgumentException(
+                'Flag incorrectly set',
+            ),
+        };
+
+        $result = $this->executeQuery($sql);
+
+        return $result->isQueryResult()
+            ? $result->getQueryResult($resultPrototype ?? $this->queryResultSetPrototype)
+            : $result;
+    }
+
+    #[Override]
+    public function setProfiler(Profiler\ProfilerInterface $profiler): Profiler\ProfilerAwareInterface
+    {
+        $this->profiler = $profiler;
+        if ($this->driver instanceof Profiler\ProfilerAwareInterface) {
+            $this->driver->setProfiler($profiler);
+        }
+        return $this;
     }
 
     /** @throws Exception\InvalidArgumentException */

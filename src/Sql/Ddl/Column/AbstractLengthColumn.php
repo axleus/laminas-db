@@ -20,28 +20,11 @@ abstract class AbstractLengthColumn extends Column
         ?int $length = null,
         bool $nullable = false,
         mixed $default = null,
-        array $options = []
+        array $options = [],
     ) {
         $this->setLength($length);
 
         parent::__construct($name, $nullable, $default, $options);
-    }
-
-    public function setLength(?int $length = 0): static
-    {
-        $this->length = $length;
-
-        return $this;
-    }
-
-    public function getLength(): int|null
-    {
-        return $this->length;
-    }
-
-    protected function getLengthExpression(): string
-    {
-        return (string) $this->length;
     }
 
     /** @inheritDoc */
@@ -55,5 +38,22 @@ abstract class AbstractLengthColumn extends Column
         }
 
         return $expressionData;
+    }
+
+    public function getLength(): ?int
+    {
+        return $this->length;
+    }
+
+    public function setLength(?int $length = 0): static
+    {
+        $this->length = $length;
+
+        return $this;
+    }
+
+    protected function getLengthExpression(): string
+    {
+        return (string) $this->length;
     }
 }

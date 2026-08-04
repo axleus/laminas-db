@@ -13,7 +13,7 @@ use PhpDb\Sql\Exception\InvalidArgumentException;
 
 class Like extends AbstractExpression implements PredicateInterface
 {
-    protected string $operator               = 'LIKE';
+    protected string             $operator   = 'LIKE';
     protected ?ArgumentInterface $identifier = null;
     protected ?ArgumentInterface $like       = null;
 
@@ -21,50 +21,16 @@ class Like extends AbstractExpression implements PredicateInterface
      * Constructor
      */
     public function __construct(
-        null|string|ArgumentInterface $identifier = null,
-        null|bool|float|int|string|ArgumentInterface $like = null
+        string|ArgumentInterface|null $identifier = null,
+        bool|float|int|string|ArgumentInterface|null $like = null,
     ) {
-        if ($identifier !== null) {
+        if (null !== $identifier) {
             $this->setIdentifier($identifier);
         }
 
-        if ($like !== null) {
+        if (null !== $like) {
             $this->setLike($like);
         }
-    }
-
-    /**
-     * Set identifier for comparison
-     */
-    public function setIdentifier(string|ArgumentInterface $identifier): static
-    {
-        $this->identifier = $identifier instanceof ArgumentInterface
-            ? $identifier
-            : new Identifier($identifier);
-
-        return $this;
-    }
-
-    public function getIdentifier(): ?ArgumentInterface
-    {
-        return $this->identifier;
-    }
-
-    /**
-     * Set like pattern for comparison
-     */
-    public function setLike(bool|float|int|null|string|ArgumentInterface $like): static
-    {
-        $this->like = $like instanceof ArgumentInterface
-            ? $like
-            : new Value($like);
-
-        return $this;
-    }
-
-    public function getLike(): ?ArgumentInterface
-    {
-        return $this->like;
     }
 
     /** @inheritDoc */
@@ -86,5 +52,39 @@ class Like extends AbstractExpression implements PredicateInterface
             'spec'   => $this->specification ?? "{$identifierSpec} {$this->operator} {$likeSpec}",
             'values' => [$this->identifier, $this->like],
         ];
+    }
+
+    public function getIdentifier(): ?ArgumentInterface
+    {
+        return $this->identifier;
+    }
+
+    public function getLike(): ?ArgumentInterface
+    {
+        return $this->like;
+    }
+
+    /**
+     * Set identifier for comparison
+     */
+    public function setIdentifier(string|ArgumentInterface $identifier): static
+    {
+        $this->identifier = $identifier instanceof ArgumentInterface
+            ? $identifier
+            : new Identifier($identifier);
+
+        return $this;
+    }
+
+    /**
+     * Set like pattern for comparison
+     */
+    public function setLike(bool|float|int|string|ArgumentInterface|null $like): static
+    {
+        $this->like = $like instanceof ArgumentInterface
+            ? $like
+            : new Value($like);
+
+        return $this;
     }
 }

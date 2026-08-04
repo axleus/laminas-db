@@ -27,14 +27,6 @@ abstract class AbstractTableObject
     }
 
     /**
-     * Set columns
-     */
-    public function setColumns(array $columns): void
-    {
-        $this->columns = $columns;
-    }
-
-    /**
      * Get columns
      *
      * @return array<int|string, mixed>|null
@@ -42,14 +34,6 @@ abstract class AbstractTableObject
     public function getColumns(): ?array
     {
         return $this->columns;
-    }
-
-    /**
-     * Set constraints
-     */
-    public function setConstraints(array $constraints): void
-    {
-        $this->constraints = $constraints;
     }
 
     /**
@@ -63,18 +47,34 @@ abstract class AbstractTableObject
     }
 
     /**
-     * Set name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
-
-    /**
      * Get name
      */
     public function getName(): ?string
     {
         return $this->name;
+    }
+
+    /**
+     * Set columns
+     */
+    public function setColumns(array $columns): void
+    {
+        $this->columns = $columns;
+    }
+
+    /**
+     * Set constraints
+     */
+    public function setConstraints(array $constraints): void
+    {
+        $this->constraints = $constraints;
+    }
+
+    /**
+     * Set name
+     */
+    public function setName(string $name): void
+    {
+        $this->name = $name;
     }
 }

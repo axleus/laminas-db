@@ -18,13 +18,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversMethod(StatementContainer::class, 'getParameterContainer')]
 final class StatementContainerTest extends TestCase
 {
-    public function testConstructorWithSqlSetsSql(): void
-    {
-        $container = new StatementContainer('SELECT 1');
-
-        self::assertSame('SELECT 1', $container->getSql());
-    }
-
     public function testConstructorWithoutSqlDoesNotSetSql(): void
     {
         $container = new StatementContainer();
@@ -32,14 +25,11 @@ final class StatementContainerTest extends TestCase
         self::assertSame('', $container->getSql());
     }
 
-    public function testSetAndGetSql(): void
+    public function testConstructorWithSqlSetsSql(): void
     {
-        $container = new StatementContainer();
+        $container = new StatementContainer('SELECT 1');
 
-        $result = $container->setSql('test');
-
-        self::assertSame($container, $result);
-        self::assertSame('test', $container->getSql());
+        self::assertSame('SELECT 1', $container->getSql());
     }
 
     public function testSetAndGetParameterContainer(): void
@@ -51,5 +41,15 @@ final class StatementContainerTest extends TestCase
 
         self::assertSame($container, $result);
         self::assertSame($parameterContainer, $container->getParameterContainer());
+    }
+
+    public function testSetAndGetSql(): void
+    {
+        $container = new StatementContainer();
+
+        $result = $container->setSql('test');
+
+        self::assertSame($container, $result);
+        self::assertSame('test', $container->getSql());
     }
 }

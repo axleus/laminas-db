@@ -12,14 +12,15 @@ abstract class AbstractFeature extends AbstractTableGateway implements FeatureIn
 
     protected array $sharedData = [];
 
+    /** @return array<string, string[]> */
+    public function getMagicMethodSpecifications(): array
+    {
+        return [];
+    }
+
     public function getName(): string
     {
         return static::class;
-    }
-
-    public function setTableGateway(AbstractTableGateway $tableGateway): void
-    {
-        $this->tableGateway = $tableGateway;
     }
 
     public function initialize(): void
@@ -27,22 +28,21 @@ abstract class AbstractFeature extends AbstractTableGateway implements FeatureIn
         // No-op
     }
 
-    /** @return array<string, string[]> */
-    public function getMagicMethodSpecifications(): array
+    public function setTableGateway(AbstractTableGateway $tableGateway): void
     {
-        return [];
+        $this->tableGateway = $tableGateway;
     }
 
     /*
-    public function preInitialize();
-    public function postInitialize();
-    public function preSelect(Select $select);
-    public function postSelect(StatementInterface $statement, ResultInterface $result, ResultSetInterface $resultSet);
-    public function preInsert(Insert $insert);
-    public function postInsert(StatementInterface $statement, ResultInterface $result);
-    public function preUpdate(Update $update);
-    public function postUpdate(StatementInterface $statement, ResultInterface $result);
-    public function preDelete(Delete $delete);
-    public function postDelete(StatementInterface $statement, ResultInterface $result);
-    */
+     * public function preInitialize();
+     * public function postInitialize();
+     * public function preSelect(Select $select);
+     * public function postSelect(StatementInterface $statement, ResultInterface $result, ResultSetInterface $resultSet);
+     * public function preInsert(Insert $insert);
+     * public function postInsert(StatementInterface $statement, ResultInterface $result);
+     * public function preUpdate(Update $update);
+     * public function postUpdate(StatementInterface $statement, ResultInterface $result);
+     * public function preDelete(Delete $delete);
+     * public function postDelete(StatementInterface $statement, ResultInterface $result);
+     */
 }

@@ -62,9 +62,9 @@ abstract class AbstractAdapterTestCase extends TestCase
         $mypid  = getmypid();
         $dbPort = (string) $this->port;
         /** @psalm-suppress ForbiddenCode - running lsof */
-        $lsof = shell_exec("lsof -i -P -n | grep $dbPort | grep $mypid");
+        $lsof = shell_exec("lsof -i -P -n | grep {$dbPort} | grep {$mypid}");
 
-        return $lsof !== null;
+        return null !== $lsof;
     }
 
     protected function isTcpConnection(): bool

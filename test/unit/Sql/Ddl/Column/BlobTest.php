@@ -20,9 +20,12 @@ final class BlobTest extends TestCase
         $expressionData = $column->getExpressionData();
 
         self::assertEquals('%s %s NOT NULL', $expressionData['spec']);
-        self::assertEquals([
-            new Identifier('foo'),
-            new Literal('BLOB'),
-        ], $expressionData['values']);
+        self::assertEquals(
+            [
+                new Identifier('foo'),
+                new Literal('BLOB'),
+            ],
+            $expressionData['values'],
+        );
     }
 }

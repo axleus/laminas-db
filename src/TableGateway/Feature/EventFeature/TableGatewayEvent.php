@@ -21,22 +21,6 @@ class TableGatewayEvent implements EventInterface
     }
 
     /**
-     * Get target/context from which event was triggered
-     */
-    public function getTarget(): ?AbstractTableGateway
-    {
-        return $this->target;
-    }
-
-    /**
-     * Get parameters passed to the event
-     */
-    public function getParams(): array|object
-    {
-        return $this->params;
-    }
-
-    /**
      * Get a single parameter by name
      *
      * @param string|int $name
@@ -48,6 +32,30 @@ class TableGatewayEvent implements EventInterface
     }
 
     /**
+     * Get parameters passed to the event
+     */
+    public function getParams(): array|object
+    {
+        return $this->params;
+    }
+
+    /**
+     * Get target/context from which event was triggered
+     */
+    public function getTarget(): ?AbstractTableGateway
+    {
+        return $this->target;
+    }
+
+    /**
+     * Has this event indicated event propagation should stop?
+     */
+    public function propagationIsStopped(): false
+    {
+        return false;
+    }
+
+    /**
      * Set the event name
      *
      * @param string $name
@@ -55,28 +63,6 @@ class TableGatewayEvent implements EventInterface
     public function setName($name): void
     {
         $this->name = $name;
-    }
-
-    /**
-     * Set the event target/context
-     *
-     * @param object|string|null $target
-     * @phpstan-ignore selfOut.type
-     */
-    public function setTarget($target): void
-    {
-        $this->target = $target;
-    }
-
-    /**
-     * Set event parameters
-     *
-     * @param array|object $params
-     * @phpstan-ignore selfOut.type
-     */
-    public function setParams($params): void
-    {
-        $this->params = $params;
     }
 
     /**
@@ -91,19 +77,31 @@ class TableGatewayEvent implements EventInterface
     }
 
     /**
+     * Set event parameters
+     *
+     * @param array|object $params
+     * @phpstan-ignore selfOut.type
+     */
+    public function setParams($params): void
+    {
+        $this->params = $params;
+    }
+
+    /**
+     * Set the event target/context
+     *
+     * @param object|string|null $target
+     * @phpstan-ignore selfOut.type
+     */
+    public function setTarget($target): void
+    {
+        $this->target = $target;
+    }
+
+    /**
      * Indicate whether or not the parent EventManagerInterface should stop propagating events
      *
      * @param bool $flag
      */
-    public function stopPropagation($flag = true): void
-    {
-    }
-
-    /**
-     * Has this event indicated event propagation should stop?
-     */
-    public function propagationIsStopped(): false
-    {
-        return false;
-    }
+    public function stopPropagation($flag = true): void {}
 }

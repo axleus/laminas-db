@@ -46,110 +46,11 @@ class Statement implements StatementInterface, PdoDriverAwareInterface, Profiler
     public function __construct(
         protected ParameterContainer $parameterContainer = new ParameterContainer(),
         protected array $options = [],
-    ) {
-    }
-
-    #[Override]
-    public function setDriver(PdoDriverInterface $driver): PdoDriverAwareInterface
-    {
-        $this->driver = $driver;
-        return $this;
-    }
-
-    #[Override]
-    public function setProfiler(ProfilerInterface $profiler): ProfilerAwareInterface
-    {
-        $this->profiler = $profiler;
-        return $this;
-    }
-
-    public function getProfiler(): ?ProfilerInterface
-    {
-        return $this->profiler;
-    }
-
-    /** Initialize */
-    public function initialize(PDO $connectionResource): StatementInterface
-    {
-        $this->pdo = $connectionResource;
-        return $this;
-    }
-
-    /** Set resource */
-    public function setResource(PDOStatement $pdoStatement): StatementInterface
-    {
-        $this->resource = $pdoStatement;
-        return $this;
-    }
-
-    /** Get resource */
-    #[Override]
-    public function getResource(): PDOStatement|false|null
-    {
-        return $this->resource;
-    }
-
-    /** Set sql */
-    #[Override]
-    public function setSql(?string $sql): StatementContainerInterface
-    {
-        $this->sql = $sql;
-        return $this;
-    }
-
-    /** Get sql */
-    #[Override]
-    public function getSql(): ?string
-    {
-        return $this->sql;
-    }
-
-    #[Override]
-    public function setParameterContainer(ParameterContainer $parameterContainer): StatementContainerInterface
-    {
-        $this->parameterContainer = $parameterContainer;
-        return $this;
-    }
-
-    #[Override]
-    public function getParameterContainer(): ParameterContainer
-    {
-        return $this->parameterContainer;
-    }
-
-    /** @throws Exception\RuntimeException */
-    #[Override]
-    public function prepare(?string $sql = null): StatementInterface
-    {
-        if ($this->isPrepared) {
-            throw new Exception\RuntimeException('This statement has been prepared already');
-        }
-
-        if ($sql === null) {
-            $sql = $this->sql;
-        }
-
-        $this->resource = $this->pdo->prepare($sql);
-
-        if ($this->resource === false) {
-            $error = $this->pdo->errorInfo();
-            throw new Exception\RuntimeException($error[2]);
-        }
-
-        $this->isPrepared = true;
-
-        return $this;
-    }
-
-    #[Override]
-    public function isPrepared(): bool
-    {
-        return $this->isPrepared;
-    }
+    ) {}
 
     /** @throws Exception\InvalidQueryException */
     #[Override]
-    public function execute(null|array|ParameterContainer $parameters = null): ?ResultInterface
+    public function execute(array|ParameterContainer|null $parameters = null): ?ResultInterface
     {
         if (! $this->isPrepared) {
             $this->prepare();
@@ -185,13 +86,111 @@ class Statement implements StatementInterface, PdoDriverAwareInterface, Profiler
             throw new Exception\InvalidQueryException(
                 'Statement could not be executed (' . implode(' - ', $this->resource->errorInfo()) . ')',
                 $code,
-                $e
+                $e,
             );
         }
 
         $this->profiler?->profilerFinish();
 
         return $this->driver->createResult($this->resource);
+    }
+
+    #[Override]
+    public function getParameterContainer(): ParameterContainer
+    {
+        return $this->parameterContainer;
+    }
+
+    public function getProfiler(): ?ProfilerInterface
+    {
+        return $this->profiler;
+    }
+
+    /** Get resource */
+    #[Override]
+    public function getResource(): PDOStatement|false|null
+    {
+        return $this->resource;
+    }
+
+    /** Get sql */
+    #[Override]
+    public function getSql(): ?string
+    {
+        return $this->sql;
+    }
+
+    /** Initialize */
+    public function initialize(PDO $connectionResource): StatementInterface
+    {
+        $this->pdo = $connectionResource;
+        return $this;
+    }
+
+    #[Override]
+    public function isPrepared(): bool
+    {
+        return $this->isPrepared;
+    }
+
+    /** @throws Exception\RuntimeException */
+    #[Override]
+    public function prepare(?string $sql = null): StatementInterface
+    {
+        if ($this->isPrepared) {
+            throw new Exception\RuntimeException('This statement has been prepared already');
+        }
+
+        if (null === $sql) {
+            $sql = $this->sql;
+        }
+
+        $this->resource = $this->pdo->prepare($sql);
+
+        if (false === $this->resource) {
+            $error = $this->pdo->errorInfo();
+            throw new Exception\RuntimeException($error[2]);
+        }
+
+        $this->isPrepared = true;
+
+        return $this;
+    }
+
+    #[Override]
+    public function setDriver(PdoDriverInterface $driver): PdoDriverAwareInterface
+    {
+        $this->driver = $driver;
+        return $this;
+    }
+
+    #[Override]
+    public function setParameterContainer(ParameterContainer $parameterContainer): StatementContainerInterface
+    {
+        $this->parameterContainer = $parameterContainer;
+        return $this;
+    }
+
+    #[Override]
+    public function setProfiler(ProfilerInterface $profiler): ProfilerAwareInterface
+    {
+        $this->profiler = $profiler;
+        return $this;
+    }
+
+    /** Set resource */
+    public function setResource(PDOStatement $pdoStatement): StatementInterface
+    {
+        $this->resource = $pdoStatement;
+        return $this;
+    }
+
+    /** Set sql */
+    #[Override]
+    public function setSql(?string $sql): StatementContainerInterface
+    {
+        $this->sql = $sql;
+        return $this;
     }
 
     /** Bind parameters from container */
@@ -208,15 +207,15 @@ class Statement implements StatementInterface, PdoDriverAwareInterface, Profiler
             if (isset($errata[$name])) {
                 $type = match ($errata[$name]) {
                     ParameterContainer::TYPE_INTEGER => PDO::PARAM_INT,
-                    ParameterContainer::TYPE_NULL => PDO::PARAM_NULL,
-                    ParameterContainer::TYPE_LOB => PDO::PARAM_LOB,
-                    default => PDO::PARAM_STR,
+                    ParameterContainer::TYPE_NULL    => PDO::PARAM_NULL,
+                    ParameterContainer::TYPE_LOB     => PDO::PARAM_LOB,
+                    default                          => PDO::PARAM_STR,
                 };
             } else {
                 $type = match (true) {
                     is_int($value) => PDO::PARAM_INT,
-                    $value === false, $value === true => PDO::PARAM_BOOL,
-                    $value === null => PDO::PARAM_NULL,
+                    false === $value, true === $value => PDO::PARAM_BOOL,
+                    null === $value => PDO::PARAM_NULL,
                     default => PDO::PARAM_STR,
                 };
             }
@@ -227,8 +226,8 @@ class Statement implements StatementInterface, PdoDriverAwareInterface, Profiler
                 if (! preg_match('/^:?[a-zA-Z0-9_]+$/', $name)) {
                     throw new Exception\RuntimeException(sprintf(
                         'The PDO param "%s" contains invalid characters.'
-                        . ' Only alphabetic characters, digits, and underscores (_) are allowed.',
-                        $name
+                            . ' Only alphabetic characters, digits, and underscores (_) are allowed.',
+                        $name,
                     ));
                 }
                 $parameter = ':' . ltrim($name, ':');

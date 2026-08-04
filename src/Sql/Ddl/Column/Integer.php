@@ -16,7 +16,7 @@ class Integer extends Column
         $options        = $this->getOptions();
 
         if (isset($options['length'])) {
-            $expressionData['spec'] .= ' (' . $options['length'] . ')';
+            $expressionData['spec'] .= " ({$options['length']})";
         }
 
         return $expressionData;

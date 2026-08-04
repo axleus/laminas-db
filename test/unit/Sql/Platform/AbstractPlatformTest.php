@@ -29,37 +29,25 @@ final class AbstractPlatformTest extends TestCase
 {
     private AbstractPlatform $platform;
 
-    protected function setUp(): void
+    public function testGetSqlStringDelegatesToDecoratorSubject(): void
     {
-        $this->platform = new AbstractPlatform();
+        $select = new Select('foo');
+        $this->platform->setSubject($select);
+
+        $sql = $this->platform->getSqlString();
+
+        self::assertStringContainsString('SELECT', $sql);
+        self::assertStringContainsString('"foo"', $sql);
     }
 
-    public function testSetSubjectReturnsStatic(): void
+    public function testGetSqlStringThrowsWhenSubjectNotSqlInterface(): void
     {
-        $subject = $this->createMock(SqlInterface::class);
-        $result  = $this->platform->setSubject($subject);
+        $subject = $this->createMock(PreparableSqlInterface::class);
+        $this->platform->setSubject($subject);
 
-        self::assertSame($this->platform, $result);
-    }
-
-    public function testSetAndGetTypeDecorator(): void
-    {
-        $decorator = $this->createMock(PlatformDecoratorInterface::class);
-        $this->platform->setTypeDecorator(Select::class, $decorator);
-
-        $decorators = $this->platform->getDecorators();
-
-        self::assertArrayHasKey(Select::class, $decorators);
-        self::assertSame($decorator, $decorators[Select::class]);
-    }
-
-    public function testGetTypeDecoratorReturnsSubjectWhenNoMatch(): void
-    {
-        $subject = $this->createMock(SqlInterface::class);
-
-        $result = $this->platform->getTypeDecorator($subject);
-
-        self::assertSame($subject, $result);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('The subject does not appear to implement');
+        $this->platform->getSqlString();
     }
 
     public function testGetTypeDecoratorLoopMatchesByInstanceof(): void
@@ -75,38 +63,13 @@ final class AbstractPlatformTest extends TestCase
         self::assertSame($decorator, $result);
     }
 
-    public function testPrepareStatementThrowsWhenSubjectNotPreparable(): void
+    public function testGetTypeDecoratorReturnsSubjectWhenNoMatch(): void
     {
         $subject = $this->createMock(SqlInterface::class);
-        $this->platform->setSubject($subject);
 
-        $adapter   = $this->createMock(AdapterInterface::class);
-        $statement = new StatementContainer();
+        $result = $this->platform->getTypeDecorator($subject);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('The subject does not appear to implement');
-        $this->platform->prepareStatement($adapter, $statement);
-    }
-
-    public function testGetSqlStringThrowsWhenSubjectNotSqlInterface(): void
-    {
-        $subject = $this->createMock(PreparableSqlInterface::class);
-        $this->platform->setSubject($subject);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('The subject does not appear to implement');
-        $this->platform->getSqlString();
-    }
-
-    public function testGetSqlStringDelegatesToDecoratorSubject(): void
-    {
-        $select = new Select('foo');
-        $this->platform->setSubject($select);
-
-        $sql = $this->platform->getSqlString();
-
-        self::assertStringContainsString('SELECT', $sql);
-        self::assertStringContainsString('"foo"', $sql);
+        self::assertSame($subject, $result);
     }
 
     public function testPrepareStatementDelegatesToDecoratorSubject(): void
@@ -116,8 +79,8 @@ final class AbstractPlatformTest extends TestCase
         $this->platform->setSubject($select);
 
         $mockPlatform = $this->createMock(PlatformInterface::class);
-        $mockPlatform->method('quoteIdentifier')->willReturnCallback(fn($v) => '"' . $v . '"');
-        $mockPlatform->method('quoteIdentifierInFragment')->willReturnCallback(fn($v) => '"' . $v . '"');
+        $mockPlatform->method('quoteIdentifier')->willReturnCallback(static fn($v) => '"' . $v . '"');
+        $mockPlatform->method('quoteIdentifierInFragment')->willReturnCallback(static fn($v) => '"' . $v . '"');
         $mockPlatform->method('getIdentifierSeparator')->willReturn('.');
         $mockPlatform->method('getSqlPlatformDecorator')->willReturn($this->platform);
 
@@ -133,5 +96,42 @@ final class AbstractPlatformTest extends TestCase
 
         self::assertSame($statement, $result);
         self::assertStringContainsString('SELECT', $statement->getSql());
+    }
+
+    public function testPrepareStatementThrowsWhenSubjectNotPreparable(): void
+    {
+        $subject = $this->createMock(SqlInterface::class);
+        $this->platform->setSubject($subject);
+
+        $adapter   = $this->createMock(AdapterInterface::class);
+        $statement = new StatementContainer();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('The subject does not appear to implement');
+        $this->platform->prepareStatement($adapter, $statement);
+    }
+
+    public function testSetAndGetTypeDecorator(): void
+    {
+        $decorator = $this->createMock(PlatformDecoratorInterface::class);
+        $this->platform->setTypeDecorator(Select::class, $decorator);
+
+        $decorators = $this->platform->getDecorators();
+
+        self::assertArrayHasKey(Select::class, $decorators);
+        self::assertSame($decorator, $decorators[Select::class]);
+    }
+
+    public function testSetSubjectReturnsStatic(): void
+    {
+        $subject = $this->createMock(SqlInterface::class);
+        $result  = $this->platform->setSubject($subject);
+
+        self::assertSame($this->platform, $result);
+    }
+
+    protected function setUp(): void
+    {
+        $this->platform = new AbstractPlatform();
     }
 }

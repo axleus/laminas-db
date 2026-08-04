@@ -20,22 +20,11 @@ class Index extends AbstractIndex
 
     protected ?string $type = null;
 
-    public function __construct(null|array|string $columns, ?string $name = null, array $lengths = [])
+    public function __construct(array|string|null $columns, ?string $name = null, array $lengths = [])
     {
         parent::__construct($columns, $name);
 
         $this->lengths = $lengths;
-    }
-
-    public function setType(string $type): static
-    {
-        $this->type = $type;
-        return $this;
-    }
-
-    public function getType(): ?string
-    {
-        return $this->type;
     }
 
     /** @inheritDoc */
@@ -51,7 +40,7 @@ class Index extends AbstractIndex
             $values[] = new Identifier($this->columns[$i]);
 
             if (isset($this->lengths[$i])) {
-                $specPart .= '(' . $this->lengths[$i] . ')';
+                $specPart .= "({$this->lengths[$i]})";
             }
 
             $specParts[] = $specPart;
@@ -59,8 +48,8 @@ class Index extends AbstractIndex
 
         $spec = str_replace('...', implode(', ', $specParts), $this->specification);
 
-        if ($this->type !== null) {
-            $spec    .= ' USING %s';
+        if (null !== $this->type) {
+            $spec     .= ' USING %s';
             $values[] = new Literal($this->type);
         }
 
@@ -68,5 +57,16 @@ class Index extends AbstractIndex
             'spec'   => $spec,
             'values' => $values,
         ];
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): static
+    {
+        $this->type = $type;
+        return $this;
     }
 }

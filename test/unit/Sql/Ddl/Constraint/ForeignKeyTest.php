@@ -32,6 +32,53 @@ use PHPUnit\Framework\TestCase;
 #[CoversMethod(ForeignKey::class, 'getExpressionData')]
 final class ForeignKeyTest extends TestCase
 {
+    public function testGetExpressionData(): void
+    {
+        $fk = new ForeignKey('foo', 'bar', 'baz', 'bam', 'CASCADE', 'SET NULL');
+
+        $expressionData = $fk->getExpressionData();
+
+        // Verify specification
+        self::assertEquals(
+            'CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) ON DELETE %s ON UPDATE %s',
+            $expressionData['spec'],
+        );
+
+        // Verify expression values
+        $values = $expressionData['values'];
+        self::assertCount(6, $values);
+
+        // Verify constraint name
+        self::assertInstanceOf(ArgumentInterface::class, $values[0]);
+        self::assertEquals('foo', $values[0]->getValue());
+        self::assertEquals(ArgumentType::Identifier, $values[0]->getType());
+
+        // Verify column name
+        self::assertInstanceOf(ArgumentInterface::class, $values[1]);
+        self::assertEquals('bar', $values[1]->getValue());
+        self::assertEquals(ArgumentType::Identifier, $values[1]->getType());
+
+        // Verify reference table
+        self::assertInstanceOf(ArgumentInterface::class, $values[2]);
+        self::assertEquals('baz', $values[2]->getValue());
+        self::assertEquals(ArgumentType::Identifier, $values[2]->getType());
+
+        // Verify reference column
+        self::assertInstanceOf(ArgumentInterface::class, $values[3]);
+        self::assertEquals('bam', $values[3]->getValue());
+        self::assertEquals(ArgumentType::Identifier, $values[3]->getType());
+
+        // Verify on delete rule
+        self::assertInstanceOf(ArgumentInterface::class, $values[4]);
+        self::assertEquals('CASCADE', $values[4]->getValue());
+        self::assertEquals(ArgumentType::Literal, $values[4]->getType());
+
+        // Verify on update rule
+        self::assertInstanceOf(ArgumentInterface::class, $values[5]);
+        self::assertEquals('SET NULL', $values[5]->getValue());
+        self::assertEquals(ArgumentType::Literal, $values[5]->getType());
+    }
+
     public function testSetName(): void
     {
         $fk = new ForeignKey('foo', 'bar', 'baz', 'bam');
@@ -50,46 +97,6 @@ final class ForeignKeyTest extends TestCase
 
         // Verify the instance was actually mutated
         self::assertEquals('yyyy', $fk->getName());
-    }
-
-    public function testSetReferenceTable(): void
-    {
-        $fk = new ForeignKey('foo', 'bar', 'baz', 'bam');
-
-        // First mutation
-        $result = $fk->setReferenceTable('xxxx');
-
-        // Verify fluent interface
-        self::assertSame($fk, $result);
-
-        // Verify the first mutation occurred
-        self::assertEquals('xxxx', $fk->getReferenceTable());
-
-        // Second mutation to verify mutability
-        $fk->setReferenceTable('yyyy');
-
-        // Verify the instance was actually mutated
-        self::assertEquals('yyyy', $fk->getReferenceTable());
-    }
-
-    public function testSetReferenceColumn(): void
-    {
-        $fk = new ForeignKey('foo', 'bar', 'baz', 'bam');
-
-        // First mutation
-        $result = $fk->setReferenceColumn('xxxx');
-
-        // Verify fluent interface
-        self::assertSame($fk, $result);
-
-        // Verify the first mutation occurred
-        self::assertEquals(['xxxx'], $fk->getReferenceColumn());
-
-        // Second mutation to verify mutability
-        $fk->setReferenceColumn('yyyy');
-
-        // Verify the instance was actually mutated
-        self::assertEquals(['yyyy'], $fk->getReferenceColumn());
     }
 
     public function testSetOnDeleteRule(): void
@@ -132,50 +139,43 @@ final class ForeignKeyTest extends TestCase
         self::assertEquals('RESTRICT', $fk->getOnUpdateRule());
     }
 
-    public function testGetExpressionData(): void
+    public function testSetReferenceColumn(): void
     {
-        $fk = new ForeignKey('foo', 'bar', 'baz', 'bam', 'CASCADE', 'SET NULL');
+        $fk = new ForeignKey('foo', 'bar', 'baz', 'bam');
 
-        $expressionData = $fk->getExpressionData();
+        // First mutation
+        $result = $fk->setReferenceColumn('xxxx');
 
-        // Verify specification
-        self::assertEquals(
-            'CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s (%s) ON DELETE %s ON UPDATE %s',
-            $expressionData['spec']
-        );
+        // Verify fluent interface
+        self::assertSame($fk, $result);
 
-        // Verify expression values
-        $values = $expressionData['values'];
-        self::assertCount(6, $values);
+        // Verify the first mutation occurred
+        self::assertEquals(['xxxx'], $fk->getReferenceColumn());
 
-        // Verify constraint name
-        self::assertInstanceOf(ArgumentInterface::class, $values[0]);
-        self::assertEquals('foo', $values[0]->getValue());
-        self::assertEquals(ArgumentType::Identifier, $values[0]->getType());
+        // Second mutation to verify mutability
+        $fk->setReferenceColumn('yyyy');
 
-        // Verify column name
-        self::assertInstanceOf(ArgumentInterface::class, $values[1]);
-        self::assertEquals('bar', $values[1]->getValue());
-        self::assertEquals(ArgumentType::Identifier, $values[1]->getType());
+        // Verify the instance was actually mutated
+        self::assertEquals(['yyyy'], $fk->getReferenceColumn());
+    }
 
-        // Verify reference table
-        self::assertInstanceOf(ArgumentInterface::class, $values[2]);
-        self::assertEquals('baz', $values[2]->getValue());
-        self::assertEquals(ArgumentType::Identifier, $values[2]->getType());
+    public function testSetReferenceTable(): void
+    {
+        $fk = new ForeignKey('foo', 'bar', 'baz', 'bam');
 
-        // Verify reference column
-        self::assertInstanceOf(ArgumentInterface::class, $values[3]);
-        self::assertEquals('bam', $values[3]->getValue());
-        self::assertEquals(ArgumentType::Identifier, $values[3]->getType());
+        // First mutation
+        $result = $fk->setReferenceTable('xxxx');
 
-        // Verify on delete rule
-        self::assertInstanceOf(ArgumentInterface::class, $values[4]);
-        self::assertEquals('CASCADE', $values[4]->getValue());
-        self::assertEquals(ArgumentType::Literal, $values[4]->getType());
+        // Verify fluent interface
+        self::assertSame($fk, $result);
 
-        // Verify on update rule
-        self::assertInstanceOf(ArgumentInterface::class, $values[5]);
-        self::assertEquals('SET NULL', $values[5]->getValue());
-        self::assertEquals(ArgumentType::Literal, $values[5]->getType());
+        // Verify the first mutation occurred
+        self::assertEquals('xxxx', $fk->getReferenceTable());
+
+        // Second mutation to verify mutability
+        $fk->setReferenceTable('yyyy');
+
+        // Verify the instance was actually mutated
+        self::assertEquals('yyyy', $fk->getReferenceTable());
     }
 }

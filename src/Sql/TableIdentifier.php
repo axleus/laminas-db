@@ -14,16 +14,16 @@ class TableIdentifier
     {
         if ('' === $table) {
             throw new Exception\InvalidArgumentException(
-                '$table must be a valid table name, empty string given'
+                '$table must be a valid table name, empty string given',
             );
         }
 
         $this->table = $table;
 
-        if ($schema !== null) {
+        if (null !== $schema) {
             if ('' === $schema) {
                 throw new Exception\InvalidArgumentException(
-                    '$schema must be a valid schema name or null, empty string given'
+                    '$schema must be a valid schema name or null, empty string given',
                 );
             }
 
@@ -31,14 +31,14 @@ class TableIdentifier
         }
     }
 
-    public function getTable(): string
-    {
-        return $this->table;
-    }
-
     public function getSchema(): ?string
     {
         return $this->schema;
+    }
+
+    public function getTable(): string
+    {
+        return $this->table;
     }
 
     /** @return array{0: string, 1: null|string} */

@@ -17,66 +17,22 @@ class In extends AbstractExpression implements PredicateInterface
 {
     protected ?ArgumentInterface $identifier = null;
     protected ?ArgumentInterface $valueSet   = null;
-    protected string $operator               = 'IN';
+    protected string             $operator   = 'IN';
 
     /**
      * Constructor
      */
     public function __construct(
-        null|string|ArgumentInterface $identifier = null,
-        null|array|Select|ArgumentInterface $valueSet = null
+        string|ArgumentInterface|null $identifier = null,
+        array|Select|ArgumentInterface|null $valueSet = null,
     ) {
-        if ($identifier !== null) {
+        if (null !== $identifier) {
             $this->setIdentifier($identifier);
         }
 
-        if ($valueSet !== null) {
+        if (null !== $valueSet) {
             $this->setValueSet($valueSet);
         }
-    }
-
-    /**
-     * Set identifier for comparison
-     */
-    public function setIdentifier(string|ArgumentInterface $identifier): static
-    {
-        $this->identifier = $identifier instanceof ArgumentInterface
-            ? $identifier
-            : new Identifier($identifier);
-
-        return $this;
-    }
-
-    /**
-     * Get identifier of comparison
-     */
-    public function getIdentifier(): ?ArgumentInterface
-    {
-        return $this->identifier;
-    }
-
-    /**
-     * Set set of values for IN comparison
-     */
-    public function setValueSet(array|Select|ArgumentInterface $valueSet): static
-    {
-        if ($valueSet instanceof ArgumentInterface) {
-            $this->valueSet = $valueSet;
-        } elseif ($valueSet instanceof Select) {
-            $this->valueSet = new ArgumentSelect($valueSet);
-        } else {
-            $this->valueSet = new Values($valueSet);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Gets set of values in IN comparison
-     */
-    public function getValueSet(): ?ArgumentInterface
-    {
-        return $this->valueSet;
     }
 
     /** @inheritDoc */
@@ -98,5 +54,49 @@ class In extends AbstractExpression implements PredicateInterface
             'spec'   => $this->specification ?? "{$identifierSpec} {$this->operator} {$valueSetSpec}",
             'values' => [$this->identifier, $this->valueSet],
         ];
+    }
+
+    /**
+     * Get identifier of comparison
+     */
+    public function getIdentifier(): ?ArgumentInterface
+    {
+        return $this->identifier;
+    }
+
+    /**
+     * Gets set of values in IN comparison
+     */
+    public function getValueSet(): ?ArgumentInterface
+    {
+        return $this->valueSet;
+    }
+
+    /**
+     * Set identifier for comparison
+     */
+    public function setIdentifier(string|ArgumentInterface $identifier): static
+    {
+        $this->identifier = $identifier instanceof ArgumentInterface
+            ? $identifier
+            : new Identifier($identifier);
+
+        return $this;
+    }
+
+    /**
+     * Set set of values for IN comparison
+     */
+    public function setValueSet(array|Select|ArgumentInterface $valueSet): static
+    {
+        if ($valueSet instanceof ArgumentInterface) {
+            $this->valueSet = $valueSet;
+        } elseif ($valueSet instanceof Select) {
+            $this->valueSet = new ArgumentSelect($valueSet);
+        } else {
+            $this->valueSet = new Values($valueSet);
+        }
+
+        return $this;
     }
 }

@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace PhpDb\Metadata\Object;
 
-class TableObject extends AbstractTableObject
-{
-}
+class TableObject extends AbstractTableObject {}

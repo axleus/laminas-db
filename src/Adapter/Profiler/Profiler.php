@@ -32,6 +32,39 @@ class Profiler implements ProfilerInterface
     protected $currentIndex = 0;
 
     /**
+     * @return ProfileShape|null
+     */
+    public function getLastProfile(): ?array
+    {
+        return end($this->profiles);
+    }
+
+    /**
+     * @return ProfilesShape
+     */
+    public function getProfiles(): array
+    {
+        return $this->profiles;
+    }
+
+    /**
+     * @return $this Provides a fluent interface
+     */
+    public function profilerFinish(): ProfilerInterface
+    {
+        if (! isset($this->profiles[$this->currentIndex])) {
+            throw new Exception\RuntimeException(
+                'A profile must be started before ' . __FUNCTION__ . ' can be called.',
+            );
+        }
+        $current           = &$this->profiles[$this->currentIndex];
+        $current['end']    = microtime(true);
+        $current['elapse'] = $current['end'] - $current['start'];
+        $this->currentIndex++;
+        return $this;
+    }
+
+    /**
      * @throws InvalidArgumentException
      * @return $this Provides a fluent interface
      */
@@ -50,7 +83,7 @@ class Profiler implements ProfilerInterface
         } else {
             $profileInformation['sql'] = $target->getSql();
             $container                 = $target->getParameterContainer();
-            if ($container !== null) {
+            if (null !== $container) {
                 $profileInformation['parameters'] = clone $container;
             }
         }
@@ -58,38 +91,5 @@ class Profiler implements ProfilerInterface
         $this->profiles[$this->currentIndex] = $profileInformation;
 
         return $this;
-    }
-
-    /**
-     * @return $this Provides a fluent interface
-     */
-    public function profilerFinish(): ProfilerInterface
-    {
-        if (! isset($this->profiles[$this->currentIndex])) {
-            throw new Exception\RuntimeException(
-                'A profile must be started before ' . __FUNCTION__ . ' can be called.'
-            );
-        }
-        $current           = &$this->profiles[$this->currentIndex];
-        $current['end']    = microtime(true);
-        $current['elapse'] = $current['end'] - $current['start'];
-        $this->currentIndex++;
-        return $this;
-    }
-
-    /**
-     * @return ProfileShape|null
-     */
-    public function getLastProfile(): ?array
-    {
-        return end($this->profiles);
-    }
-
-    /**
-     * @return ProfilesShape
-     */
-    public function getProfiles(): array
-    {
-        return $this->profiles;
     }
 }

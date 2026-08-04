@@ -18,6 +18,58 @@ final class StatementIntegrationTest extends TestCase
 
     protected PDOStatement|MockObject $pdoStatementMock;
 
+    public function testStatementExecuteWillConvertPhpBoolToPdoBoolWhenBinding(): void
+    {
+        $this->pdoStatementMock
+            ->expects($this->any())
+            ->method('bindParam')
+            ->with(
+                $this->equalTo(':foo'),
+                $this->equalTo(false),
+                $this->equalTo(PDO::PARAM_BOOL),
+            );
+        $this->statement->execute(['foo' => false]);
+    }
+
+    public function testStatementExecuteWillUsePdoIntForIntWhenBinding(): void
+    {
+        $this->pdoStatementMock
+            ->expects($this->any())
+            ->method('bindParam')
+            ->with(
+                $this->equalTo(':foo'),
+                $this->equalTo(123),
+                $this->equalTo(PDO::PARAM_INT),
+            );
+        $this->statement->execute(['foo' => 123]);
+    }
+
+    public function testStatementExecuteWillUsePdoStrByDefaultWhenBinding(): void
+    {
+        $this->pdoStatementMock
+            ->expects($this->any())
+            ->method('bindParam')
+            ->with(
+                $this->equalTo(':foo'),
+                $this->equalTo('bar'),
+                $this->equalTo(PDO::PARAM_STR),
+            );
+        $this->statement->execute(['foo' => 'bar']);
+    }
+
+    public function testStatementExecuteWillUsePdoStrForStringIntegerWhenBinding(): void
+    {
+        $this->pdoStatementMock
+            ->expects($this->any())
+            ->method('bindParam')
+            ->with(
+                $this->equalTo(':foo'),
+                $this->equalTo('123'),
+                $this->equalTo(PDO::PARAM_STR),
+            );
+        $this->statement->execute(['foo' => '123']);
+    }
+
     /**
      * Sets up the fixture, for example, opens a network connection.
      * This method is called before a test is executed.
@@ -35,7 +87,7 @@ final class StatementIntegrationTest extends TestCase
         $this->statement->initialize(new TestAsset\CtorlessPdo(
             $this->pdoStatementMock = $this->getMockBuilder('PDOStatement')
                 ->onlyMethods(['execute', 'bindParam'])
-                ->getMock()
+                ->getMock(),
         ));
     }
 
@@ -43,47 +95,5 @@ final class StatementIntegrationTest extends TestCase
      * Tears down the fixture, for example, closes a network connection.
      * This method is called after a test is executed.
      */
-    protected function tearDown(): void
-    {
-    }
-
-    public function testStatementExecuteWillConvertPhpBoolToPdoBoolWhenBinding(): void
-    {
-        $this->pdoStatementMock->expects($this->any())->method('bindParam')->with(
-            $this->equalTo(':foo'),
-            $this->equalTo(false),
-            $this->equalTo(PDO::PARAM_BOOL)
-        );
-        $this->statement->execute(['foo' => false]);
-    }
-
-    public function testStatementExecuteWillUsePdoStrByDefaultWhenBinding(): void
-    {
-        $this->pdoStatementMock->expects($this->any())->method('bindParam')->with(
-            $this->equalTo(':foo'),
-            $this->equalTo('bar'),
-            $this->equalTo(PDO::PARAM_STR)
-        );
-        $this->statement->execute(['foo' => 'bar']);
-    }
-
-    public function testStatementExecuteWillUsePdoStrForStringIntegerWhenBinding(): void
-    {
-        $this->pdoStatementMock->expects($this->any())->method('bindParam')->with(
-            $this->equalTo(':foo'),
-            $this->equalTo('123'),
-            $this->equalTo(PDO::PARAM_STR)
-        );
-        $this->statement->execute(['foo' => '123']);
-    }
-
-    public function testStatementExecuteWillUsePdoIntForIntWhenBinding(): void
-    {
-        $this->pdoStatementMock->expects($this->any())->method('bindParam')->with(
-            $this->equalTo(':foo'),
-            $this->equalTo(123),
-            $this->equalTo(PDO::PARAM_INT)
-        );
-        $this->statement->execute(['foo' => 123]);
-    }
+    protected function tearDown(): void {}
 }

@@ -33,44 +33,11 @@ final class AbstractAdapterInterfaceFactoryTest extends TestCase
 {
     private ContainerInterface|ServiceManager $serviceManager;
 
-    #[Override]
-    protected function setUp(): void
+    public static function providerInvalidService(): array
     {
-        /** @var PdoDriverInterface&MockObject $pdoDriverInterfaceMock */
-        $pdoDriverInterfaceMock = $this->getMockBuilder(PdoDriverInterface::class)->getMock();
-        /** @var PlatformInterface&MockObject $platformMock */
-        $platformMock = $this->getMockBuilder(PlatformInterface::class)->getMock();
-
-        $config = [
-            'abstract_factories' => [AbstractAdapterInterfaceFactory::class],
-            'factories'          => [
-                PdoStubDriver::class     => static function (
-                    ContainerInterface $container
-                ) use ($pdoDriverInterfaceMock): PdoDriverInterface {
-                    return $pdoDriverInterfaceMock;
-                },
-                PlatformInterface::class => static function (
-                    ContainerInterface $container
-                ) use ($platformMock): PlatformInterface {
-                    return $platformMock;
-                },
-            ],
+        return [
+            ['PhpDb\Adapter\Unknown'],
         ];
-
-        $this->serviceManager = new ServiceManager($config);
-
-        $this->serviceManager->setService('config', [
-            AdapterInterface::class => [
-                'adapters' => [
-                    'PhpDb\Adapter\Writer' => [
-                        'driver' => PdoStubDriver::class,
-                    ],
-                    'PhpDb\Adapter\Reader' => [
-                        'driver' => PdoStubDriver::class,
-                    ],
-                ],
-            ],
-        ]);
     }
 
     public static function providerValidService(): array
@@ -81,35 +48,6 @@ final class AbstractAdapterInterfaceFactoryTest extends TestCase
         ];
     }
 
-    public static function providerInvalidService(): array
-    {
-        return [
-            ['PhpDb\Adapter\Unknown'],
-        ];
-    }
-
-    /**
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
-     */
-    #[DataProvider('providerValidService')]
-    public function testValidService(string $service): void
-    {
-        $actual = $this->serviceManager->get($service);
-        self::assertInstanceOf(AdapterInterface::class, $actual);
-    }
-
-    /**
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
-     */
-    #[DataProvider('providerInvalidService')]
-    public function testInvalidService(string $service): void
-    {
-        $this->expectException(ServiceNotFoundException::class);
-        $this->serviceManager->get($service);
-    }
-
     public function testCanCreateReturnsFalseForEmptyConfig(): void
     {
         $container = new ServiceManager();
@@ -118,25 +56,6 @@ final class AbstractAdapterInterfaceFactoryTest extends TestCase
         $factory = new AbstractAdapterInterfaceFactory();
 
         self::assertFalse($factory->canCreate($container, 'PhpDb\Adapter\Writer'));
-    }
-
-    public function testInvokeThrowsWhenDriverNotConfigured(): void
-    {
-        $container = new ServiceManager();
-        $container->setService('config', [
-            AdapterInterface::class => [
-                'adapters' => [
-                    'PhpDb\Adapter\NoDriver' => [],
-                ],
-            ],
-        ]);
-
-        $factory = new AbstractAdapterInterfaceFactory();
-        $factory->canCreate($container, 'PhpDb\Adapter\NoDriver');
-
-        $this->expectException(ContainerException::class);
-        $this->expectExceptionMessage('no driver configured');
-        $factory($container, 'PhpDb\Adapter\NoDriver');
     }
 
     public function testGetConfigCachesResult(): void
@@ -165,6 +84,36 @@ final class AbstractAdapterInterfaceFactoryTest extends TestCase
         $factory = new AbstractAdapterInterfaceFactory();
 
         self::assertFalse($factory->canCreate($container, 'anything'));
+    }
+
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
+    #[DataProvider('providerInvalidService')]
+    public function testInvalidService(string $service): void
+    {
+        $this->expectException(ServiceNotFoundException::class);
+        $this->serviceManager->get($service);
+    }
+
+    public function testInvokeThrowsWhenDriverNotConfigured(): void
+    {
+        $container = new ServiceManager();
+        $container->setService('config', [
+            AdapterInterface::class => [
+                'adapters' => [
+                    'PhpDb\Adapter\NoDriver' => [],
+                ],
+            ],
+        ]);
+
+        $factory = new AbstractAdapterInterfaceFactory();
+        $factory->canCreate($container, 'PhpDb\Adapter\NoDriver');
+
+        $this->expectException(ContainerException::class);
+        $this->expectExceptionMessage('no driver configured');
+        $factory($container, 'PhpDb\Adapter\NoDriver');
     }
 
     public function testInvokeUsesResultSetFromContainer(): void
@@ -202,5 +151,56 @@ final class AbstractAdapterInterfaceFactoryTest extends TestCase
         self::assertInstanceOf(AdapterInterface::class, $adapter);
         self::assertSame($resultSet, $adapter->getQueryResultSetPrototype());
         self::assertSame($profiler, $adapter->getProfiler());
+    }
+
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
+    #[DataProvider('providerValidService')]
+    public function testValidService(string $service): void
+    {
+        $actual = $this->serviceManager->get($service);
+        self::assertInstanceOf(AdapterInterface::class, $actual);
+    }
+
+    #[Override]
+    protected function setUp(): void
+    {
+        /** @var PdoDriverInterface&MockObject $pdoDriverInterfaceMock */
+        $pdoDriverInterfaceMock = $this->getMockBuilder(PdoDriverInterface::class)->getMock();
+        /** @var PlatformInterface&MockObject $platformMock */
+        $platformMock = $this->getMockBuilder(PlatformInterface::class)->getMock();
+
+        $config = [
+            'abstract_factories' => [AbstractAdapterInterfaceFactory::class],
+            'factories'          => [
+                PdoStubDriver::class     => static function (
+                    ContainerInterface $container,
+                ) use ($pdoDriverInterfaceMock): PdoDriverInterface {
+                    return $pdoDriverInterfaceMock;
+                },
+                PlatformInterface::class => static function (
+                    ContainerInterface $container,
+                ) use ($platformMock): PlatformInterface {
+                    return $platformMock;
+                },
+            ],
+        ];
+
+        $this->serviceManager = new ServiceManager($config);
+
+        $this->serviceManager->setService('config', [
+            AdapterInterface::class => [
+                'adapters' => [
+                    'PhpDb\Adapter\Writer' => [
+                        'driver' => PdoStubDriver::class,
+                    ],
+                    'PhpDb\Adapter\Reader' => [
+                        'driver' => PdoStubDriver::class,
+                    ],
+                ],
+            ],
+        ]);
     }
 }

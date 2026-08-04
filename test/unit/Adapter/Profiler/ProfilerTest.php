@@ -22,40 +22,6 @@ final class ProfilerTest extends TestCase
 {
     protected Profiler $profiler;
 
-    /**
-     * Sets up the fixture, for example, opens a network connection.
-     * This method is called before a test is executed.
-     */
-    #[Override]
-    protected function setUp(): void
-    {
-        $this->profiler = new Profiler();
-    }
-
-    public function testProfilerStartWithString(): void
-    {
-        $ret = $this->profiler->profilerStart('SELECT * FROM FOO');
-        self::assertSame($this->profiler, $ret);
-    }
-
-    public function testProfilerStartWithStatementContainer(): void
-    {
-        $ret = $this->profiler->profilerStart(new StatementContainer());
-        self::assertSame($this->profiler, $ret);
-    }
-
-    public function testProfilerFinishThrowsWithoutStart(): void
-    {
-        $this->profiler->profilerStart('SELECT * FROM FOO');
-        $ret = $this->profiler->profilerFinish();
-        self::assertSame($this->profiler, $ret);
-
-        $profiler = new Profiler();
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('A profile must be started before profilerFinish can be called');
-        $profiler->profilerFinish();
-    }
-
     public function testGetLastProfileReturnsSqlAndTimings(): void
     {
         $this->profiler->profilerStart('SELECT * FROM FOO');
@@ -78,6 +44,18 @@ final class ProfilerTest extends TestCase
         self::assertCount(2, $this->profiler->getProfiles());
     }
 
+    public function testProfilerFinishThrowsWithoutStart(): void
+    {
+        $this->profiler->profilerStart('SELECT * FROM FOO');
+        $ret = $this->profiler->profilerFinish();
+        self::assertSame($this->profiler, $ret);
+
+        $profiler = new Profiler();
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('A profile must be started before profilerFinish can be called');
+        $profiler->profilerFinish();
+    }
+
     public function testProfilerStartClonesParameterContainerFromStatementContainer(): void
     {
         $parameterContainer = new ParameterContainer(['key' => 'value']);
@@ -91,5 +69,27 @@ final class ProfilerTest extends TestCase
         self::assertSame('SELECT ?', $profile['sql']);
         self::assertInstanceOf(ParameterContainer::class, $profile['parameters']);
         self::assertNotSame($parameterContainer, $profile['parameters']);
+    }
+
+    public function testProfilerStartWithStatementContainer(): void
+    {
+        $ret = $this->profiler->profilerStart(new StatementContainer());
+        self::assertSame($this->profiler, $ret);
+    }
+
+    public function testProfilerStartWithString(): void
+    {
+        $ret = $this->profiler->profilerStart('SELECT * FROM FOO');
+        self::assertSame($this->profiler, $ret);
+    }
+
+    /**
+     * Sets up the fixture, for example, opens a network connection.
+     * This method is called before a test is executed.
+     */
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->profiler = new Profiler();
     }
 }

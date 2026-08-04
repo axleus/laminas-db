@@ -32,7 +32,7 @@ class SqliteMemoryPdo extends PDO
             throw new Exception(sprintf(
                 'Error: %s, %s',
                 $this->errorCode(),
-                implode(',', $this->errorInfo())
+                implode(',', $this->errorInfo()),
             ));
         }
     }

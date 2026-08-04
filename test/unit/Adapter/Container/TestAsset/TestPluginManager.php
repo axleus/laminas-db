@@ -8,7 +8,5 @@ use Laminas\ServiceManager\AbstractPluginManager;
 
 class TestPluginManager extends AbstractPluginManager
 {
-    public function validate(mixed $instance): void
-    {
-    }
+    public function validate(mixed $instance): void {}
 }

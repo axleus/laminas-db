@@ -9,8 +9,6 @@ use PhpDb\Adapter\Driver\DriverInterface;
 use PhpDb\Adapter\ParameterContainer;
 use PhpDb\Adapter\Platform\PlatformInterface;
 use PhpDb\Sql\Predicate\PredicateInterface;
-use PhpDb\Sql\TableIdentifier;
-use PhpDb\Sql\Where;
 
 use function array_key_exists;
 use function str_replace;
@@ -28,7 +26,7 @@ class Delete extends AbstractPreparableSql
 
     final public const SPECIFICATION_WHERE = 'where';
 
-    /**@#-*/
+    /** @#- */
 
     /**
      * {@inheritDoc}
@@ -54,11 +52,6 @@ class Delete extends AbstractPreparableSql
         }
     }
 
-    private function getWhere(): Where
-    {
-        return $this->where ??= new Where();
-    }
-
     /**
      * Create from statement
      */
@@ -75,7 +68,7 @@ class Delete extends AbstractPreparableSql
             'table'                => $this->table,
             'where'                => $this->getWhere(),
         ];
-        return $key !== null && array_key_exists($key, $rawState) ? $rawState[$key] : $rawState;
+        return null !== $key && array_key_exists($key, $rawState) ? $rawState[$key] : $rawState;
     }
 
     /**
@@ -85,7 +78,7 @@ class Delete extends AbstractPreparableSql
      */
     public function where(
         PredicateInterface|array|Closure|string|Where $predicate,
-        string $combination = Predicate\PredicateSet::OP_AND
+        string $combination = Predicate\PredicateSet::OP_AND,
     ): static {
         if ($predicate instanceof Where) {
             $this->where = $predicate;
@@ -99,29 +92,34 @@ class Delete extends AbstractPreparableSql
     protected function processDelete(
         PlatformInterface $platform,
         ?DriverInterface $driver = null,
-        ?ParameterContainer $parameterContainer = null
+        ?ParameterContainer $parameterContainer = null,
     ): string {
         return str_replace(
             '%1$s',
             $this->resolveTable($this->table, $platform, $driver, $parameterContainer),
-            $this->specifications[static::SPECIFICATION_DELETE]
+            $this->specifications[static::SPECIFICATION_DELETE],
         );
     }
 
     protected function processWhere(
         PlatformInterface $platform,
         ?DriverInterface $driver = null,
-        ?ParameterContainer $parameterContainer = null
+        ?ParameterContainer $parameterContainer = null,
     ): ?string {
-        if ($this->where === null || $this->where->count() === 0) {
+        if (null === $this->where || $this->where->count() === 0) {
             return null;
         }
 
         return str_replace(
             '%1$s',
             $this->processExpression($this->where, $platform, $driver, $parameterContainer, 'where'),
-            $this->specifications[static::SPECIFICATION_WHERE]
+            $this->specifications[static::SPECIFICATION_WHERE],
         );
+    }
+
+    private function getWhere(): Where
+    {
+        return $this->where ??= new Where();
     }
 
     /**

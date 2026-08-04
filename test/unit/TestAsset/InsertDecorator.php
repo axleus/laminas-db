@@ -14,8 +14,8 @@ final class InsertDecorator extends Sql\Insert implements Sql\Platform\PlatformD
      * @return $this Provides a fluent interface
      */
     public function setSubject(
-        Sql\SqlInterface|Sql\PreparableSqlInterface|null $subject
-    ): InsertDecorator {
+        Sql\SqlInterface|Sql\PreparableSqlInterface|null $subject,
+    ): self {
         $this->subject = $subject;
         return $this;
     }

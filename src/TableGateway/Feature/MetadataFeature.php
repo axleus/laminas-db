@@ -19,7 +19,7 @@ class MetadataFeature extends AbstractFeature
      * Constructor
      */
     public function __construct(
-        protected MetadataInterface $metadata
+        protected MetadataInterface $metadata,
     ) {
         $this->sharedData['metadata'] = [
             'primaryKey' => null,
@@ -58,13 +58,15 @@ class MetadataFeature extends AbstractFeature
         $pkc = null;
 
         foreach ($m->getConstraints($table, $schema) as $constraint) {
-            if ($constraint->getType() === 'PRIMARY KEY') {
-                $pkc = $constraint;
-                break;
+            if ($constraint->getType() !== 'PRIMARY KEY') {
+                continue;
             }
+
+            $pkc = $constraint;
+            break;
         }
 
-        if ($pkc === null) {
+        if (null === $pkc) {
             throw new Exception\RuntimeException('A primary key for this column could not be found in the metadata.');
         }
 

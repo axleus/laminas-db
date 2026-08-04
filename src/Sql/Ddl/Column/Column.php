@@ -34,7 +34,7 @@ class Column implements ColumnInterface
         string $name = '',
         bool $nullable = false,
         mixed $default = null,
-        array $options = []
+        array $options = [],
     ) {
         $this->setName($name);
         $this->setNullable($nullable);
@@ -42,33 +42,10 @@ class Column implements ColumnInterface
         $this->setOptions($options);
     }
 
-    public function setName(string $name): static
+    public function addConstraint(ConstraintInterface $constraint): static
     {
-        $this->name = $name;
-        return $this;
-    }
+        $this->constraints[] = $constraint;
 
-    #[Override]
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function setNullable(bool $nullable): static
-    {
-        $this->isNullable = $nullable;
-        return $this;
-    }
-
-    #[Override]
-    public function isNullable(): bool
-    {
-        return $this->isNullable;
-    }
-
-    public function setDefault(string|int|float|bool|Literal|Value|null $default): static
-    {
-        $this->default = $default;
         return $this;
     }
 
@@ -76,31 +53,6 @@ class Column implements ColumnInterface
     public function getDefault(): string|int|float|bool|Literal|Value|null
     {
         return $this->default;
-    }
-
-    public function setOptions(array $options): static
-    {
-        $this->options = $options;
-        return $this;
-    }
-
-    public function setOption(string $name, bool|string $value): static
-    {
-        $this->options[$name] = $value;
-        return $this;
-    }
-
-    #[Override]
-    public function getOptions(): array
-    {
-        return $this->options;
-    }
-
-    public function addConstraint(ConstraintInterface $constraint): static
-    {
-        $this->constraints[] = $constraint;
-
-        return $this;
     }
 
     /** @inheritDoc */
@@ -113,13 +65,13 @@ class Column implements ColumnInterface
             new Literal($this->type),
         ];
 
-        if ($this->isNullable === false) {
+        if (false === $this->isNullable) {
             $specParts[] = 'NOT NULL';
         } else {
             $specParts[] = 'NULL';
         }
 
-        if ($this->default !== null) {
+        if (null !== $this->default) {
             $specParts[] = 'DEFAULT %s';
             $values[]    = $this->default instanceof ArgumentInterface
                 ? $this->default
@@ -140,5 +92,53 @@ class Column implements ColumnInterface
             'spec'   => implode(' ', $specParts),
             'values' => $values,
         ];
+    }
+
+    #[Override]
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    #[Override]
+    public function getOptions(): array
+    {
+        return $this->options;
+    }
+
+    #[Override]
+    public function isNullable(): bool
+    {
+        return $this->isNullable;
+    }
+
+    public function setDefault(string|int|float|bool|Literal|Value|null $default): static
+    {
+        $this->default = $default;
+        return $this;
+    }
+
+    public function setName(string $name): static
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function setNullable(bool $nullable): static
+    {
+        $this->isNullable = $nullable;
+        return $this;
+    }
+
+    public function setOption(string $name, bool|string $value): static
+    {
+        $this->options[$name] = $value;
+        return $this;
+    }
+
+    public function setOptions(array $options): static
+    {
+        $this->options = $options;
+        return $this;
     }
 }

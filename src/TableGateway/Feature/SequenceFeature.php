@@ -25,30 +25,31 @@ class SequenceFeature extends AbstractFeature
         $this->sequenceName    = $sequenceName;
     }
 
-    public function preInsert(Insert $insert): Insert
+    /**
+     * Return the most recent value from the specified sequence in the database.
+     *
+     * @throws RuntimeException
+     */
+    public function lastSequenceId(): int
     {
-        $columns = $insert->getRawState('columns');
-        $values  = $insert->getRawState('values');
-        $key     = array_search($this->primaryKeyField, $columns);
-        if ($key !== false) {
-            $this->sequenceValue = $values[$key] ?? null;
-            return $insert;
-        }
+        $platform     = $this->tableGateway->adapter->getPlatform();
+        $platformName = $platform->getName();
 
-        $this->sequenceValue = $this->nextSequenceId();
-        if ($this->sequenceValue === null) {
-            return $insert;
-        }
+        // todo: Remove string usage
+        $sql = match ($platformName) {
+            'Oracle' => 'SELECT '
+                . $platform->quoteIdentifier($this->sequenceName)
+                . '.CURRVAL as "currval" FROM dual',
+            'PostgreSQL' => 'SELECT LAST_INSERT_ROWID() as "currval"',
+            default      => throw new RuntimeException('Unsupported platform for retrieving last sequence id'),
+        };
 
-        $insert->values([$this->primaryKeyField => $this->sequenceValue], Insert::VALUES_MERGE);
-        return $insert;
-    }
-
-    public function postInsert(StatementInterface $statement, ResultInterface $result): void
-    {
-        if ($this->sequenceValue !== null) {
-            $this->tableGateway->lastInsertValue = $this->sequenceValue;
-        }
+        $statement = $this->tableGateway->adapter->createStatement();
+        $statement->prepare($sql);
+        $result   = $statement->execute();
+        $sequence = $result->current();
+        unset($statement, $result);
+        return $sequence['currval'];
     }
 
     /**
@@ -62,9 +63,9 @@ class SequenceFeature extends AbstractFeature
         $platformName = $platform->getName();
 
         $sql = match ($platformName) {
-            'Oracle'     => 'SELECT '
-                            . $platform->quoteIdentifier($this->sequenceName)
-                            . '.NEXTVAL as "nextval" FROM dual',
+            'Oracle' => 'SELECT '
+                . $platform->quoteIdentifier($this->sequenceName)
+                . '.NEXTVAL as "nextval" FROM dual',
             'PostgreSQL' => 'SELECT NEXTVAL(\'"' . $this->sequenceName . '"\')',
             default      => throw new RuntimeException('Unsupported platform for retrieving next sequence id'),
         };
@@ -77,30 +78,29 @@ class SequenceFeature extends AbstractFeature
         return $sequence['nextval'];
     }
 
-    /**
-     * Return the most recent value from the specified sequence in the database.
-     *
-     * @throws RuntimeException
-     */
-    public function lastSequenceId(): int
+    public function postInsert(StatementInterface $statement, ResultInterface $result): void
     {
-        $platform     = $this->tableGateway->adapter->getPlatform();
-        $platformName = $platform->getName();
+        if (null !== $this->sequenceValue) {
+            $this->tableGateway->lastInsertValue = $this->sequenceValue;
+        }
+    }
 
-        // todo: Remove string usage
-        $sql = match ($platformName) {
-            'Oracle'     => 'SELECT '
-                            . $platform->quoteIdentifier($this->sequenceName)
-                            . '.CURRVAL as "currval" FROM dual',
-            'PostgreSQL' => 'SELECT LAST_INSERT_ROWID() as "currval"',
-            default => throw new RuntimeException('Unsupported platform for retrieving last sequence id'),
-        };
+    public function preInsert(Insert $insert): Insert
+    {
+        $columns = $insert->getRawState('columns');
+        $values  = $insert->getRawState('values');
+        $key     = array_search($this->primaryKeyField, $columns);
+        if (false !== $key) {
+            $this->sequenceValue = $values[$key] ?? null;
+            return $insert;
+        }
 
-        $statement = $this->tableGateway->adapter->createStatement();
-        $statement->prepare($sql);
-        $result   = $statement->execute();
-        $sequence = $result->current();
-        unset($statement, $result);
-        return $sequence['currval'];
+        $this->sequenceValue = $this->nextSequenceId();
+        if (null === $this->sequenceValue) {
+            return $insert;
+        }
+
+        $insert->values([$this->primaryKeyField => $this->sequenceValue], Insert::VALUES_MERGE);
+        return $insert;
     }
 }

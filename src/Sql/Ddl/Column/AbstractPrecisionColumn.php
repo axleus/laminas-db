@@ -16,19 +16,19 @@ abstract class AbstractPrecisionColumn extends AbstractLengthColumn
         ?int $decimal = null,
         bool $nullable = false,
         mixed $default = null,
-        array $options = []
+        array $options = [],
     ) {
         $this->setDecimal($decimal);
 
         parent::__construct($name, $digits, $nullable, $default, $options);
     }
 
-    public function setDigits(?int $digits): static
+    public function getDecimal(): ?int
     {
-        return $this->setLength($digits);
+        return $this->decimal;
     }
 
-    public function getDigits(): int|null
+    public function getDigits(): ?int
     {
         return $this->getLength();
     }
@@ -40,16 +40,16 @@ abstract class AbstractPrecisionColumn extends AbstractLengthColumn
         return $this;
     }
 
-    public function getDecimal(): ?int
+    public function setDigits(?int $digits): static
     {
-        return $this->decimal;
+        return $this->setLength($digits);
     }
 
     #[Override]
     protected function getLengthExpression(): string
     {
-        if ($this->decimal !== null) {
-            return $this->length . ',' . $this->decimal;
+        if (null !== $this->decimal) {
+            return "{$this->length},{$this->decimal}";
         }
 
         return (string) $this->length;

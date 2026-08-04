@@ -15,12 +15,13 @@ class AbstractFeatureTest extends TestCase
 {
     private AbstractFeature&MockObject $feature;
 
-    protected function setUp(): void
+    public function testGetMagicMethodSpecificationsReturnsEmptyArray(): void
     {
-        $this->feature = $this->getMockBuilder(AbstractFeature::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods([])
-            ->getMock();
+        $result = $this->feature->getMagicMethodSpecifications();
+
+        /** @phpstan-ignore staticMethod.alreadyNarrowedType */
+        self::assertIsArray($result);
+        self::assertEmpty($result);
     }
 
     public function testGetNameReturnsClassName(): void
@@ -31,6 +32,14 @@ class AbstractFeatureTest extends TestCase
         /** @phpstan-ignore staticMethod.alreadyNarrowedType */
         self::assertIsString($name);
         self::assertNotEmpty($name);
+    }
+
+    public function testInitializeThrowsRuntimeException(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('This method is not intended to be called on this object.');
+
+        $this->feature->initialize();
     }
 
     public function testSetRowGateway(): void
@@ -49,20 +58,11 @@ class AbstractFeatureTest extends TestCase
         self::assertSame($rowGateway, $value);
     }
 
-    public function testInitializeThrowsRuntimeException(): void
+    protected function setUp(): void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('This method is not intended to be called on this object.');
-
-        $this->feature->initialize();
-    }
-
-    public function testGetMagicMethodSpecificationsReturnsEmptyArray(): void
-    {
-        $result = $this->feature->getMagicMethodSpecifications();
-
-        /** @phpstan-ignore staticMethod.alreadyNarrowedType */
-        self::assertIsArray($result);
-        self::assertEmpty($result);
+        $this->feature = $this->getMockBuilder(AbstractFeature::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods([])
+            ->getMock();
     }
 }

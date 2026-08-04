@@ -18,17 +18,6 @@ final class NotBetweenTest extends TestCase
 {
     protected NotBetween $notBetween;
 
-    #[Override]
-    protected function setUp(): void
-    {
-        $this->notBetween = new NotBetween();
-    }
-
-    public function testSpecificationIsNullByDefault(): void
-    {
-        self::assertNull($this->notBetween->getSpecification());
-    }
-
     public function testRetrievingWherePartsReturnsSpecificationArrayOfIdentifierAndValuesAndArrayOfTypes(): void
     {
         $this->notBetween
@@ -88,5 +77,16 @@ final class NotBetweenTest extends TestCase
         self::assertInstanceOf(ArgumentInterface::class, $values[2]);
         self::assertEquals('foo.baz', $values[2]->getValue());
         self::assertEquals(ArgumentType::Identifier, $values[2]->getType());
+    }
+
+    public function testSpecificationIsNullByDefault(): void
+    {
+        self::assertNull($this->notBetween->getSpecification());
+    }
+
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->notBetween = new NotBetween();
     }
 }

@@ -13,68 +13,6 @@ use PHPUnit\Framework\TestCase;
 
 class FeatureSetTest extends TestCase
 {
-    public function testConstructorWithEmptyArray(): void
-    {
-        $featureSet = new FeatureSet();
-        self::assertInstanceOf(FeatureSet::class, $featureSet);
-    }
-
-    public function testConstructorWithFeatures(): void
-    {
-        $feature    = $this->createMock(AbstractFeature::class);
-        $featureSet = new FeatureSet([$feature]);
-        self::assertInstanceOf(FeatureSet::class, $featureSet);
-    }
-
-    public function testSetRowGateway(): void
-    {
-        /** @var AbstractRowGateway&MockObject $rowGateway */
-        $rowGateway = $this->getMockBuilder(AbstractRowGateway::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $feature = $this->createMock(AbstractFeature::class);
-        $feature->expects($this->once())
-            ->method('setRowGateway')
-            ->with($rowGateway);
-
-        $featureSet = new FeatureSet([$feature]);
-        $result     = $featureSet->setRowGateway($rowGateway);
-
-        self::assertSame($featureSet, $result);
-    }
-
-    public function testGetFeatureByClassNameReturnsFeature(): void
-    {
-        $feature    = $this->createMock(AbstractFeature::class);
-        $featureSet = new FeatureSet([$feature]);
-
-        $result = $featureSet->getFeatureByClassName(AbstractFeature::class);
-
-        self::assertSame($feature, $result);
-    }
-
-    public function testGetFeatureByClassNameReturnsNullWhenNotFound(): void
-    {
-        $featureSet = new FeatureSet();
-
-        $result = $featureSet->getFeatureByClassName(AbstractFeature::class);
-
-        self::assertNull($result);
-    }
-
-    public function testAddFeatures(): void
-    {
-        $feature1 = $this->createMock(AbstractFeature::class);
-        $feature2 = $this->createMock(AbstractFeature::class);
-
-        $featureSet = new FeatureSet();
-        $result     = $featureSet->addFeatures([$feature1, $feature2]);
-
-        self::assertSame($featureSet, $result);
-        self::assertSame($feature1, $featureSet->getFeatureByClassName(AbstractFeature::class));
-    }
-
     public function testAddFeature(): void
     {
         $feature = $this->createMock(AbstractFeature::class);
@@ -101,6 +39,18 @@ class FeatureSetTest extends TestCase
         $featureSet = new FeatureSet();
         $featureSet->setRowGateway($rowGateway);
         $featureSet->addFeature($feature);
+    }
+
+    public function testAddFeatures(): void
+    {
+        $feature1 = $this->createMock(AbstractFeature::class);
+        $feature2 = $this->createMock(AbstractFeature::class);
+
+        $featureSet = new FeatureSet();
+        $result     = $featureSet->addFeatures([$feature1, $feature2]);
+
+        self::assertSame($featureSet, $result);
+        self::assertSame($feature1, $featureSet->getFeatureByClassName(AbstractFeature::class));
     }
 
     public function testApplyCallsMethodOnFeatures(): void
@@ -139,24 +89,16 @@ class FeatureSetTest extends TestCase
         self::assertTrue(true);
     }
 
-    public function testCanCallMagicGetReturnsFalse(): void
+    public function testCallMagicCallReturnsNull(): void
     {
         $featureSet = new FeatureSet();
-        /** @phpstan-ignore staticMethod.impossibleType */
-        self::assertFalse($featureSet->canCallMagicGet('property'));
+        self::assertNull($featureSet->callMagicCall('method', []));
     }
 
     public function testCallMagicGetReturnsNull(): void
     {
         $featureSet = new FeatureSet();
         self::assertNull($featureSet->callMagicGet('property'));
-    }
-
-    public function testCanCallMagicSetReturnsFalse(): void
-    {
-        $featureSet = new FeatureSet();
-        /** @phpstan-ignore staticMethod.impossibleType */
-        self::assertFalse($featureSet->canCallMagicSet('property'));
     }
 
     public function testCallMagicSetReturnsNull(): void
@@ -171,9 +113,67 @@ class FeatureSetTest extends TestCase
         self::assertFalse($featureSet->canCallMagicCall('method'));
     }
 
-    public function testCallMagicCallReturnsNull(): void
+    public function testCanCallMagicGetReturnsFalse(): void
     {
         $featureSet = new FeatureSet();
-        self::assertNull($featureSet->callMagicCall('method', []));
+        /** @phpstan-ignore staticMethod.impossibleType */
+        self::assertFalse($featureSet->canCallMagicGet('property'));
+    }
+
+    public function testCanCallMagicSetReturnsFalse(): void
+    {
+        $featureSet = new FeatureSet();
+        /** @phpstan-ignore staticMethod.impossibleType */
+        self::assertFalse($featureSet->canCallMagicSet('property'));
+    }
+
+    public function testConstructorWithEmptyArray(): void
+    {
+        $featureSet = new FeatureSet();
+        self::assertInstanceOf(FeatureSet::class, $featureSet);
+    }
+
+    public function testConstructorWithFeatures(): void
+    {
+        $feature    = $this->createMock(AbstractFeature::class);
+        $featureSet = new FeatureSet([$feature]);
+        self::assertInstanceOf(FeatureSet::class, $featureSet);
+    }
+
+    public function testGetFeatureByClassNameReturnsFeature(): void
+    {
+        $feature    = $this->createMock(AbstractFeature::class);
+        $featureSet = new FeatureSet([$feature]);
+
+        $result = $featureSet->getFeatureByClassName(AbstractFeature::class);
+
+        self::assertSame($feature, $result);
+    }
+
+    public function testGetFeatureByClassNameReturnsNullWhenNotFound(): void
+    {
+        $featureSet = new FeatureSet();
+
+        $result = $featureSet->getFeatureByClassName(AbstractFeature::class);
+
+        self::assertNull($result);
+    }
+
+    public function testSetRowGateway(): void
+    {
+        /** @var AbstractRowGateway&MockObject $rowGateway */
+        $rowGateway = $this->getMockBuilder(AbstractRowGateway::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $feature = $this->createMock(AbstractFeature::class);
+        $feature->expects($this->once())
+            ->method('setRowGateway')
+            ->with($rowGateway);
+
+        $featureSet = new FeatureSet([$feature]);
+        $result     = $featureSet->setRowGateway($rowGateway);
+
+        self::assertSame($featureSet, $result);
     }
 }

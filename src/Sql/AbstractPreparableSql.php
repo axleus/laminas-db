@@ -14,7 +14,7 @@ abstract class AbstractPreparableSql extends AbstractSql implements PreparableSq
     #[Override]
     public function prepareStatement(
         AdapterInterface $adapter,
-        StatementContainerInterface $statementContainer
+        StatementContainerInterface $statementContainer,
     ): StatementContainerInterface {
         $parameterContainer = $statementContainer->getParameterContainer();
 
@@ -25,7 +25,7 @@ abstract class AbstractPreparableSql extends AbstractSql implements PreparableSq
         }
 
         $statementContainer->setSql(
-            $this->buildSqlString($adapter->getPlatform(), $adapter->getDriver(), $parameterContainer)
+            $this->buildSqlString($adapter->getPlatform(), $adapter->getDriver(), $parameterContainer),
         );
 
         return $statementContainer;

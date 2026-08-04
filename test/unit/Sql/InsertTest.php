@@ -51,204 +51,32 @@ final class InsertTest extends TestCase
 
     protected Insert $insert;
 
-    /**
-     * Sets up the fixture, for example, opens a network connection.
-     * This method is called before a test is executed.
-     */
-    #[Override]
-    protected function setUp(): void
+    // @codingStandardsIgnoreStart
+    public function test__get(): void
     {
-        $this->insert = new Insert();
+        // @codingStandardsIgnoreEnd
+        /** @psalm-suppress UndefinedMagicPropertyAssignment */
+        $this->insert->foo = 'bar';
+        self::assertEquals('bar', $this->insert->foo);
+
+        /** @psalm-suppress UndefinedMagicPropertyAssignment */
+        $this->insert->foo = null;
+        self::assertNull($this->insert->foo);
     }
 
-    public function testInto(): void
+    // @codingStandardsIgnoreStart
+    public function test__isset(): void
     {
-        $this->insert->into('table');
-        self::assertEquals('table', $this->insert->getRawState('table'));
+        // @codingStandardsIgnoreEnd
+        /** @psalm-suppress UndefinedMagicPropertyAssignment */
+        $this->insert->foo = 'bar';
+        /** @psalm-suppress RedundantCondition */
+        self::assertTrue(isset($this->insert->foo));
 
-        $tableIdentifier = new TableIdentifier('table', 'schema');
-        $this->insert->into($tableIdentifier);
-        self::assertEquals($tableIdentifier, $this->insert->getRawState('table'));
-    }
-
-    public function testColumns(): void
-    {
-        $columns = ['foo', 'bar'];
-        $this->insert->columns($columns);
-        self::assertEquals($columns, $this->insert->getRawState('columns'));
-    }
-
-    public function testValues(): void
-    {
-        $this->insert->values(['foo' => 'bar']);
-        self::assertEquals(['foo'], $this->insert->getRawState('columns'));
-        self::assertEquals(['bar'], $this->insert->getRawState('values'));
-
-        // test will merge cols and values of previously set stuff
-        $this->insert->values(['foo' => 'bax'], Insert::VALUES_MERGE);
-        $this->insert->values(['boom' => 'bam'], Insert::VALUES_MERGE);
-        self::assertEquals(['foo', 'boom'], $this->insert->getRawState('columns'));
-        self::assertEquals(['bax', 'bam'], $this->insert->getRawState('values'));
-
-        $this->insert->values(['foo' => 'bax']);
-        self::assertEquals(['foo'], $this->insert->getRawState('columns'));
-        self::assertEquals(['bax'], $this->insert->getRawState('values'));
-    }
-
-    public function testValuesThrowsExceptionWhenNotArrayOrSelect(): void
-    {
-        $this->expectException(TypeError::class);
-        /** @psalm-suppress InvalidArgument */
-        $this->insert->values(5);
-    }
-
-    public function testValuesThrowsExceptionWhenSelectMergeOverArray(): void
-    {
-        $this->insert->values(['foo' => 'bar']);
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('A PhpDb\Sql\Select instance cannot be provided with the merge flag');
-        $this->insert->values(new Select(), Insert::VALUES_MERGE);
-    }
-
-    public function testValuesThrowsExceptionWhenArrayMergeOverSelect(): void
-    {
-        $this->insert->values(new Select());
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'An array of values cannot be provided with the merge flag when a PhpDb\Sql\Select instance already '
-            . 'exists as the value source'
-        );
-        $this->insert->values(['foo' => 'bar'], Insert::VALUES_MERGE);
-    }
-
-    /**
-     * @throws ReflectionException
-     */
-    #[Group('Laminas-4926')]
-    public function testEmptyArrayValues(): void
-    {
-        $this->insert->values([]);
-        self::assertEquals([], $this->readAttribute($this->insert, 'columns'));
-    }
-
-    public function testPrepareStatement(): void
-    {
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
-        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $pContainer    = new ParameterContainer([]);
-        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
-        $mockStatement->expects($this->once())
-            ->method('setSql')
-            ->with($this->equalTo('INSERT INTO "foo" ("bar", "boo") VALUES (?, NOW())'));
-
-        $this->insert->into('foo')
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()')]);
-
-        $this->insert->prepareStatement($mockAdapter, $mockStatement);
-
-        // with TableIdentifier
-        $this->insert = new Insert();
-
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
-        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $pContainer    = new ParameterContainer([]);
-        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
-        $mockStatement->expects($this->once())
-            ->method('setSql')
-            ->with($this->equalTo('INSERT INTO "sch"."foo" ("bar", "boo") VALUES (?, NOW())'));
-
-        $this->insert->into(new TableIdentifier('foo', 'sch'))
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()')]);
-
-        $this->insert->prepareStatement($mockAdapter, $mockStatement);
-    }
-
-    public function testPrepareStatementWithSelect(): void
-    {
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
-        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = new StatementContainer();
-
-        $select = new Select('bar');
-        $this->insert
-                ->into('foo')
-                ->columns(['col1'])
-                ->select($select->where(['x' => 5]))
-                ->prepareStatement($mockAdapter, $mockStatement);
-
-        self::assertEquals(
-            'INSERT INTO "foo" ("col1") SELECT "bar".* FROM "bar" WHERE "x" = ?',
-            $mockStatement->getSql()
-        );
-        $parameters = $mockStatement->getParameterContainer();
-        $this->assertInstanceOf(ParameterContainer::class, $parameters);
-
-        $namedArray = $parameters->getNamedArray();
-        self::assertSame(['subselect1where1' => 5], $namedArray);
-    }
-
-    public function testGetSqlString(): void
-    {
-        $this->insert->into('foo')
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
-
-        self::assertEquals(
-            'INSERT INTO "foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
-            $this->insert->getSqlString(new TrustingSql92Platform())
-        );
-
-        // with TableIdentifier
-        $this->insert = new Insert();
-        $this->insert->into(new TableIdentifier('foo', 'sch'))
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
-
-        self::assertEquals(
-            'INSERT INTO "sch"."foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
-            $this->insert->getSqlString(new TrustingSql92Platform())
-        );
-
-        // with Select
-        $this->insert = new Insert();
-        $select       = new Select();
-        $this->insert->into('foo')->select($select->from('bar'));
-
-        self::assertEquals(
-            'INSERT INTO "foo"  SELECT "bar".* FROM "bar"',
-            $this->insert->getSqlString(new TrustingSql92Platform())
-        );
-
-        // with Select and columns
-        $this->insert->columns(['col1', 'col2']);
-        self::assertEquals(
-            'INSERT INTO "foo" ("col1", "col2") SELECT "bar".* FROM "bar"',
-            $this->insert->getSqlString(new TrustingSql92Platform())
-        );
-    }
-
-    public function testGetSqlStringUsingColumnsAndValuesMethods(): void
-    {
-        // With columns() and values()
-        $this->insert
-            ->into('foo')
-            ->columns(['col1', 'col2', 'col3'])
-            ->values(['val1', 'val2', 'val3']);
-        self::assertEquals(
-            'INSERT INTO "foo" ("col1", "col2", "col3") VALUES (\'val1\', \'val2\', \'val3\')',
-            $this->insert->getSqlString(new TrustingSql92Platform())
-        );
+        /** @psalm-suppress UndefinedMagicPropertyAssignment */
+        $this->insert->foo = null;
+        /** @psalm-suppress TypeDoesNotContainType */
+        self::assertTrue(isset($this->insert->foo));
     }
 
     // @codingStandardsIgnoreStart
@@ -283,45 +111,58 @@ final class InsertTest extends TestCase
         self::assertEquals([], $this->insert->getRawState('values'));
     }
 
-    // @codingStandardsIgnoreStart
-    public function test__isset(): void
+    public function testColumns(): void
     {
-        // @codingStandardsIgnoreEnd
-        /** @psalm-suppress UndefinedMagicPropertyAssignment */
-        $this->insert->foo = 'bar';
-        /** @psalm-suppress RedundantCondition */
-        self::assertTrue(isset($this->insert->foo));
-
-        /** @psalm-suppress UndefinedMagicPropertyAssignment */
-        $this->insert->foo = null;
-        /** @psalm-suppress TypeDoesNotContainType */
-        self::assertTrue(isset($this->insert->foo));
+        $columns = ['foo', 'bar'];
+        $this->insert->columns($columns);
+        self::assertEquals($columns, $this->insert->getRawState('columns'));
     }
 
-    // @codingStandardsIgnoreStart
-    public function test__get(): void
+    /**
+     * @throws ReflectionException
+     */
+    #[Group('Laminas-4926')]
+    public function testEmptyArrayValues(): void
     {
-        // @codingStandardsIgnoreEnd
-        /** @psalm-suppress UndefinedMagicPropertyAssignment */
-        $this->insert->foo = 'bar';
-        self::assertEquals('bar', $this->insert->foo);
-
-        /** @psalm-suppress UndefinedMagicPropertyAssignment */
-        $this->insert->foo = null;
-        self::assertNull($this->insert->foo);
+        $this->insert->values([]);
+        self::assertEquals([], $this->readAttribute($this->insert, 'columns'));
     }
 
-    #[Group('Laminas-536')]
-    public function testValuesMerge(): void
+    public function testGetSqlString(): void
     {
-        $this->insert->into('foo')
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
-        $this->insert->into('foo')
-            ->values(['qux' => 100], Insert::VALUES_MERGE);
+        $this->insert->into('foo')->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
 
         self::assertEquals(
-            'INSERT INTO "foo" ("bar", "boo", "bam", "qux") VALUES (\'baz\', NOW(), NULL, \'100\')',
-            $this->insert->getSqlString(new TrustingSql92Platform())
+            'INSERT INTO "foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
+            $this->insert->getSqlString(new TrustingSql92Platform()),
+        );
+
+        // with TableIdentifier
+        $this->insert = new Insert();
+        $this->insert
+            ->into(new TableIdentifier('foo', 'sch'))
+            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
+
+        self::assertEquals(
+            'INSERT INTO "sch"."foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
+            $this->insert->getSqlString(new TrustingSql92Platform()),
+        );
+
+        // with Select
+        $this->insert = new Insert();
+        $select       = new Select();
+        $this->insert->into('foo')->select($select->from('bar'));
+
+        self::assertEquals(
+            'INSERT INTO "foo"  SELECT "bar".* FROM "bar"',
+            $this->insert->getSqlString(new TrustingSql92Platform()),
+        );
+
+        // with Select and columns
+        $this->insert->columns(['col1', 'col2']);
+        self::assertEquals(
+            'INSERT INTO "foo" ("col1", "col2") SELECT "bar".* FROM "bar"',
+            $this->insert->getSqlString(new TrustingSql92Platform()),
         );
     }
 
@@ -334,11 +175,17 @@ final class InsertTest extends TestCase
         $this->insert->getSqlString(new TrustingSql92Platform());
     }
 
-    public function testUnsetThrowsExceptionForNonExistentColumn(): void
+    public function testGetSqlStringUsingColumnsAndValuesMethods(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('The key nonexistent was not found in this objects column list');
-        unset($this->insert->nonexistent);
+        // With columns() and values()
+        $this->insert
+            ->into('foo')
+            ->columns(['col1', 'col2', 'col3'])
+            ->values(['val1', 'val2', 'val3']);
+        self::assertEquals(
+            'INSERT INTO "foo" ("col1", "col2", "col3") VALUES (\'val1\', \'val2\', \'val3\')',
+            $this->insert->getSqlString(new TrustingSql92Platform()),
+        );
     }
 
     public function testGetThrowsExceptionForNonExistentColumn(): void
@@ -346,6 +193,153 @@ final class InsertTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The key nonexistent was not found in this objects column list');
         $value = $this->insert->nonexistent;
+    }
+
+    public function testInto(): void
+    {
+        $this->insert->into('table');
+        self::assertEquals('table', $this->insert->getRawState('table'));
+
+        $tableIdentifier = new TableIdentifier('table', 'schema');
+        $this->insert->into($tableIdentifier);
+        self::assertEquals($tableIdentifier, $this->insert->getRawState('table'));
+    }
+
+    public function testPrepareStatement(): void
+    {
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
+        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $pContainer    = new ParameterContainer([]);
+        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
+        $mockStatement->expects($this->once())
+            ->method('setSql')
+            ->with($this->equalTo('INSERT INTO "foo" ("bar", "boo") VALUES (?, NOW())'));
+
+        $this->insert->into('foo')->values(['bar' => 'baz', 'boo' => new Expression('NOW()')]);
+
+        $this->insert->prepareStatement($mockAdapter, $mockStatement);
+
+        // with TableIdentifier
+        $this->insert = new Insert();
+
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
+        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $pContainer    = new ParameterContainer([]);
+        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
+        $mockStatement->expects($this->once())
+            ->method('setSql')
+            ->with($this->equalTo('INSERT INTO "sch"."foo" ("bar", "boo") VALUES (?, NOW())'));
+
+        $this->insert
+            ->into(new TableIdentifier('foo', 'sch'))
+            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()')]);
+
+        $this->insert->prepareStatement($mockAdapter, $mockStatement);
+    }
+
+    public function testPrepareStatementCreatesParameterContainerWhenNotPresent(): void
+    {
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
+        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $mockStatement->expects($this->once())
+            ->method('getParameterContainer')
+            ->willReturn(null);
+        $mockStatement->expects($this->once())
+            ->method('setParameterContainer')
+            ->with($this->isInstanceOf(ParameterContainer::class))
+            ->willReturnSelf();
+        $mockStatement->expects($this->once())
+            ->method('setSql')
+            ->with($this->stringContains('INSERT INTO'))
+            ->willReturnSelf();
+
+        $this->insert->into('foo')->values(['bar' => 'baz']);
+
+        $result = $this->insert->prepareStatement($mockAdapter, $mockStatement);
+
+        self::assertSame($mockStatement, $result);
+    }
+
+    public function testPrepareStatementWithSelect(): void
+    {
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
+        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = new StatementContainer();
+
+        $select = new Select('bar');
+        $this->insert
+            ->into('foo')
+            ->columns(['col1'])
+            ->select($select->where(['x' => 5]))
+            ->prepareStatement($mockAdapter, $mockStatement);
+
+        self::assertEquals(
+            'INSERT INTO "foo" ("col1") SELECT "bar".* FROM "bar" WHERE "x" = ?',
+            $mockStatement->getSql(),
+        );
+        $parameters = $mockStatement->getParameterContainer();
+        $this->assertInstanceOf(ParameterContainer::class, $parameters);
+
+        $namedArray = $parameters->getNamedArray();
+        self::assertSame(['subselect1where1' => 5], $namedArray);
+    }
+
+    public function testProcessInsertWithPdoDriverUsesDriverColumnQuoting(): void
+    {
+        $mockDriver = $this->getMockBuilder(PdoDriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
+        $mockDriver->expects($this->any())
+            ->method('formatParameterName')
+            ->willReturnCallback(static fn(string $name): string => ":{$name}");
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = new StatementContainer();
+
+        $this->insert->into('foo')->values(['bar' => 'baz', 'boo' => 'qux']);
+
+        $this->insert->prepareStatement($mockAdapter, $mockStatement);
+
+        $sql = $mockStatement->getSql();
+        self::assertStringContainsString(':c_0', $sql);
+        self::assertStringContainsString(':c_1', $sql);
+    }
+
+    #[CoversNothing]
+    public function testSpecificationconstantsCouldBeOverridedByExtensionInGetSqlString(): void
+    {
+        $replace = new Replace();
+        $replace->into('foo')
+            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
+
+        self::assertEquals(
+            'REPLACE INTO "foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
+            $replace->getSqlString(new TrustingSql92Platform()),
+        );
+
+        // with TableIdentifier
+        $replace = new Replace();
+        $replace->into(new TableIdentifier('foo', 'sch'))
+            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
+
+        self::assertEquals(
+            'REPLACE INTO "sch"."foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
+            $replace->getSqlString(new TrustingSql92Platform()),
+        );
     }
 
     #[CoversNothing]
@@ -391,75 +385,78 @@ final class InsertTest extends TestCase
         $replace->prepareStatement($mockAdapter, $mockStatement);
     }
 
-    #[CoversNothing]
-    public function testSpecificationconstantsCouldBeOverridedByExtensionInGetSqlString(): void
+    public function testUnsetThrowsExceptionForNonExistentColumn(): void
     {
-        $replace = new Replace();
-        $replace->into('foo')
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The key nonexistent was not found in this objects column list');
+        unset($this->insert->nonexistent);
+    }
+
+    public function testValues(): void
+    {
+        $this->insert->values(['foo' => 'bar']);
+        self::assertEquals(['foo'], $this->insert->getRawState('columns'));
+        self::assertEquals(['bar'], $this->insert->getRawState('values'));
+
+        // test will merge cols and values of previously set stuff
+        $this->insert->values(['foo' => 'bax'], Insert::VALUES_MERGE);
+        $this->insert->values(['boom' => 'bam'], Insert::VALUES_MERGE);
+        self::assertEquals(['foo', 'boom'], $this->insert->getRawState('columns'));
+        self::assertEquals(['bax', 'bam'], $this->insert->getRawState('values'));
+
+        $this->insert->values(['foo' => 'bax']);
+        self::assertEquals(['foo'], $this->insert->getRawState('columns'));
+        self::assertEquals(['bax'], $this->insert->getRawState('values'));
+    }
+
+    #[Group('Laminas-536')]
+    public function testValuesMerge(): void
+    {
+        $this->insert->into('foo')->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
+        $this->insert->into('foo')
+            ->values(['qux' => 100], Insert::VALUES_MERGE);
 
         self::assertEquals(
-            'REPLACE INTO "foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
-            $replace->getSqlString(new TrustingSql92Platform())
-        );
-
-        // with TableIdentifier
-        $replace = new Replace();
-        $replace->into(new TableIdentifier('foo', 'sch'))
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
-
-        self::assertEquals(
-            'REPLACE INTO "sch"."foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
-            $replace->getSqlString(new TrustingSql92Platform())
+            'INSERT INTO "foo" ("bar", "boo", "bam", "qux") VALUES (\'baz\', NOW(), NULL, \'100\')',
+            $this->insert->getSqlString(new TrustingSql92Platform()),
         );
     }
 
-    public function testPrepareStatementCreatesParameterContainerWhenNotPresent(): void
+    public function testValuesThrowsExceptionWhenArrayMergeOverSelect(): void
     {
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
-        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
-        $mockAdapter = $this->createMockAdapter($mockDriver);
+        $this->insert->values(new Select());
 
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $mockStatement->expects($this->once())
-            ->method('getParameterContainer')
-            ->willReturn(null);
-        $mockStatement->expects($this->once())
-            ->method('setParameterContainer')
-            ->with($this->isInstanceOf(ParameterContainer::class))
-            ->willReturnSelf();
-        $mockStatement->expects($this->once())
-            ->method('setSql')
-            ->with($this->stringContains('INSERT INTO'))
-            ->willReturnSelf();
-
-        $this->insert->into('foo')
-            ->values(['bar' => 'baz']);
-
-        $result = $this->insert->prepareStatement($mockAdapter, $mockStatement);
-
-        self::assertSame($mockStatement, $result);
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'An array of values cannot be provided with the merge flag when a PhpDb\Sql\Select instance already '
+                . 'exists as the value source',
+        );
+        $this->insert->values(['foo' => 'bar'], Insert::VALUES_MERGE);
     }
 
-    public function testProcessInsertWithPdoDriverUsesDriverColumnQuoting(): void
+    public function testValuesThrowsExceptionWhenNotArrayOrSelect(): void
     {
-        $mockDriver = $this->getMockBuilder(PdoDriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
-        $mockDriver->expects($this->any())
-            ->method('formatParameterName')
-            ->willReturnCallback(fn(string $name): string => ':' . $name);
-        $mockAdapter = $this->createMockAdapter($mockDriver);
+        $this->expectException(TypeError::class);
+        /** @psalm-suppress InvalidArgument */
+        $this->insert->values(5);
+    }
 
-        $mockStatement = new StatementContainer();
+    public function testValuesThrowsExceptionWhenSelectMergeOverArray(): void
+    {
+        $this->insert->values(['foo' => 'bar']);
 
-        $this->insert->into('foo')
-            ->values(['bar' => 'baz', 'boo' => 'qux']);
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A PhpDb\Sql\Select instance cannot be provided with the merge flag');
+        $this->insert->values(new Select(), Insert::VALUES_MERGE);
+    }
 
-        $this->insert->prepareStatement($mockAdapter, $mockStatement);
-
-        $sql = $mockStatement->getSql();
-        self::assertStringContainsString(':c_0', $sql);
-        self::assertStringContainsString(':c_1', $sql);
+    /**
+     * Sets up the fixture, for example, opens a network connection.
+     * This method is called before a test is executed.
+     */
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->insert = new Insert();
     }
 }

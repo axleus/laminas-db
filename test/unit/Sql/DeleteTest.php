@@ -47,22 +47,17 @@ final class DeleteTest extends TestCase
 
     protected Delete $delete;
 
-    /**
-     * Sets up the fixture, for example, opens a network connection.
-     * This method is called before a test is executed.
-     */
-    #[Override]
-    protected function setUp(): void
+    public function testConstructorWithTable(): void
     {
-        $this->delete = new Delete();
+        $delete = new Delete('foo');
+        self::assertEquals('foo', $delete->getRawState('table'));
     }
 
-    /**
-     * Tears down the fixture, for example, closes a network connection.
-     * This method is called after a test is executed.
-     */
-    protected function tearDown(): void
+    public function testConstructorWithTableIdentifier(): void
     {
+        $tableIdentifier = new TableIdentifier('foo', 'bar');
+        $delete          = new Delete($tableIdentifier);
+        self::assertEquals($tableIdentifier, $delete->getRawState('table'));
     }
 
     /**
@@ -78,6 +73,143 @@ final class DeleteTest extends TestCase
         $tableIdentifier = new TableIdentifier('foo', 'bar');
         $this->delete->from($tableIdentifier);
         self::assertEquals($tableIdentifier, $this->readAttribute($this->delete, 'table'));
+    }
+
+    public function testGetRawState(): void
+    {
+        $this->delete->from('foo')->where('x = y');
+
+        $rawState = $this->delete->getRawState();
+
+        self::assertIsArray($rawState);
+        self::assertArrayHasKey('table', $rawState);
+        self::assertArrayHasKey('where', $rawState);
+        self::assertArrayHasKey('emptyWhereProtection', $rawState);
+
+        self::assertEquals('foo', $rawState['table']);
+        self::assertInstanceOf(Where::class, $rawState['where']);
+        self::assertTrue($rawState['emptyWhereProtection']);
+    }
+
+    public function testGetRawStateWithKey(): void
+    {
+        $this->delete->from('foo');
+
+        self::assertEquals('foo', $this->delete->getRawState('table'));
+        self::assertInstanceOf(Where::class, $this->delete->getRawState('where'));
+        self::assertTrue($this->delete->getRawState('emptyWhereProtection'));
+    }
+
+    public function testGetSqlString(): void
+    {
+        $this->delete->from('foo')->where('x = y');
+        self::assertEquals('DELETE FROM "foo" WHERE x = y', $this->delete->getSqlString());
+
+        // Test with TableIdentifier
+        $this->delete = new Delete();
+        $this->delete->from(new TableIdentifier('foo', 'sch'))->where('x = y');
+        self::assertEquals('DELETE FROM "sch"."foo" WHERE x = y', $this->delete->getSqlString());
+    }
+
+    public function testGetSqlStringWithEmptyWhere(): void
+    {
+        $this->delete->from('foo');
+        // Empty where should not add WHERE clause
+        self::assertEquals('DELETE FROM "foo"', $this->delete->getSqlString());
+    }
+
+    public function testMagicGetReturnsNullForUnknownProperty(): void
+    {
+        /** @noinspection PhpUndefinedFieldInspection */
+        self::assertNull($this->delete->unknown); // @phpstan-ignore-line
+        self::assertNull($this->delete->table); // @phpstan-ignore-line
+    }
+
+    public function testMagicGetReturnsWhereClause(): void
+    {
+        $where = $this->delete->where;
+        self::assertInstanceOf(Where::class, $where);
+    }
+
+    public function testPrepareStatement(): void
+    {
+        $mockDriver  = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $mockStatement->expects($this->once())
+            ->method('setSql')
+            ->with($this->equalTo('DELETE FROM "foo" WHERE x = y'));
+
+        $this->delete->from('foo')->where('x = y');
+
+        $this->delete->prepareStatement($mockAdapter, $mockStatement);
+
+        // Test with TableIdentifier
+        $this->delete = new Delete();
+
+        $mockDriver  = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $mockStatement->expects($this->once())
+            ->method('setSql')
+            ->with($this->equalTo('DELETE FROM "sch"."foo" WHERE x = y'));
+
+        $this->delete->from(new TableIdentifier('foo', 'sch'))->where('x = y');
+
+        $this->delete->prepareStatement($mockAdapter, $mockStatement);
+    }
+
+    #[CoversNothing]
+    public function testSpecificationconstantsCouldBeOverridedByExtensionInGetSqlString(): void
+    {
+        $deleteIgnore = new DeleteIgnore();
+
+        $deleteIgnore->from('foo')
+            ->where('x = y');
+        self::assertEquals('DELETE IGNORE FROM "foo" WHERE x = y', $deleteIgnore->getSqlString());
+
+        // with TableIdentifier
+        $deleteIgnore = new DeleteIgnore();
+        $deleteIgnore->from(new TableIdentifier('foo', 'sch'))
+            ->where('x = y');
+        self::assertEquals('DELETE IGNORE FROM "sch"."foo" WHERE x = y', $deleteIgnore->getSqlString());
+    }
+
+    #[CoversNothing]
+    public function testSpecificationconstantsCouldBeOverridedByExtensionInPrepareStatement(): void
+    {
+        $deleteIgnore = new DeleteIgnore();
+
+        $mockDriver  = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $mockStatement->expects($this->once())
+            ->method('setSql')
+            ->with($this->equalTo('DELETE IGNORE FROM "foo" WHERE x = y'));
+
+        $deleteIgnore->from('foo')
+            ->where('x = y');
+
+        $deleteIgnore->prepareStatement($mockAdapter, $mockStatement);
+
+        // with TableIdentifier
+        $deleteIgnore = new DeleteIgnore();
+
+        $mockDriver  = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $mockStatement->expects($this->once())
+            ->method('setSql')
+            ->with($this->equalTo('DELETE IGNORE FROM "sch"."foo" WHERE x = y'));
+
+        $deleteIgnore->from(new TableIdentifier('foo', 'sch'))
+            ->where('x = y');
+
+        $deleteIgnore->prepareStatement($mockAdapter, $mockStatement);
     }
 
     /**
@@ -129,170 +261,16 @@ final class DeleteTest extends TestCase
         $this->delete->where($where);
         self::assertSame($where, $this->delete->where);
 
-        $this->delete->where(function ($what) use ($where): void {
+        $this->delete->where(static function ($what) use ($where): void {
             self::assertSame($where, $what);
         });
-    }
-
-    public function testPrepareStatement(): void
-    {
-        $mockDriver  = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $mockStatement->expects($this->once())
-            ->method('setSql')
-            ->with($this->equalTo('DELETE FROM "foo" WHERE x = y'));
-
-        $this->delete->from('foo')
-            ->where('x = y');
-
-        $this->delete->prepareStatement($mockAdapter, $mockStatement);
-
-        // Test with TableIdentifier
-        $this->delete = new Delete();
-
-        $mockDriver  = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $mockStatement->expects($this->once())
-            ->method('setSql')
-            ->with($this->equalTo('DELETE FROM "sch"."foo" WHERE x = y'));
-
-        $this->delete->from(new TableIdentifier('foo', 'sch'))
-            ->where('x = y');
-
-        $this->delete->prepareStatement($mockAdapter, $mockStatement);
-    }
-
-    public function testGetSqlString(): void
-    {
-        $this->delete->from('foo')
-            ->where('x = y');
-        self::assertEquals('DELETE FROM "foo" WHERE x = y', $this->delete->getSqlString());
-
-        // Test with TableIdentifier
-        $this->delete = new Delete();
-        $this->delete->from(new TableIdentifier('foo', 'sch'))
-            ->where('x = y');
-        self::assertEquals('DELETE FROM "sch"."foo" WHERE x = y', $this->delete->getSqlString());
-    }
-
-    #[CoversNothing]
-    public function testSpecificationconstantsCouldBeOverridedByExtensionInPrepareStatement(): void
-    {
-        $deleteIgnore = new DeleteIgnore();
-
-        $mockDriver  = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $mockStatement->expects($this->once())
-            ->method('setSql')
-            ->with($this->equalTo('DELETE IGNORE FROM "foo" WHERE x = y'));
-
-        $deleteIgnore->from('foo')
-            ->where('x = y');
-
-        $deleteIgnore->prepareStatement($mockAdapter, $mockStatement);
-
-        // with TableIdentifier
-        $deleteIgnore = new DeleteIgnore();
-
-        $mockDriver  = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $mockStatement->expects($this->once())
-            ->method('setSql')
-            ->with($this->equalTo('DELETE IGNORE FROM "sch"."foo" WHERE x = y'));
-
-        $deleteIgnore->from(new TableIdentifier('foo', 'sch'))
-            ->where('x = y');
-
-        $deleteIgnore->prepareStatement($mockAdapter, $mockStatement);
-    }
-
-    #[CoversNothing]
-    public function testSpecificationconstantsCouldBeOverridedByExtensionInGetSqlString(): void
-    {
-        $deleteIgnore = new DeleteIgnore();
-
-        $deleteIgnore->from('foo')
-            ->where('x = y');
-        self::assertEquals('DELETE IGNORE FROM "foo" WHERE x = y', $deleteIgnore->getSqlString());
-
-        // with TableIdentifier
-        $deleteIgnore = new DeleteIgnore();
-        $deleteIgnore->from(new TableIdentifier('foo', 'sch'))
-            ->where('x = y');
-        self::assertEquals('DELETE IGNORE FROM "sch"."foo" WHERE x = y', $deleteIgnore->getSqlString());
-    }
-
-    public function testGetRawState(): void
-    {
-        $this->delete->from('foo')
-            ->where('x = y');
-
-        $rawState = $this->delete->getRawState();
-
-        self::assertIsArray($rawState);
-        self::assertArrayHasKey('table', $rawState);
-        self::assertArrayHasKey('where', $rawState);
-        self::assertArrayHasKey('emptyWhereProtection', $rawState);
-
-        self::assertEquals('foo', $rawState['table']);
-        self::assertInstanceOf(Where::class, $rawState['where']);
-        self::assertTrue($rawState['emptyWhereProtection']);
-    }
-
-    public function testGetRawStateWithKey(): void
-    {
-        $this->delete->from('foo');
-
-        self::assertEquals('foo', $this->delete->getRawState('table'));
-        self::assertInstanceOf(Where::class, $this->delete->getRawState('where'));
-        self::assertTrue($this->delete->getRawState('emptyWhereProtection'));
-    }
-
-    public function testMagicGetReturnsWhereClause(): void
-    {
-        $where = $this->delete->where;
-        self::assertInstanceOf(Where::class, $where);
-    }
-
-    public function testMagicGetReturnsNullForUnknownProperty(): void
-    {
-        /** @noinspection PhpUndefinedFieldInspection */
-        self::assertNull($this->delete->unknown); // @phpstan-ignore-line
-        self::assertNull($this->delete->table); // @phpstan-ignore-line
-    }
-
-    public function testConstructorWithTable(): void
-    {
-        $delete = new Delete('foo');
-        self::assertEquals('foo', $delete->getRawState('table'));
-    }
-
-    public function testConstructorWithTableIdentifier(): void
-    {
-        $tableIdentifier = new TableIdentifier('foo', 'bar');
-        $delete          = new Delete($tableIdentifier);
-        self::assertEquals($tableIdentifier, $delete->getRawState('table'));
-    }
-
-    public function testGetSqlStringWithEmptyWhere(): void
-    {
-        $this->delete->from('foo');
-        // Empty where should not add WHERE clause
-        self::assertEquals('DELETE FROM "foo"', $this->delete->getSqlString());
     }
 
     #[TestDox('unit test: Test where() accepts Expression (ExpressionInterface) in array')]
     public function testWhereAcceptsExpressionInterface(): void
     {
-        $this->delete->from('foo')
+        $this->delete
+            ->from('foo')
             ->where([
                 new SqlExpression('COUNT(?) > ?', [new Identifier('id'), new Value(5)]),
             ]);
@@ -301,4 +279,20 @@ final class DeleteTest extends TestCase
         self::assertInstanceOf(Where::class, $where);
         self::assertEquals(1, $where->count());
     }
+
+    /**
+     * Sets up the fixture, for example, opens a network connection.
+     * This method is called before a test is executed.
+     */
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->delete = new Delete();
+    }
+
+    /**
+     * Tears down the fixture, for example, closes a network connection.
+     * This method is called after a test is executed.
+     */
+    protected function tearDown(): void {}
 }

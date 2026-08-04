@@ -24,21 +24,58 @@ abstract class AbstractConstraint implements ConstraintInterface
 
     protected array $columns = [];
 
-    public function __construct(null|array|string $columns = null, ?string $name = null)
+    public function __construct(array|string|null $columns = null, ?string $name = null)
     {
-        if ($columns !== null) {
+        if (null !== $columns) {
             $this->setColumns($columns);
         }
 
-        if ($name !== null) {
+        if (null !== $name) {
             $this->setName($name);
         }
     }
 
-    public function setName(string $name): static
+    public function addColumn(string $column): static
     {
-        $this->name = $name;
+        $this->columns[] = $column;
         return $this;
+    }
+
+    #[Override]
+    public function getColumns(): array
+    {
+        return $this->columns;
+    }
+
+    /** @inheritDoc */
+    #[Override]
+    public function getExpressionData(): array
+    {
+        $specParts = [];
+        $values    = [];
+
+        if ('' !== $this->name) {
+            $specParts[] = $this->namedSpecification;
+            $values[]    = new Identifier($this->name);
+        }
+
+        if ('' !== $this->specification) {
+            $specParts[] = $this->specification;
+        }
+
+        $columnCount = count($this->columns);
+        if (0 !== $columnCount) {
+            $columnSpec  = array_fill(0, $columnCount, '%s');
+            $specParts[] = str_replace('%s', implode(', ', $columnSpec), $this->columnSpecification);
+            for ($i = 0; $i < $columnCount; $i++) {
+                $values[] = new Identifier($this->columns[$i]);
+            }
+        }
+
+        return [
+            'spec'   => implode(' ', $specParts),
+            'values' => $values,
+        ];
     }
 
     public function getName(): string
@@ -53,45 +90,9 @@ abstract class AbstractConstraint implements ConstraintInterface
         return $this;
     }
 
-    public function addColumn(string $column): static
+    public function setName(string $name): static
     {
-        $this->columns[] = $column;
+        $this->name = $name;
         return $this;
-    }
-
-    #[Override] public function getColumns(): array
-    {
-        return $this->columns;
-    }
-
-    /** @inheritDoc */
-    #[Override]
-    public function getExpressionData(): array
-    {
-        $specParts = [];
-        $values    = [];
-
-        if ($this->name !== '') {
-            $specParts[] = $this->namedSpecification;
-            $values[]    = new Identifier($this->name);
-        }
-
-        if ($this->specification !== '') {
-            $specParts[] = $this->specification;
-        }
-
-        $columnCount = count($this->columns);
-        if ($columnCount !== 0) {
-            $columnSpec  = array_fill(0, $columnCount, '%s');
-            $specParts[] = str_replace('%s', implode(', ', $columnSpec), $this->columnSpecification);
-            for ($i = 0; $i < $columnCount; $i++) {
-                $values[] = new Identifier($this->columns[$i]);
-            }
-        }
-
-        return [
-            'spec'   => implode(' ', $specParts),
-            'values' => $values,
-        ];
     }
 }

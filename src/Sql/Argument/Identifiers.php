@@ -31,6 +31,14 @@ final readonly class Identifiers implements ArgumentInterface
         $this->identifiers = array_values($identifiers);
     }
 
+    public function getSpecification(): string
+    {
+        $count = count($this->identifiers);
+        return $count > 0
+            ? '(' . implode(', ', array_fill(0, $count, '%s')) . ')'
+            : '(NULL)';
+    }
+
     public function getType(): ArgumentType
     {
         return ArgumentType::Identifiers;
@@ -42,13 +50,5 @@ final readonly class Identifiers implements ArgumentInterface
     public function getValue(): array
     {
         return $this->identifiers;
-    }
-
-    public function getSpecification(): string
-    {
-        $count = count($this->identifiers);
-        return $count > 0
-            ? '(' . implode(', ', array_fill(0, $count, '%s')) . ')'
-            : '(NULL)';
     }
 }

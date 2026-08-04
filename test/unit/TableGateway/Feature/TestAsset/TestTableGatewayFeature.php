@@ -18,13 +18,6 @@ class TestTableGatewayFeature extends AbstractFeature
     /** @var array<string, array<int, string>> */
     public array $magicMethodSpecs = [];
 
-    public function testMethod(mixed ...$args): mixed
-    {
-        $this->called       = true;
-        $this->receivedArgs = $args;
-        return $this->returnValue;
-    }
-
     public function customMethod(array $args): string
     {
         $this->called       = true;
@@ -36,5 +29,12 @@ class TestTableGatewayFeature extends AbstractFeature
     public function getMagicMethodSpecifications(): array
     {
         return $this->magicMethodSpecs;
+    }
+
+    public function testMethod(mixed ...$args): mixed
+    {
+        $this->called       = true;
+        $this->receivedArgs = $args;
+        return $this->returnValue;
     }
 }

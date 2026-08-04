@@ -20,11 +20,11 @@ class RowGateway extends AbstractRowGateway
     public function __construct(
         string|array|null $primaryKeyColumn,
         string|TableIdentifier $table,
-        Sql|AdapterInterface $adapterOrSql
+        Sql|AdapterInterface $adapterOrSql,
     ) {
         // setup primary key
         if (is_string($primaryKeyColumn)) {
-            $primaryKeyColumn = $primaryKeyColumn !== '' ? (array) $primaryKeyColumn : null;
+            $primaryKeyColumn = '' !== $primaryKeyColumn ? (array) $primaryKeyColumn : null;
         }
         $this->primaryKeyColumn = $primaryKeyColumn;
 
@@ -40,7 +40,7 @@ class RowGateway extends AbstractRowGateway
 
         if ($this->sql->getTable() !== $this->table) {
             throw new Exception\InvalidArgumentException(
-                'The Sql object provided does not have a table that matches this row object'
+                'The Sql object provided does not have a table that matches this row object',
             );
         }
 

@@ -25,15 +25,15 @@ class DropTable extends AbstractSql
         $this->table = $table;
     }
 
+    public function getIfExists(): bool
+    {
+        return $this->ifExists;
+    }
+
     public function ifExists(bool $ifExists = true): static
     {
         $this->ifExists = $ifExists;
         return $this;
-    }
-
-    public function getIfExists(): bool
-    {
-        return $this->ifExists;
     }
 
     /** @return string[] */

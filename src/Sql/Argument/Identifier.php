@@ -15,8 +15,12 @@ use PhpDb\Sql\ArgumentType;
 final readonly class Identifier implements ArgumentInterface
 {
     public function __construct(
-        private string $identifier
-    ) {
+        private string $identifier,
+    ) {}
+
+    public function getSpecification(): string
+    {
+        return '%s';
     }
 
     public function getType(): ArgumentType
@@ -27,10 +31,5 @@ final readonly class Identifier implements ArgumentInterface
     public function getValue(): string
     {
         return $this->identifier;
-    }
-
-    public function getSpecification(): string
-    {
-        return '%s';
     }
 }

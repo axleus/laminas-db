@@ -19,63 +19,40 @@ use ReflectionProperty;
 
 class RowGatewayFeatureTest extends TestCase
 {
-    private function createTableGatewayMock(
-        ResultSetInterface $resultSetPrototype,
-        ?FeatureSet $featureSet = null
-    ): AbstractTableGateway&MockObject {
-        /** @var AbstractTableGateway&MockObject $tableGateway */
-        $tableGateway = $this->getMockBuilder(AbstractTableGateway::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $adapter = $this->createMock(AdapterInterface::class);
-
-        $tableProperty = new ReflectionProperty(AbstractTableGateway::class, 'table');
-        $tableProperty->setValue($tableGateway, 'test_table');
-
-        $adapterProperty = new ReflectionProperty(AbstractTableGateway::class, 'adapter');
-        $adapterProperty->setValue($tableGateway, $adapter);
-
-        $resultSetProperty = new ReflectionProperty(AbstractTableGateway::class, 'resultSetPrototype');
-        $resultSetProperty->setValue($tableGateway, $resultSetPrototype);
-
-        if ($featureSet !== null) {
-            $featureSetProperty = new ReflectionProperty(AbstractTableGateway::class, 'featureSet');
-            $featureSetProperty->setValue($tableGateway, $featureSet);
-        }
-
-        return $tableGateway;
-    }
-
-    public function testPostInitializeWithStringPrimaryKey(): void
+    public function testConstructorStoresArguments(): void
     {
-        $resultSet    = new ResultSet();
-        $tableGateway = $this->createTableGatewayMock($resultSet);
-
         $feature = new RowGatewayFeature('id');
-        $feature->setTableGateway($tableGateway);
 
-        $feature->postInitialize();
+        // Use reflection to check the constructorArguments property
+        $property = new ReflectionProperty(RowGatewayFeature::class, 'constructorArguments');
+        $args     = $property->getValue($feature);
 
-        $prototype = $resultSet->getRowPrototype();
-        self::assertInstanceOf(RowGatewayInterface::class, $prototype);
+        self::assertEquals(['id'], $args);
     }
 
-    public function testPostInitializeWithRowGatewayInstance(): void
+    public function testConstructorStoresRowGatewayInstance(): void
     {
-        $resultSet = new ResultSet();
-
         /** @var RowGatewayInterface&MockObject $rowGateway */
         $rowGateway = $this->createMock(RowGatewayInterface::class);
 
-        $tableGateway = $this->createTableGatewayMock($resultSet);
-
         $feature = new RowGatewayFeature($rowGateway);
-        $feature->setTableGateway($tableGateway);
 
-        $feature->postInitialize();
+        // Use reflection to check the constructorArguments property
+        $property = new ReflectionProperty(RowGatewayFeature::class, 'constructorArguments');
+        $args     = $property->getValue($feature);
 
-        self::assertSame($rowGateway, $resultSet->getRowPrototype());
+        self::assertSame($rowGateway, $args[0]);
+    }
+
+    public function testConstructorWithNoArguments(): void
+    {
+        $feature = new RowGatewayFeature();
+
+        // Use reflection to check the constructorArguments property
+        $property = new ReflectionProperty(RowGatewayFeature::class, 'constructorArguments');
+        $args     = $property->getValue($feature);
+
+        self::assertEquals([], $args);
     }
 
     public function testPostInitializeThrowsExceptionForNonResultSet(): void
@@ -88,6 +65,57 @@ class RowGatewayFeatureTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('expects the ResultSet to be an instance of');
+
+        $feature->postInitialize();
+    }
+
+    public function testPostInitializeThrowsExceptionWhenMetadataHasNoMetadataKey(): void
+    {
+        $resultSet = new ResultSet();
+
+        // Create a MetadataFeature mock without the metadata key in sharedData
+        $metadataFeature = $this->getMockBuilder(MetadataFeature::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        // Set empty sharedData on the metadata feature
+        $sharedDataProperty = new ReflectionProperty(MetadataFeature::class, 'sharedData');
+        $sharedDataProperty->setValue($metadataFeature, []);
+
+        $featureSet = $this->createMock(FeatureSet::class);
+        $featureSet->expects($this->once())
+            ->method('getFeatureByClassName')
+            ->with(MetadataFeature::class)
+            ->willReturn($metadataFeature);
+
+        $tableGateway = $this->createTableGatewayMock($resultSet, $featureSet);
+
+        $feature = new RowGatewayFeature();
+        $feature->setTableGateway($tableGateway);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('No information was provided to the RowGatewayFeature');
+
+        $feature->postInitialize();
+    }
+
+    public function testPostInitializeThrowsExceptionWhenNoMetadataAndNoPrimaryKey(): void
+    {
+        $resultSet = new ResultSet();
+
+        $featureSet = $this->createMock(FeatureSet::class);
+        $featureSet->expects($this->once())
+            ->method('getFeatureByClassName')
+            ->with(MetadataFeature::class)
+            ->willReturn(null);
+
+        $tableGateway = $this->createTableGatewayMock($resultSet, $featureSet);
+
+        $feature = new RowGatewayFeature();
+        $feature->setTableGateway($tableGateway);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('No information was provided to the RowGatewayFeature');
 
         $feature->postInitialize();
     }
@@ -124,90 +152,62 @@ class RowGatewayFeatureTest extends TestCase
         self::assertInstanceOf(RowGatewayInterface::class, $prototype);
     }
 
-    public function testPostInitializeThrowsExceptionWhenNoMetadataAndNoPrimaryKey(): void
+    public function testPostInitializeWithRowGatewayInstance(): void
     {
         $resultSet = new ResultSet();
 
-        $featureSet = $this->createMock(FeatureSet::class);
-        $featureSet->expects($this->once())
-            ->method('getFeatureByClassName')
-            ->with(MetadataFeature::class)
-            ->willReturn(null);
-
-        $tableGateway = $this->createTableGatewayMock($resultSet, $featureSet);
-
-        $feature = new RowGatewayFeature();
-        $feature->setTableGateway($tableGateway);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('No information was provided to the RowGatewayFeature');
-
-        $feature->postInitialize();
-    }
-
-    public function testPostInitializeThrowsExceptionWhenMetadataHasNoMetadataKey(): void
-    {
-        $resultSet = new ResultSet();
-
-        // Create a MetadataFeature mock without the metadata key in sharedData
-        $metadataFeature = $this->getMockBuilder(MetadataFeature::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        // Set empty sharedData on the metadata feature
-        $sharedDataProperty = new ReflectionProperty(MetadataFeature::class, 'sharedData');
-        $sharedDataProperty->setValue($metadataFeature, []);
-
-        $featureSet = $this->createMock(FeatureSet::class);
-        $featureSet->expects($this->once())
-            ->method('getFeatureByClassName')
-            ->with(MetadataFeature::class)
-            ->willReturn($metadataFeature);
-
-        $tableGateway = $this->createTableGatewayMock($resultSet, $featureSet);
-
-        $feature = new RowGatewayFeature();
-        $feature->setTableGateway($tableGateway);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('No information was provided to the RowGatewayFeature');
-
-        $feature->postInitialize();
-    }
-
-    public function testConstructorStoresArguments(): void
-    {
-        $feature = new RowGatewayFeature('id');
-
-        // Use reflection to check the constructorArguments property
-        $property = new ReflectionProperty(RowGatewayFeature::class, 'constructorArguments');
-        $args     = $property->getValue($feature);
-
-        self::assertEquals(['id'], $args);
-    }
-
-    public function testConstructorStoresRowGatewayInstance(): void
-    {
         /** @var RowGatewayInterface&MockObject $rowGateway */
         $rowGateway = $this->createMock(RowGatewayInterface::class);
 
+        $tableGateway = $this->createTableGatewayMock($resultSet);
+
         $feature = new RowGatewayFeature($rowGateway);
+        $feature->setTableGateway($tableGateway);
 
-        // Use reflection to check the constructorArguments property
-        $property = new ReflectionProperty(RowGatewayFeature::class, 'constructorArguments');
-        $args     = $property->getValue($feature);
+        $feature->postInitialize();
 
-        self::assertSame($rowGateway, $args[0]);
+        self::assertSame($rowGateway, $resultSet->getRowPrototype());
     }
 
-    public function testConstructorWithNoArguments(): void
+    public function testPostInitializeWithStringPrimaryKey(): void
     {
-        $feature = new RowGatewayFeature();
+        $resultSet    = new ResultSet();
+        $tableGateway = $this->createTableGatewayMock($resultSet);
 
-        // Use reflection to check the constructorArguments property
-        $property = new ReflectionProperty(RowGatewayFeature::class, 'constructorArguments');
-        $args     = $property->getValue($feature);
+        $feature = new RowGatewayFeature('id');
+        $feature->setTableGateway($tableGateway);
 
-        self::assertEquals([], $args);
+        $feature->postInitialize();
+
+        $prototype = $resultSet->getRowPrototype();
+        self::assertInstanceOf(RowGatewayInterface::class, $prototype);
+    }
+
+    private function createTableGatewayMock(
+        ResultSetInterface $resultSetPrototype,
+        ?FeatureSet $featureSet = null,
+    ): AbstractTableGateway&MockObject {
+        /** @var AbstractTableGateway&MockObject $tableGateway */
+        $tableGateway = $this->getMockBuilder(AbstractTableGateway::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $adapter = $this->createMock(AdapterInterface::class);
+
+        $tableProperty = new ReflectionProperty(AbstractTableGateway::class, 'table');
+        $tableProperty->setValue($tableGateway, 'test_table');
+
+        $adapterProperty = new ReflectionProperty(AbstractTableGateway::class, 'adapter');
+        $adapterProperty->setValue($tableGateway, $adapter);
+
+        $resultSetProperty = new ReflectionProperty(AbstractTableGateway::class, 'resultSetPrototype');
+        $resultSetProperty->setValue($tableGateway, $resultSetPrototype);
+
+        if (null !== $featureSet) {
+            $featureSetProperty = new ReflectionProperty(AbstractTableGateway::class, 'featureSet');
+            $featureSetProperty->setValue($tableGateway, $featureSet);
+        }
+
+        return $tableGateway;
     }
 }

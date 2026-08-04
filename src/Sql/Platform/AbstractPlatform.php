@@ -18,59 +18,11 @@ class AbstractPlatform implements PlatformDecoratorInterface, PreparableSqlInter
     protected array $decorators = [];
 
     /**
-     * {@inheritDoc}
-     */
-    public function setSubject($subject): static
-    {
-        $this->subject = $subject;
-
-        return $this;
-    }
-
-    public function setTypeDecorator(string $type, PlatformDecoratorInterface $decorator): void
-    {
-        $this->decorators[$type] = $decorator;
-    }
-
-    public function getTypeDecorator(
-        PreparableSqlInterface|SqlInterface $subject
-    ): PlatformDecoratorInterface|PreparableSqlInterface|SqlInterface {
-        foreach ($this->decorators as $type => $decorator) {
-            /** @phpstan-ignore-next-line instanceof with string class name is valid */
-            if ($subject instanceof $type) {
-                $decorator->setSubject($subject);
-                return $decorator;
-            }
-        }
-
-        return $subject;
-    }
-
-    /**
      * @return array|PlatformDecoratorInterface[]
      */
     public function getDecorators(): array
     {
         return $this->decorators;
-    }
-
-    /**
-     * @throws Exception\RuntimeException
-     */
-    public function prepareStatement(
-        AdapterInterface $adapter,
-        StatementContainerInterface $statementContainer
-    ): StatementContainerInterface {
-        if (! $this->subject instanceof PreparableSqlInterface) {
-            throw new Exception\RuntimeException(
-                'The subject does not appear to implement PhpDb\Sql\PreparableSqlInterface, thus calling '
-                . 'prepareStatement() has no effect'
-            );
-        }
-
-        $this->getTypeDecorator($this->subject)->prepareStatement($adapter, $statementContainer);
-
-        return $statementContainer;
     }
 
     /**
@@ -83,10 +35,60 @@ class AbstractPlatform implements PlatformDecoratorInterface, PreparableSqlInter
         if (! $this->subject instanceof SqlInterface) {
             throw new Exception\RuntimeException(
                 'The subject does not appear to implement PhpDb\Sql\SqlInterface, thus calling '
-                . 'getSqlString() has no effect'
+                    . 'getSqlString() has no effect',
             );
         }
 
         return $this->getTypeDecorator($this->subject)->getSqlString($adapterPlatform);
+    }
+
+    public function getTypeDecorator(
+        PreparableSqlInterface|SqlInterface $subject,
+    ): PlatformDecoratorInterface|PreparableSqlInterface|SqlInterface {
+        foreach ($this->decorators as $type => $decorator) {
+            /** @phpstan-ignore-next-line instanceof with string class name is valid */
+            if (! $subject instanceof $type) {
+                continue;
+            }
+
+            $decorator->setSubject($subject);
+            return $decorator;
+        }
+
+        return $subject;
+    }
+
+    /**
+     * @throws Exception\RuntimeException
+     */
+    public function prepareStatement(
+        AdapterInterface $adapter,
+        StatementContainerInterface $statementContainer,
+    ): StatementContainerInterface {
+        if (! $this->subject instanceof PreparableSqlInterface) {
+            throw new Exception\RuntimeException(
+                'The subject does not appear to implement PhpDb\Sql\PreparableSqlInterface, thus calling '
+                    . 'prepareStatement() has no effect',
+            );
+        }
+
+        $this->getTypeDecorator($this->subject)->prepareStatement($adapter, $statementContainer);
+
+        return $statementContainer;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setSubject($subject): static
+    {
+        $this->subject = $subject;
+
+        return $this;
+    }
+
+    public function setTypeDecorator(string $type, PlatformDecoratorInterface $decorator): void
+    {
+        $this->decorators[$type] = $decorator;
     }
 }
