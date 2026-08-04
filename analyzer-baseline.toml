@@ -26,6 +26,12 @@ count = 1
 
 [[issues]]
 file = "src/Adapter/Adapter.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\Adapter::getHelpers`.'
+count = 1
+
+[[issues]]
+file = "src/Adapter/Adapter.php"
 code = "mixed-argument"
 message = 'Invalid argument type for argument #1 of `PhpDb\Adapter\Platform\PlatformInterface::quoteIdentifier`: expected `string`, but found `mixed`.'
 count = 1
@@ -86,6 +92,54 @@ count = 1
 
 [[issues]]
 file = "src/Adapter/AdapterInterface.php"
+code = "missing-constant-type"
+message = "Class constant `FUNCTION_FORMAT_PARAMETER_NAME` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/AdapterInterface.php"
+code = "missing-constant-type"
+message = "Class constant `FUNCTION_QUOTE_IDENTIFIER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/AdapterInterface.php"
+code = "missing-constant-type"
+message = "Class constant `FUNCTION_QUOTE_VALUE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/AdapterInterface.php"
+code = "missing-constant-type"
+message = "Class constant `PREPARE_TYPE_NAMED` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/AdapterInterface.php"
+code = "missing-constant-type"
+message = "Class constant `PREPARE_TYPE_POSITIONAL` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/AdapterInterface.php"
+code = "missing-constant-type"
+message = "Class constant `QUERY_MODE_EXECUTE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/AdapterInterface.php"
+code = "missing-constant-type"
+message = "Class constant `QUERY_MODE_PREPARE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/AdapterInterface.php"
+code = "missing-constant-type"
+message = "Class constant `VALUE_QUOTE_SEPARATOR` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/AdapterInterface.php"
 code = "missing-return-type"
 message = "Function `getHelpers` is missing a return type hint."
 count = 1
@@ -124,6 +178,12 @@ count = 1
 file = "src/Adapter/Driver/AbstractConnection.php"
 code = "missing-api-or-internal"
 message = 'Abstract class `PhpDb\Adapter\Driver\AbstractConnection` is missing an `@api` or `@internal` annotation.'
+count = 1
+
+[[issues]]
+file = "src/Adapter/Driver/AbstractConnection.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\Driver\AbstractConnection::setConnectionParameters`.'
 count = 1
 
 [[issues]]
@@ -170,6 +230,18 @@ count = 1
 
 [[issues]]
 file = "src/Adapter/Driver/DriverInterface.php"
+code = "missing-constant-type"
+message = "Class constant `PARAMETERIZATION_NAMED` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/Driver/DriverInterface.php"
+code = "missing-constant-type"
+message = "Class constant `PARAMETERIZATION_POSITIONAL` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/Driver/DriverInterface.php"
 code = "missing-parameter-type"
 message = "Parameter `$resource` is missing a type hint."
 count = 1
@@ -202,6 +274,24 @@ count = 1
 file = "src/Adapter/Driver/Feature/DriverFeatureProviderTrait.php"
 code = "imprecise-type"
 message = "Type `array` in parameter `$features` is imprecise, equivalent to `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
+file = "src/Adapter/Driver/Feature/DriverFeatureProviderTrait.php"
+code = "invalid-override-attribute"
+message = 'Invalid `#[Override]` attribute on `PhpDb\Adapter\Driver\Feature\DriverFeatureProviderTrait::addfeature`.'
+count = 1
+
+[[issues]]
+file = "src/Adapter/Driver/Feature/DriverFeatureProviderTrait.php"
+code = "invalid-override-attribute"
+message = 'Invalid `#[Override]` attribute on `PhpDb\Adapter\Driver\Feature\DriverFeatureProviderTrait::addfeatures`.'
+count = 1
+
+[[issues]]
+file = "src/Adapter/Driver/Feature/DriverFeatureProviderTrait.php"
+code = "invalid-override-attribute"
+message = 'Invalid `#[Override]` attribute on `PhpDb\Adapter\Driver\Feature\DriverFeatureProviderTrait::getfeature`.'
 count = 1
 
 [[issues]]
@@ -454,6 +544,24 @@ count = 1
 file = "src/Adapter/Driver/Pdo/Result.php"
 code = "incompatible-return-type"
 message = 'Return type `mixed` of `PhpDb\Adapter\Driver\Pdo\Result::next()` is incompatible with parent return type `void` of `Iterator::next()`'
+count = 1
+
+[[issues]]
+file = "src/Adapter/Driver/Pdo/Result.php"
+code = "missing-constant-type"
+message = "Class constant `STATEMENT_MODE_FORWARD` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/Driver/Pdo/Result.php"
+code = "missing-constant-type"
+message = "Class constant `STATEMENT_MODE_SCROLLABLE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/Driver/Pdo/Result.php"
+code = "missing-constant-type"
+message = "Class constant `VALID_FETCH_MODES` is missing a type hint."
 count = 1
 
 [[issues]]
@@ -770,6 +878,48 @@ count = 1
 
 [[issues]]
 file = "src/Adapter/ParameterContainer.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_AUTO` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/ParameterContainer.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_BINARY` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/ParameterContainer.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_DOUBLE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/ParameterContainer.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_INTEGER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/ParameterContainer.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_LOB` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/ParameterContainer.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_NULL` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/ParameterContainer.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_STRING` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/ParameterContainer.php"
 code = "missing-template-parameter"
 message = "Too few template arguments for `ArrayAccess`: expected at least 2, but found 0."
 count = 1
@@ -884,6 +1034,12 @@ count = 1
 
 [[issues]]
 file = "src/Adapter/Platform/AbstractPlatform.php"
+code = "missing-constant-type"
+message = "Class constant `SAFE_WORDS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/Platform/AbstractPlatform.php"
 code = "mixed-argument"
 message = "Invalid argument type for argument #1 of `strtolower`: expected `string`, but found `mixed`."
 count = 1
@@ -974,6 +1130,12 @@ count = 1
 
 [[issues]]
 file = "src/Adapter/Platform/Sql92.php"
+code = "missing-constant-type"
+message = "Class constant `PLATFORM_NAME` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Adapter/Platform/Sql92.php"
 code = "unhandled-thrown-type"
 message = 'Potentially unhandled exception `PhpDb\Adapter\Exception\VunerablePlatformQuoteException` in `PhpDb\Adapter\Platform\Sql92::quoteValue`.'
 count = 1
@@ -1000,6 +1162,18 @@ count = 1
 file = "src/Adapter/Profiler/Profiler.php"
 code = "invalid-return-statement"
 message = '''Invalid return type for function `PhpDb\Adapter\Profiler\Profiler::getLastProfile`: expected `array{'elapse': float|null, 'end': float|null, 'parameters': PhpDb\Adapter\ParameterContainer|null, 'sql': string, 'start': float}|null`, but found `array{'elapse': float|null, 'end': float|null, 'parameters': PhpDb\Adapter\ParameterContainer|null, 'sql': string, 'start': float}|false`.'''
+count = 1
+
+[[issues]]
+file = "src/Adapter/Profiler/Profiler.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\Profiler\Profiler::profilerFinish`.'
+count = 1
+
+[[issues]]
+file = "src/Adapter/Profiler/Profiler.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\Profiler\Profiler::profilerStart`.'
 count = 1
 
 [[issues]]
@@ -1069,6 +1243,30 @@ message = 'Parameter `$sql` of `PhpDb\Adapter\StatementContainer::setsql()` expe
 count = 1
 
 [[issues]]
+file = "src/Adapter/StatementContainer.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\StatementContainer::getParameterContainer`.'
+count = 1
+
+[[issues]]
+file = "src/Adapter/StatementContainer.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\StatementContainer::getSql`.'
+count = 1
+
+[[issues]]
+file = "src/Adapter/StatementContainer.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\StatementContainer::setParameterContainer`.'
+count = 1
+
+[[issues]]
+file = "src/Adapter/StatementContainer.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\StatementContainer::setSql`.'
+count = 1
+
+[[issues]]
 file = "src/Adapter/StatementContainerInterface.php"
 code = "missing-api-or-internal"
 message = 'Interface `PhpDb\Adapter\StatementContainerInterface` is missing an `@api` or `@internal` annotation.'
@@ -1084,6 +1282,12 @@ count = 1
 file = "src/ConfigProvider.php"
 code = "imprecise-type"
 message = "Type `array` in return type of `getDependencies` is imprecise, equivalent to `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
+file = "src/ConfigProvider.php"
+code = "missing-constant-type"
+message = "Class constant `NAMED_ADAPTER_KEY` is missing a type hint."
 count = 1
 
 [[issues]]
@@ -1114,6 +1318,18 @@ count = 1
 file = "src/Container/AbstractAdapterInterfaceFactory.php"
 code = "invalid-return-statement"
 message = 'Invalid return type for function `PhpDb\Container\AbstractAdapterInterfaceFactory::getConfig`: expected `array<array-key, mixed>`, but found `array<array-key, mixed>|null`.'
+count = 1
+
+[[issues]]
+file = "src/Container/AbstractAdapterInterfaceFactory.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Container\AbstractAdapterInterfaceFactory::__invoke`.'
+count = 1
+
+[[issues]]
+file = "src/Container/AbstractAdapterInterfaceFactory.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Container\AbstractAdapterInterfaceFactory::canCreate`.'
 count = 1
 
 [[issues]]
@@ -1387,6 +1603,36 @@ message = 'Class `PhpDb\Metadata\Object\ConstraintKeyObject` should be declared 
 count = 1
 
 [[issues]]
+file = "src/Metadata/Object/ConstraintKeyObject.php"
+code = "missing-constant-type"
+message = "Class constant `FK_CASCADE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Metadata/Object/ConstraintKeyObject.php"
+code = "missing-constant-type"
+message = "Class constant `FK_NO_ACTION` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Metadata/Object/ConstraintKeyObject.php"
+code = "missing-constant-type"
+message = "Class constant `FK_RESTRICT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Metadata/Object/ConstraintKeyObject.php"
+code = "missing-constant-type"
+message = "Class constant `FK_SET_DEFAULT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Metadata/Object/ConstraintKeyObject.php"
+code = "missing-constant-type"
+message = "Class constant `FK_SET_NULL` is missing a type hint."
+count = 1
+
+[[issues]]
 file = "src/Metadata/Object/ConstraintObject.php"
 code = "class-must-be-final"
 message = 'Class `PhpDb\Metadata\Object\ConstraintObject` should be declared `final`.'
@@ -1498,6 +1744,12 @@ count = 2
 file = "src/Metadata/Source/AbstractSource.php"
 code = "missing-api-or-internal"
 message = 'Abstract class `PhpDb\Metadata\Source\AbstractSource` is missing an `@api` or `@internal` annotation.'
+count = 1
+
+[[issues]]
+file = "src/Metadata/Source/AbstractSource.php"
+code = "missing-constant-type"
+message = "Class constant `DEFAULT_SCHEMA` is missing a type hint."
 count = 1
 
 [[issues]]
@@ -2084,6 +2336,18 @@ count = 1
 
 [[issues]]
 file = "src/ResultSet/ResultSet.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_ARRAYOBJECT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/ResultSet/ResultSet.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_ARRAY` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/ResultSet/ResultSet.php"
 code = "nullable-return-statement"
 message = 'Function `PhpDb\ResultSet\ResultSet::getRowPrototype` is declared to return `ArrayObject<array-key, mixed>|PhpDb\ResultSet\RowPrototypeInterface` but possibly returns a nullable value (inferred as `ArrayObject<array-key, mixed>|PhpDb\ResultSet\RowPrototypeInterface|null`).'
 count = 1
@@ -2206,6 +2470,18 @@ count = 1
 file = "src/RowGateway/AbstractRowGateway.php"
 code = "missing-api-or-internal"
 message = 'Abstract class `PhpDb\RowGateway\AbstractRowGateway` is missing an `@api` or `@internal` annotation.'
+count = 1
+
+[[issues]]
+file = "src/RowGateway/AbstractRowGateway.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\AbstractRowGateway::exchangeArray`.'
+count = 1
+
+[[issues]]
+file = "src/RowGateway/AbstractRowGateway.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\AbstractRowGateway::toArray`.'
 count = 1
 
 [[issues]]
@@ -2353,6 +2629,30 @@ message = 'Abstract class `PhpDb\RowGateway\Feature\AbstractFeature` is missing 
 count = 1
 
 [[issues]]
+file = "src/RowGateway/Feature/AbstractFeature.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\Feature\AbstractFeature::getMagicMethodSpecifications`.'
+count = 1
+
+[[issues]]
+file = "src/RowGateway/Feature/AbstractFeature.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\Feature\AbstractFeature::getName`.'
+count = 1
+
+[[issues]]
+file = "src/RowGateway/Feature/AbstractFeature.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\Feature\AbstractFeature::initialize`.'
+count = 1
+
+[[issues]]
+file = "src/RowGateway/Feature/AbstractFeature.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\Feature\AbstractFeature::setRowGateway`.'
+count = 1
+
+[[issues]]
 file = "src/RowGateway/Feature/FeatureInterface.php"
 code = "missing-api-or-internal"
 message = 'Interface `PhpDb\RowGateway\Feature\FeatureInterface` is missing an `@api` or `@internal` annotation.'
@@ -2380,6 +2680,12 @@ count = 2
 file = "src/RowGateway/Feature/FeatureSet.php"
 code = "imprecise-type"
 message = "Type `array` in property `$magicSpecifications` is imprecise, equivalent to `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
+file = "src/RowGateway/Feature/FeatureSet.php"
+code = "missing-constant-type"
+message = "Class constant `APPLY_HALT` is missing a type hint."
 count = 1
 
 [[issues]]
@@ -2749,6 +3055,114 @@ message = 'Possible argument type mismatch for argument #1 of `PhpDb\Sql\Argumen
 count = 1
 
 [[issues]]
+file = "src/Sql/Argument/Identifier.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Identifier::getSpecification`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Identifier.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Identifier::getType`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Identifier.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Identifier::getValue`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Identifiers.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Identifiers::getSpecification`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Identifiers.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Identifiers::getType`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Identifiers.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Identifiers::getValue`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Literal.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Literal::getSpecification`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Literal.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Literal::getType`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Literal.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Literal::getValue`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Select.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Select::getSpecification`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Select.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Select::getType`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Select.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Select::getValue`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Value.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Value::getSpecification`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Value.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Value::getType`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Value.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Value::getValue`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Values.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Values::getSpecification`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Values.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Values::getType`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Argument/Values.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Values::getValue`.'
+count = 1
+
+[[issues]]
 file = "src/Sql/ArgumentInterface.php"
 code = "imprecise-type"
 message = "Type `array` in return type of `getValue` is imprecise, equivalent to `array<array-key, mixed>`."
@@ -2824,6 +3238,36 @@ count = 1
 file = "src/Sql/Combine.php"
 code = "invalid-array-element"
 message = "Cannot use spread operator on non-iterable type `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Sql/Combine.php"
+code = "missing-constant-type"
+message = "Class constant `COLUMNS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Combine.php"
+code = "missing-constant-type"
+message = "Class constant `COMBINE_EXCEPT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Combine.php"
+code = "missing-constant-type"
+message = "Class constant `COMBINE_INTERSECT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Combine.php"
+code = "missing-constant-type"
+message = "Class constant `COMBINE_UNION` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Combine.php"
+code = "missing-constant-type"
+message = "Class constant `COMBINE` is missing a type hint."
 count = 1
 
 [[issues]]
@@ -3022,6 +3466,54 @@ count = 1
 file = "src/Sql/Ddl/AlterTable.php"
 code = "less-specific-argument"
 message = "Argument type mismatch for argument #1 of `strtoupper`: expected `string`, but provided type `array-key` is less specific."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/AlterTable.php"
+code = "missing-constant-type"
+message = "Class constant `ADD_COLUMNS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/AlterTable.php"
+code = "missing-constant-type"
+message = "Class constant `ADD_CONSTRAINTS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/AlterTable.php"
+code = "missing-constant-type"
+message = "Class constant `CHANGE_COLUMNS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/AlterTable.php"
+code = "missing-constant-type"
+message = "Class constant `DROP_COLUMNS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/AlterTable.php"
+code = "missing-constant-type"
+message = "Class constant `DROP_CONSTRAINTS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/AlterTable.php"
+code = "missing-constant-type"
+message = "Class constant `DROP_INDEXES` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/AlterTable.php"
+code = "missing-constant-type"
+message = "Class constant `TABLE_OPTIONS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/AlterTable.php"
+code = "missing-constant-type"
+message = "Class constant `TABLE` is missing a type hint."
 count = 1
 
 [[issues]]
@@ -3434,6 +3926,30 @@ count = 1
 
 [[issues]]
 file = "src/Sql/Ddl/CreateTable.php"
+code = "missing-constant-type"
+message = "Class constant `COLUMNS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/CreateTable.php"
+code = "missing-constant-type"
+message = "Class constant `CONSTRAINTS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/CreateTable.php"
+code = "missing-constant-type"
+message = "Class constant `TABLE_OPTIONS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/CreateTable.php"
+code = "missing-constant-type"
+message = "Class constant `TABLE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/CreateTable.php"
 code = "mixed-argument"
 message = 'Invalid argument type for argument #1 of `PhpDb\Adapter\Platform\PlatformInterface::quoteTrustedValue`: expected `bool|float|int|string`, but found `mixed`.'
 count = 1
@@ -3490,6 +4006,12 @@ count = 1
 file = "src/Sql/Ddl/DropTable.php"
 code = "invalid-return-statement"
 message = '''Invalid return type for function `PhpDb\Sql\Ddl\DropTable::processTable`: expected `array<array-key, string>`, but found `list{string('')|string('IF EXISTS '), array<array-key, mixed>|null|string}`.'''
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/DropTable.php"
+code = "missing-constant-type"
+message = "Class constant `TABLE` is missing a type hint."
 count = 1
 
 [[issues]]
@@ -3590,6 +4112,18 @@ count = 2
 
 [[issues]]
 file = "src/Sql/Delete.php"
+code = "missing-constant-type"
+message = "Class constant `SPECIFICATION_DELETE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Delete.php"
+code = "missing-constant-type"
+message = "Class constant `SPECIFICATION_WHERE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Delete.php"
 code = "possibly-invalid-argument"
 message = 'Possible argument type mismatch for argument #1 of `PhpDb\Sql\AbstractSql::resolveTable`: expected `PhpDb\Sql\Select|PhpDb\Sql\TableIdentifier|null|string`, but possibly received `PhpDb\Sql\TableIdentifier|array<array-key, mixed>|string`.'
 count = 1
@@ -3676,6 +4210,12 @@ count = 2
 file = "src/Sql/Expression.php"
 code = "imprecise-type"
 message = "Type `array` in return type of `getParameters` is imprecise, equivalent to `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
+file = "src/Sql/Expression.php"
+code = "missing-constant-type"
+message = "Class constant `PLACEHOLDER` is missing a type hint."
 count = 1
 
 [[issues]]
@@ -3830,6 +4370,30 @@ count = 2
 
 [[issues]]
 file = "src/Sql/Insert.php"
+code = "missing-constant-type"
+message = "Class constant `SPECIFICATION_INSERT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Insert.php"
+code = "missing-constant-type"
+message = "Class constant `SPECIFICATION_SELECT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Insert.php"
+code = "missing-constant-type"
+message = "Class constant `VALUES_MERGE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Insert.php"
+code = "missing-constant-type"
+message = "Class constant `VALUES_SET` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Insert.php"
 code = "missing-return-type"
 message = "Function `__isset` is missing a return type hint."
 count = 1
@@ -3962,6 +4526,48 @@ count = 1
 
 [[issues]]
 file = "src/Sql/Join.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_FULL_OUTER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Join.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_INNER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Join.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_LEFT_OUTER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Join.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_LEFT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Join.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_OUTER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Join.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_RIGHT_OUTER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Join.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_RIGHT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Join.php"
 code = "missing-template-parameter"
 message = "Too few template arguments for `Iterator`: expected at least 2, but found 0."
 count = 1
@@ -4000,6 +4606,24 @@ count = 1
 file = "src/Sql/Platform/AbstractPlatform.php"
 code = "missing-constructor"
 message = 'Class `PhpDb\Sql\Platform\AbstractPlatform` has typed properties without default values but no constructor to initialize them.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Platform/AbstractPlatform.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\AbstractPlatform::getSqlString`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Platform/AbstractPlatform.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\AbstractPlatform::prepareStatement`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Platform/AbstractPlatform.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\AbstractPlatform::setSubject`.'
 count = 1
 
 [[issues]]
@@ -4066,6 +4690,36 @@ count = 1
 file = "src/Sql/Platform/Platform.php"
 code = "invalid-iterator"
 message = "The expression provided to `foreach` is not iterable. It resolved to type `nonnull`, which is not iterable."
+count = 1
+
+[[issues]]
+file = "src/Sql/Platform/Platform.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\Platform::getDecorators`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Platform/Platform.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\Platform::getSqlString`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Platform/Platform.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\Platform::getTypeDecorator`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Platform/Platform.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\Platform::prepareStatement`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Platform/Platform.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\Platform::setTypeDecorator`.'
 count = 1
 
 [[issues]]
@@ -4198,6 +4852,78 @@ count = 1
 file = "src/Sql/Predicate/Operator.php"
 code = "class-must-be-final"
 message = 'Class `PhpDb\Sql\Predicate\Operator` should be declared `final`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/Operator.php"
+code = "missing-constant-type"
+message = "Class constant `OPERATOR_EQUAL_TO` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/Operator.php"
+code = "missing-constant-type"
+message = "Class constant `OPERATOR_GREATER_THAN_OR_EQUAL_TO` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/Operator.php"
+code = "missing-constant-type"
+message = "Class constant `OPERATOR_GREATER_THAN` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/Operator.php"
+code = "missing-constant-type"
+message = "Class constant `OPERATOR_LESS_THAN_OR_EQUAL_TO` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/Operator.php"
+code = "missing-constant-type"
+message = "Class constant `OPERATOR_LESS_THAN` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/Operator.php"
+code = "missing-constant-type"
+message = "Class constant `OPERATOR_NOT_EQUAL_TO` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/Operator.php"
+code = "missing-constant-type"
+message = "Class constant `OP_EQ` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/Operator.php"
+code = "missing-constant-type"
+message = "Class constant `OP_GTE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/Operator.php"
+code = "missing-constant-type"
+message = "Class constant `OP_GT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/Operator.php"
+code = "missing-constant-type"
+message = "Class constant `OP_LTE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/Operator.php"
+code = "missing-constant-type"
+message = "Class constant `OP_LT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/Operator.php"
+code = "missing-constant-type"
+message = "Class constant `OP_NE` is missing a type hint."
 count = 1
 
 [[issues]]
@@ -4348,6 +5074,30 @@ count = 1
 file = "src/Sql/Predicate/PredicateSet.php"
 code = "less-specific-nested-return-statement"
 message = '''Returned type `array{'spec': string, 'values': array{}|list<mixed>}` is less specific than the declared return type `array{'spec': string, 'values': array<array-key, PhpDb\Sql\ArgumentInterface>}` for function `PhpDb\Sql\Predicate\PredicateSet::getExpressionData` due to nested 'mixed'.'''
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/PredicateSet.php"
+code = "missing-constant-type"
+message = "Class constant `COMBINED_BY_AND` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/PredicateSet.php"
+code = "missing-constant-type"
+message = "Class constant `COMBINED_BY_OR` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/PredicateSet.php"
+code = "missing-constant-type"
+message = "Class constant `OP_AND` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Predicate/PredicateSet.php"
+code = "missing-constant-type"
+message = "Class constant `OP_OR` is missing a type hint."
 count = 1
 
 [[issues]]
@@ -4628,6 +5378,174 @@ count = 1
 
 [[issues]]
 file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `COLUMNS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `COMBINE_EXCEPT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `COMBINE_INTERSECT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `COMBINE_UNION` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `COMBINE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `GROUP` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `HAVING` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `JOINS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_FULL_OUTER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_INNER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_LEFT_OUTER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_LEFT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_OUTER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_RIGHT_OUTER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `JOIN_RIGHT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `LIMIT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `OFFSET` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `ORDER_ASCENDING` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `ORDER_DESCENDING` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `ORDER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `QUANTIFIER_ALL` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `QUANTIFIER_DISTINCT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `QUANTIFIER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `SELECT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `SQL_STAR` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `TABLE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-constant-type"
+message = "Class constant `WHERE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Select::resolveTable`.'
+count = 1
+
+[[issues]]
+file = "src/Sql/Select.php"
 code = "missing-return-type"
 message = "Function `__clone` is missing a return type hint."
 count = 1
@@ -4843,6 +5761,30 @@ message = 'Interface `PhpDb\Sql\SqlInterface` is missing an `@api` or `@internal
 count = 1
 
 [[issues]]
+file = "src/Sql/SqlInterface.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_IDENTIFIER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/SqlInterface.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_LITERAL` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/SqlInterface.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_SELECT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/SqlInterface.php"
+code = "missing-constant-type"
+message = "Class constant `TYPE_VALUE` is missing a type hint."
+count = 1
+
+[[issues]]
 file = "src/Sql/TableIdentifier.php"
 code = "class-must-be-final"
 message = 'Class `PhpDb\Sql\TableIdentifier` should be declared `final`.'
@@ -4931,6 +5873,42 @@ file = "src/Sql/Update.php"
 code = "less-specific-nested-argument-type"
 message = "Argument type mismatch for argument #3 of `str_replace`: expected `array<array-key, string>|string`, but provided type `array<array-key, mixed>|null|string` is less specific."
 count = 3
+
+[[issues]]
+file = "src/Sql/Update.php"
+code = "missing-constant-type"
+message = "Class constant `SPECIFICATION_JOIN` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Update.php"
+code = "missing-constant-type"
+message = "Class constant `SPECIFICATION_SET` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Update.php"
+code = "missing-constant-type"
+message = "Class constant `SPECIFICATION_UPDATE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Update.php"
+code = "missing-constant-type"
+message = "Class constant `SPECIFICATION_WHERE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Update.php"
+code = "missing-constant-type"
+message = "Class constant `VALUES_MERGE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Sql/Update.php"
+code = "missing-constant-type"
+message = "Class constant `VALUES_SET` is missing a type hint."
+count = 1
 
 [[issues]]
 file = "src/Sql/Update.php"
@@ -5396,6 +6374,30 @@ count = 1
 
 [[issues]]
 file = "src/TableGateway/Feature/AbstractFeature.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\AbstractFeature::getMagicMethodSpecifications`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/AbstractFeature.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\AbstractFeature::getName`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/AbstractFeature.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\AbstractFeature::initialize`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/AbstractFeature.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\AbstractFeature::setTableGateway`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/AbstractFeature.php"
 code = "uninitialized-property"
 message = 'Property `$tableGateway` is not initialized in the constructor of class `PhpDb\TableGateway\Feature\EventFeature`.'
 count = 1
@@ -5438,6 +6440,12 @@ count = 1
 
 [[issues]]
 file = "src/TableGateway/Feature/EventFeature.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature::getEventManager`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeature.php"
 code = "nullable-return-statement"
 message = 'Function `PhpDb\TableGateway\Feature\EventFeature::getEvent` is declared to return `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent` but possibly returns a nullable value (inferred as `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent|null`).'
 count = 1
@@ -5464,6 +6472,66 @@ count = 1
 file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
 code = "imprecise-type"
 message = "Type `array` in property `$params` is imprecise, equivalent to `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::getName`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::getParam`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::getParams`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::getTarget`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::propagationIsStopped`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::setName`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::setParam`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::setParams`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::setTarget`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::stopPropagation`.'
 count = 1
 
 [[issues]]
@@ -5503,6 +6571,66 @@ message = 'Interface `PhpDb\TableGateway\Feature\EventFeatureEventsInterface` is
 count = 1
 
 [[issues]]
+file = "src/TableGateway/Feature/EventFeatureEventsInterface.php"
+code = "missing-constant-type"
+message = "Class constant `EVENT_POST_DELETE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeatureEventsInterface.php"
+code = "missing-constant-type"
+message = "Class constant `EVENT_POST_INITIALIZE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeatureEventsInterface.php"
+code = "missing-constant-type"
+message = "Class constant `EVENT_POST_INSERT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeatureEventsInterface.php"
+code = "missing-constant-type"
+message = "Class constant `EVENT_POST_SELECT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeatureEventsInterface.php"
+code = "missing-constant-type"
+message = "Class constant `EVENT_POST_UPDATE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeatureEventsInterface.php"
+code = "missing-constant-type"
+message = "Class constant `EVENT_PRE_DELETE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeatureEventsInterface.php"
+code = "missing-constant-type"
+message = "Class constant `EVENT_PRE_INITIALIZE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeatureEventsInterface.php"
+code = "missing-constant-type"
+message = "Class constant `EVENT_PRE_INSERT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeatureEventsInterface.php"
+code = "missing-constant-type"
+message = "Class constant `EVENT_PRE_SELECT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeatureEventsInterface.php"
+code = "missing-constant-type"
+message = "Class constant `EVENT_PRE_UPDATE` is missing a type hint."
+count = 1
+
+[[issues]]
 file = "src/TableGateway/Feature/FeatureInterface.php"
 code = "missing-api-or-internal"
 message = 'Interface `PhpDb\TableGateway\Feature\FeatureInterface` is missing an `@api` or `@internal` annotation.'
@@ -5536,6 +6664,12 @@ count = 2
 file = "src/TableGateway/Feature/FeatureSet.php"
 code = "imprecise-type"
 message = "Type `array` in property `$magicSpecifications` is imprecise, equivalent to `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/FeatureSet.php"
+code = "missing-constant-type"
+message = "Class constant `APPLY_HALT` is missing a type hint."
 count = 1
 
 [[issues]]
