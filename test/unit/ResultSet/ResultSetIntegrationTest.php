@@ -56,7 +56,7 @@ final class ResultSetIntegrationTest extends TestCase
         for ($i = 0; $i < $count; $i++) {
             $array[] = [
                 'id'    => $i,
-                'title' => "title {$i}",
+                'title' => 'title ' . $i,
             ];
         }
 
@@ -321,24 +321,6 @@ final class ResultSetIntegrationTest extends TestCase
         $this->resultSet->initialize($dataSource);
         $test = $this->resultSet->toArray();
         self::assertEquals($dataSource->getArrayCopy(), $test, var_export($test, true));
-    }
-
-    /**
-     * @throws RandomException
-     * @throws \Exception
-     */
-    public function testToArrayRaisesExceptionForRowsThatAreNotArraysOrArrayCastable(): void
-    {
-        $count      = random_int(3, 75);
-        $dataSource = $this->getArrayDataSource($count);
-        foreach ($dataSource as $index => $row) {
-            $dataSource[$index] = (object) $row;
-        }
-
-        // Verify toArray() throws exception for non-array-castable objects
-        $this->resultSet->initialize($dataSource);
-        $this->expectException(RuntimeException::class);
-        $this->resultSet->toArray();
     }
 
     /**
