@@ -17,10 +17,7 @@ use ReturnTypeWillChange;
 
 use function count;
 use function current;
-use function gettype;
 use function is_array;
-use function is_object;
-use function method_exists;
 use function reset;
 
 abstract class AbstractResultSet implements ResultSetInterface
@@ -41,6 +38,106 @@ abstract class AbstractResultSet implements ResultSetInterface
     protected ?int $fieldCount = null;
 
     protected int $position = 0;
+
+    /**
+     * @throws RuntimeException
+     */
+    public function buffer(): ResultSetInterface
+    {
+        if ($this->buffer === -2) {
+            throw new RuntimeException('Buffering must be enabled before iteration is started');
+        } elseif ($this->buffer === null) {
+            $this->buffer = [];
+            if ($this->dataSource instanceof ResultInterface) {
+                $this->dataSource->rewind();
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Countable: return count of rows
+     */
+    #[Override]
+    #[ReturnTypeWillChange]
+    public function count(): ?int
+    {
+        if ($this->count !== null) {
+            return $this->count;
+        }
+
+        if ($this->dataSource instanceof Countable) {
+            $this->count = count($this->dataSource);
+        }
+
+        return $this->count;
+    }
+
+    /**
+     * Iterator: get current item
+     */
+    #[Override]
+    public function current(): array|object|null
+    {
+        if (-1 === $this->buffer) {
+            // datasource was an array when the resultset was initialized
+            return $this->dataSource->current();
+        }
+
+        if ($this->buffer === null) {
+            $this->buffer = -2; // implicitly disable buffering from here on
+        } elseif (is_array($this->buffer) && isset($this->buffer[$this->position])) {
+            return $this->buffer[$this->position];
+        }
+
+        $data = $this->dataSource->current();
+        if (is_array($this->buffer)) {
+            $this->buffer[$this->position] = $data;
+        }
+
+        return is_array($data) ? $data : null;
+    }
+
+    /**
+     * Get the data source used to create the result set
+     */
+    public function getDataSource(): ResultInterface|IteratorAggregate|Iterator|null
+    {
+        return $this->dataSource;
+    }
+
+    /**
+     * Retrieve count of fields in individual rows of the result set
+     */
+    #[Override]
+    public function getFieldCount(): int
+    {
+        if (null !== $this->fieldCount) {
+            return $this->fieldCount;
+        }
+
+        $dataSource = $this->getDataSource();
+        if (null === $dataSource) {
+            return 0;
+        }
+
+        $dataSource->rewind();
+        if (! $dataSource->valid()) {
+            $this->fieldCount = 0;
+            return 0;
+        }
+
+        $row = $dataSource->current();
+        if ($row instanceof Countable) {
+            $this->fieldCount = $row->count();
+            return $this->fieldCount;
+        }
+
+        $row              = (array) $row;
+        $this->fieldCount = count($row);
+        return $this->fieldCount;
+    }
 
     /**
      * Set the data source for the result set
@@ -87,66 +184,18 @@ abstract class AbstractResultSet implements ResultSetInterface
         return $this;
     }
 
-    /**
-     * @throws RuntimeException
-     */
-    public function buffer(): ResultSetInterface
-    {
-        if ($this->buffer === -2) {
-            throw new RuntimeException('Buffering must be enabled before iteration is started');
-        } elseif ($this->buffer === null) {
-            $this->buffer = [];
-            if ($this->dataSource instanceof ResultInterface) {
-                $this->dataSource->rewind();
-            }
-        }
-
-        return $this;
-    }
-
     public function isBuffered(): bool
     {
         return $this->buffer === -1 || is_array($this->buffer);
     }
 
     /**
-     * Get the data source used to create the result set
-     */
-    public function getDataSource(): ResultInterface|IteratorAggregate|Iterator|null
-    {
-        return $this->dataSource;
-    }
-
-    /**
-     * Retrieve count of fields in individual rows of the result set
+     * Iterator: retrieve current key
      */
     #[Override]
-    public function getFieldCount(): int
+    public function key(): int
     {
-        if (null !== $this->fieldCount) {
-            return $this->fieldCount;
-        }
-
-        $dataSource = $this->getDataSource();
-        if (null === $dataSource) {
-            return 0;
-        }
-
-        $dataSource->rewind();
-        if (! $dataSource->valid()) {
-            $this->fieldCount = 0;
-            return 0;
-        }
-
-        $row = $dataSource->current();
-        if ($row instanceof Countable) {
-            $this->fieldCount = $row->count();
-            return $this->fieldCount;
-        }
-
-        $row              = (array) $row;
-        $this->fieldCount = count($row);
-        return $this->fieldCount;
+        return $this->position;
     }
 
     /**
@@ -167,53 +216,6 @@ abstract class AbstractResultSet implements ResultSetInterface
     }
 
     /**
-     * Iterator: retrieve current key
-     */
-    #[Override]
-    public function key(): int
-    {
-        return $this->position;
-    }
-
-    /**
-     * Iterator: get current item
-     */
-    #[Override]
-    public function current(): array|object|null
-    {
-        if (-1 === $this->buffer) {
-            // datasource was an array when the resultset was initialized
-            return $this->dataSource->current();
-        }
-
-        if ($this->buffer === null) {
-            $this->buffer = -2; // implicitly disable buffering from here on
-        } elseif (is_array($this->buffer) && isset($this->buffer[$this->position])) {
-            return $this->buffer[$this->position];
-        }
-
-        $data = $this->dataSource->current();
-        if (is_array($this->buffer)) {
-            $this->buffer[$this->position] = $data;
-        }
-
-        return is_array($data) ? $data : null;
-    }
-
-    /**
-     * Iterator: is pointer valid?
-     */
-    #[Override]
-    public function valid(): bool
-    {
-        if (is_array($this->buffer) && isset($this->buffer[$this->position])) {
-            return true;
-        }
-
-        return $this->dataSource->valid();
-    }
-
-    /**
      * Iterator: rewind
      */
     #[Override]
@@ -227,53 +229,15 @@ abstract class AbstractResultSet implements ResultSetInterface
     }
 
     /**
-     * Countable: return count of rows
+     * Iterator: is pointer valid?
      */
     #[Override]
-    #[ReturnTypeWillChange]
-    public function count(): ?int
+    public function valid(): bool
     {
-        if ($this->count !== null) {
-            return $this->count;
+        if (is_array($this->buffer) && isset($this->buffer[$this->position])) {
+            return true;
         }
 
-        if ($this->dataSource instanceof Countable) {
-            $this->count = count($this->dataSource);
-        }
-
-        return $this->count;
-    }
-
-    /**
-     * Cast result set to array of arrays
-     *
-     * @throws RuntimeException If any row is not castable to an array.
-     */
-    #[Override]
-    public function toArray(): array
-    {
-        $return = [];
-        foreach ($this as $row) {
-            if (is_array($row)) {
-                $return[] = $row;
-                continue;
-            }
-
-            if (
-                ! is_object($row)
-                || (
-                    ! method_exists($row, 'toArray')
-                    && ! method_exists($row, 'getArrayCopy')
-                )
-            ) {
-                throw new RuntimeException(
-                    'Rows as part of this DataSource, with type ' . gettype($row) . ' cannot be cast to an array'
-                );
-            }
-
-            $return[] = method_exists($row, 'toArray') ? $row->toArray() : $row->getArrayCopy();
-        }
-
-        return $return;
+        return $this->dataSource->valid();
     }
 }
