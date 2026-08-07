@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace PhpDb\TableGateway\Feature;
 
-use PhpDb\ResultSet\ResultSet;
+use PhpDb\ResultSet\RowPrototypeResultSet;
 use PhpDb\RowGateway\RowGateway;
 use PhpDb\RowGateway\RowGatewayInterface;
 use PhpDb\TableGateway\Exception;
+use PhpDb\TableGateway\Feature\MetadataFeature;
 
 use function is_string;
 
@@ -24,12 +25,15 @@ class RowGatewayFeature extends AbstractFeature
     {
         $args = $this->constructorArguments;
 
-        /** @var ResultSet $resultSetPrototype */
+        /** @var RowPrototypeResultSet $resultSetPrototype */
         $resultSetPrototype = $this->tableGateway->resultSetPrototype;
 
-        if (! $this->tableGateway->resultSetPrototype instanceof ResultSet) {
+        if (! $this->tableGateway->resultSetPrototype instanceof RowPrototypeResultSet) {
             throw new Exception\RuntimeException(
-                'This feature ' . self::class . ' expects the ResultSet to be an instance of ' . ResultSet::class,
+                'This feature '
+                    . self::class
+                    . ' expects the ResultSet to be an instance of '
+                    . RowPrototypeResultSet::class,
             );
         }
 
@@ -41,17 +45,17 @@ class RowGatewayFeature extends AbstractFeature
                     $this->tableGateway->table,
                     $this->tableGateway->adapter,
                 );
-                $resultSetPrototype->setArrayObjectPrototype($rowGatewayPrototype);
+                $resultSetPrototype->setRowPrototype($rowGatewayPrototype);
             } elseif ($args[0] instanceof RowGatewayInterface) {
                 $rowGatewayPrototype = $args[0];
-                $resultSetPrototype->setArrayObjectPrototype($rowGatewayPrototype);
+                $resultSetPrototype->setRowPrototype($rowGatewayPrototype);
             }
         } else {
             // get from metadata feature
             $metadata = $this->tableGateway->featureSet->getFeatureByClassName(
                 MetadataFeature::class,
             );
-            if (null === $metadata || ! isset($metadata->sharedData['metadata'])) {
+            if ($metadata === null || ! isset($metadata->sharedData['metadata'])) {
                 throw new Exception\RuntimeException(
                     'No information was provided to the RowGatewayFeature and/or no MetadataFeature could be consulted '
                         . 'to find the primary key necessary for RowGateway object creation.',
@@ -63,7 +67,7 @@ class RowGatewayFeature extends AbstractFeature
                 $this->tableGateway->table,
                 $this->tableGateway->adapter,
             );
-            $resultSetPrototype->setArrayObjectPrototype($rowGatewayPrototype);
+            $resultSetPrototype->setRowPrototype($rowGatewayPrototype);
         }
     }
 }

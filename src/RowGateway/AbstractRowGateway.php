@@ -54,7 +54,7 @@ abstract class AbstractRowGateway implements ArrayAccess, Countable, RowGatewayI
         $result       = $statement->execute();
 
         $rowsAffected = $result->getAffectedRows();
-        if (1 === $rowsAffected) {
+        if ($rowsAffected === 1) {
             $this->primaryKeyData = null;
         }
 
@@ -67,7 +67,6 @@ abstract class AbstractRowGateway implements ArrayAccess, Countable, RowGatewayI
      *
      * @return array<string, mixed>
      */
-    #[Override]
     public function exchangeArray(array $array): array
     {
         $oldData = $this->data;
@@ -93,15 +92,15 @@ abstract class AbstractRowGateway implements ArrayAccess, Countable, RowGatewayI
         $this->featureSet->setRowGateway($this);
         $this->featureSet->apply('preInitialize', []);
 
-        if (null === $this->table) {
+        if ($this->table === null) {
             throw new Exception\RuntimeException('This row object does not have a valid table set.');
         }
 
-        if (null === $this->primaryKeyColumn) {
+        if ($this->primaryKeyColumn === null) {
             throw new Exception\RuntimeException('This row object does not have a primary key column set.');
         }
 
-        if (null === $this->sql) {
+        if ($this->sql === null) {
             throw new Exception\RuntimeException('This row object does not have a Sql object set.');
         }
 
@@ -165,12 +164,12 @@ abstract class AbstractRowGateway implements ArrayAccess, Countable, RowGatewayI
     /**
      * Populate Data
      */
-    public function populate(array $rowData, bool $rowExistsInDatabase = false): RowGatewayInterface
+    public function populate(array $rowData, bool $rowExistsInDatabase = false): static
     {
         $this->initialize();
 
         $this->data = $rowData;
-        if (true === $rowExistsInDatabase) {
+        if ($rowExistsInDatabase === true) {
             $this->processPrimaryKeyData();
         } else {
             $this->primaryKeyData = null;
@@ -181,7 +180,7 @@ abstract class AbstractRowGateway implements ArrayAccess, Countable, RowGatewayI
 
     public function rowExistsInDatabase(): bool
     {
-        return null !== $this->primaryKeyData;
+        return $this->primaryKeyData !== null;
     }
 
     #[Override]
@@ -212,11 +211,9 @@ abstract class AbstractRowGateway implements ArrayAccess, Countable, RowGatewayI
 
             if ($isPkModified) {
                 foreach ($this->primaryKeyColumn as $pkColumn) {
-                    if ($data[$pkColumn] === $this->primaryKeyData[$pkColumn]) {
-                        continue;
+                    if ($data[$pkColumn] !== $this->primaryKeyData[$pkColumn]) {
+                        $where[$pkColumn] = $data[$pkColumn];
                     }
-
-                    $where[$pkColumn] = $data[$pkColumn];
                 }
             }
         } else {
@@ -249,7 +246,6 @@ abstract class AbstractRowGateway implements ArrayAccess, Countable, RowGatewayI
         return $rowsAffected;
     }
 
-    #[Override]
     public function toArray(): array
     {
         return $this->data;
@@ -264,7 +260,7 @@ abstract class AbstractRowGateway implements ArrayAccess, Countable, RowGatewayI
         foreach ($this->primaryKeyColumn as $column) {
             if (! isset($this->data[$column])) {
                 throw new Exception\RuntimeException(
-                    "While processing primary key data, a known key {$column} was not found in the data array",
+                    'While processing primary key data, a known key ' . $column . ' was not found in the data array',
                 );
             }
             $this->primaryKeyData[$column] = $this->data[$column];
@@ -279,7 +275,7 @@ abstract class AbstractRowGateway implements ArrayAccess, Countable, RowGatewayI
         if (array_key_exists($name, $this->data)) {
             return $this->data[$name];
         }
-        throw new Exception\InvalidArgumentException("Not a valid column in this row: {$name}");
+        throw new Exception\InvalidArgumentException('Not a valid column in this row: ' . $name);
     }
 
     public function __isset(string $name): bool
