@@ -123,6 +123,7 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
      * Always prepares the statement; never executes it. Use executeQuery()
      * to run the returned statement.
      */
+    #[Override]
     public function prepareQuery(
         string $sql,
         ParameterContainer|array $parameters = []
@@ -148,6 +149,7 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
      *
      * @throws Exception\RuntimeException When execution did not produce a result.
      */
+    #[Override]
     public function executeQuery(string|Driver\StatementInterface $sql): Driver\ResultInterface
     {
         $result = $sql instanceof Driver\StatementInterface

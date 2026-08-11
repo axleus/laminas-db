@@ -50,6 +50,21 @@ interface AdapterInterface
     ): Driver\StatementInterface|ResultSet\ResultSetInterface|Driver\ResultInterface;
 
     /**
+     * Prepares a statement for the given SQL without executing it.
+     */
+    public function prepareQuery(
+        string $sql,
+        ParameterContainer|array $parameters = []
+    ): Driver\StatementInterface;
+
+    /**
+     * Executes raw SQL or a prepared statement.
+     *
+     * @throws Exception\RuntimeException When execution did not produce a result.
+     */
+    public function executeQuery(string|Driver\StatementInterface $sql): Driver\ResultInterface;
+
+    /**
      * @todo 0.3.x track down this usage!!!
      * @return array
      */
