@@ -10,7 +10,6 @@ use PhpDb\ResultSet;
 
 use function func_get_args;
 use function is_array;
-use function is_string;
 use function strtolower;
 
 class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, SchemaAwareInterface
@@ -89,11 +88,14 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
         }
 
         $sql = match (true) {
-            $parametersOrQueryMode === self::QUERY_MODE_EXECUTE => $sql,
-            is_string($parametersOrQueryMode) => throw new Exception\InvalidArgumentException(
-                'Parameter 2 to this method must be a flag, an array, or ParameterContainer'
+            $parametersOrQueryMode === self::QUERY_MODE_EXECUTE
+                => $sql,
+            $parametersOrQueryMode instanceof ParameterContainer,
+            is_array($parametersOrQueryMode)
+                => $this->prepareQuery($sql, $parametersOrQueryMode),
+            default => throw new Exception\InvalidArgumentException(
+                'Flag incorrectly set'
             ),
-            default => $this->prepareQuery($sql, $parametersOrQueryMode),
         };
 
         $result = $this->executeQuery($sql);

@@ -375,7 +375,7 @@ final class AdapterTest extends TestCase
     public function testQueryThrowsOnInvalidParameterType(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Parameter 2 to this method must be a flag, an array, or ParameterContainer');
+        $this->expectExceptionMessage('Flag incorrectly set');
 
         $this->adapter->query('SELECT 1', 'invalid_mode');
     }
