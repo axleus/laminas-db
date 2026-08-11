@@ -9,7 +9,6 @@ use Override;
 use PhpDb\ResultSet;
 
 use function func_get_args;
-use function in_array;
 use function is_array;
 use function is_string;
 use function strtolower;
@@ -85,36 +84,23 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
         ParameterContainer|array|string $parametersOrQueryMode = self::QUERY_MODE_PREPARE,
         ?ResultSet\ResultSetInterface $resultPrototype = null
     ): Driver\StatementInterface|ResultSet\ResultSetInterface|Driver\ResultInterface {
-        if (
-            is_string($parametersOrQueryMode)
-            && in_array($parametersOrQueryMode, [self::QUERY_MODE_PREPARE, self::QUERY_MODE_EXECUTE])
-        ) {
-            $mode       = $parametersOrQueryMode;
-            $parameters = null;
-        } elseif (is_array($parametersOrQueryMode) || $parametersOrQueryMode instanceof ParameterContainer) {
-            $mode       = self::QUERY_MODE_PREPARE;
-            $parameters = $parametersOrQueryMode;
-        } else {
-            throw new Exception\InvalidArgumentException(
+        if ($parametersOrQueryMode === self::QUERY_MODE_PREPARE) {
+            return $this->prepareQuery($sql);
+        }
+
+        $sql = match (true) {
+            $parametersOrQueryMode === self::QUERY_MODE_EXECUTE => $sql,
+            is_string($parametersOrQueryMode) => throw new Exception\InvalidArgumentException(
                 'Parameter 2 to this method must be a flag, an array, or ParameterContainer'
-            );
-        }
-
-        if ($mode === self::QUERY_MODE_PREPARE) {
-            $sql = $this->prepareQuery($sql, $parameters ?? []);
-
-            if ($parameters === null) {
-                return $sql;
-            }
-        }
+            ),
+            default => $this->prepareQuery($sql, $parametersOrQueryMode),
+        };
 
         $result = $this->executeQuery($sql);
 
-        if ($result->isQueryResult()) {
-            return $result->getQueryResult($resultPrototype ?? $this->queryResultSetPrototype);
-        }
-
-        return $result;
+        return $result->isQueryResult()
+            ? $result->getQueryResult($resultPrototype ?? $this->queryResultSetPrototype)
+            : $result;
     }
 
     /**
