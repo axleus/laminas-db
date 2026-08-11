@@ -78,11 +78,21 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
     public function getQueryResultSetPrototype(): ResultSet\ResultSetInterface;
     public function getCurrentSchema(): string|false;
 
+    /** @deprecated Use prepareQuery() and executeQuery() instead. */
     public function query(
         string $sql,
         ParameterContainer|array|string $parametersOrQueryMode = self::QUERY_MODE_PREPARE,
         ?ResultSet\ResultSetInterface $resultPrototype = null
     ): Driver\StatementInterface|ResultSet\ResultSet|Driver\ResultInterface;
+
+    public function prepareQuery(
+        string $sql,
+        ParameterContainer|array $parameters = []
+    ): Driver\StatementInterface;
+
+    public function executeQuery(
+        string|Driver\StatementInterface $sql
+    ): Driver\ResultInterface;
 
     public function createStatement(
         ?string $initialSql = null,
@@ -90,6 +100,10 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
     ): Driver\StatementInterface;
 }
 ```
+
+> **Note:** `prepareQuery()` and `executeQuery()` are currently declared on
+> the `Adapter` class only; `AdapterInterface` still declares `query()` alone
+> to avoid breaking existing implementors during the 0.x series.
 
 ### Constructor Parameters
 
@@ -104,13 +118,12 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
 
 ## Query Preparation
 
-By default, `PhpDb\Adapter\Adapter::query()` prefers that you use
-"preparation" as a means for processing SQL statements. This generally means
-that you will supply a SQL statement containing placeholders for the values, and
-separately provide substitutions for those placeholders:
+`PhpDb\Adapter\Adapter::prepareQuery()` prepares a SQL statement, optionally
+binding parameters, and always returns the prepared `Statement` without
+executing it:
 
-```php title="Query with Prepared Statement"
-$adapter->query('SELECT * FROM `artist` WHERE `id` = ?', [5]);
+```php title="Preparing a Statement"
+$statement = $adapter->prepareQuery('SELECT * FROM `artist` WHERE `id` = ?', [5]);
 ```
 
 The above example will go through the following steps:
@@ -118,37 +131,72 @@ The above example will go through the following steps:
 1. Create a new `Statement` object
 2. Prepare the array `[5]` into a `ParameterContainer` if necessary
 3. Inject the `ParameterContainer` into the `Statement` object
-4. Execute the `Statement` object, producing a `Result` object
-5. Check the `Result` object to check if the supplied SQL was a result set
-   producing statement. If the query produced a result set, clone the
-   `ResultSet` prototype, inject the `Result` as its datasource, and return
-   the new `ResultSet` instance. Otherwise, return the `Result`.
+4. Prepare the `Statement` object and return it
+
+To actually run the statement, pass it to `executeQuery()`:
+
+```php title="Executing a Prepared Statement"
+$result = $adapter->executeQuery($statement);
+```
+
+`executeQuery()` always returns the raw `Driver\ResultInterface` — it never
+wraps it. If you want the result wrapped in a `ResultSet`, check
+`isQueryResult()` and call `getQueryResult()` yourself:
+
+```php title="Wrapping a Query Result"
+if ($result->isQueryResult()) {
+    $resultSet = $result->getQueryResult();
+}
+```
+
+`getQueryResult()` clones the `ResultSet` prototype you pass it (or a
+default prototype if you pass none), injects the `Result` as its data
+source, and returns the new `ResultSet` instance. See
+[`getQueryResult()`](#using-the-driver-object) below for details.
 
 ## Query Execution
 
-In some cases, you have to execute statements directly without preparation. One
+In some cases, you have to execute SQL directly without preparation. One
 possible reason for doing so would be to execute a DDL statement, as most
 extensions and RDBMS systems are incapable of preparing such statements.
 
-To execute a query without the preparation step, pass a flag as
-the second argument indicating execution is required:
+Pass the raw SQL string to `executeQuery()` to execute it without a
+preparation step:
 
 ```php title="Executing DDL Statement Without Preparation"
+$adapter->executeQuery(
+    'ALTER TABLE ADD INDEX(`foo_index`) ON (`foo_column`)'
+);
+```
+
+## The Deprecated query() Method
+
+`Adapter::query()` predates the `prepareQuery()`/`executeQuery()` split and
+combines both concerns behind a single method and a stringly-typed second
+argument. It is deprecated in favour of the methods above but remains
+available, proxying to them internally, for backwards compatibility:
+
+```php title="Query with Prepared Statement (deprecated)"
+$adapter->query('SELECT * FROM `artist` WHERE `id` = ?', [5]);
+```
+
+```php title="Executing DDL Statement Without Preparation (deprecated)"
 $adapter->query(
     'ALTER TABLE ADD INDEX(`foo_index`) ON (`foo_column`)',
     Adapter::QUERY_MODE_EXECUTE
 );
 ```
 
-The primary difference to notice is that you must provide the
-`Adapter::QUERY_MODE_EXECUTE` (execute) flag as the second parameter.
+The primary difference to notice in the second example is that you must
+provide the `Adapter::QUERY_MODE_EXECUTE` (execute) flag as the second
+parameter.
 
 ## Creating Statements
 
-While `query()` is highly useful for one-off and quick querying of a database
-via the `Adapter`, it generally makes more sense to create a statement and
-interact with it directly, so that you have greater control over the
-prepare-then-execute workflow:
+While `prepareQuery()` and `executeQuery()` are highly useful for one-off and
+quick querying of a database via the `Adapter`, it generally makes more sense
+to create a statement and interact with it directly, so that you have
+greater control over the prepare-then-execute workflow:
 
 ```php title="Creating and Executing a Statement"
 $statement = $adapter->createStatement($sql, $optionalParameters);
@@ -229,12 +277,21 @@ interface ResultInterface extends Countable, Iterator
 {
     public function buffer(): void;
     public function isQueryResult(): bool;
+    public function getQueryResult(?ResultSetInterface $resultPrototype = null): ResultSetInterface;
     public function getAffectedRows(): int;
     public function getGeneratedValue(): mixed;
     public function getResource(): mixed;
     public function getFieldCount(): int;
 }
 ```
+
+`getQueryResult()` clones the given `$resultPrototype` (or a default
+`ResultSet` prototype if none is given), initializes the clone from the
+result, and returns it. It throws `Exception\RuntimeException` if
+`isQueryResult()` is false. `Adapter::query()` (the deprecated BC method)
+delegates to this method rather than duplicating the clone-and-initialize
+logic itself; call it yourself when you want a `ResultSet` from
+`executeQuery()`'s raw `Driver\ResultInterface`.
 
 ## Using The Platform Object
 
@@ -442,7 +499,7 @@ $sql = 'UPDATE ' . $qi('artist')
     . ' SET ' . $qi('name') . ' = ' . $fp('name')
     . ' WHERE ' . $qi('id') . ' = ' . $fp('id');
 
-$statement = $adapter->query($sql);
+$statement = $adapter->prepareQuery($sql);
 
 $parameters = [
     'name' => 'Updated Artist',
@@ -452,7 +509,7 @@ $parameters = [
 $statement->execute($parameters);
 
 // DATA UPDATED, NOW CHECK
-$statement = $adapter->query(
+$statement = $adapter->prepareQuery(
     'SELECT * FROM '
     . $qi('artist')
     . ' WHERE id = ' . $fp('id')
