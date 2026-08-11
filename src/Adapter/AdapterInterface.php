@@ -62,7 +62,7 @@ interface AdapterInterface
      *
      * @throws Exception\RuntimeException When execution did not produce a result.
      */
-    public function executeQuery(string|Driver\StatementInterface $sql): Driver\ResultInterface;
+    public function executeQuery(Driver\StatementInterface|string $sql): Driver\ResultInterface;
 
     /**
      * @todo 0.3.x track down this usage!!!

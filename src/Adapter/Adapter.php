@@ -138,7 +138,7 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
      * @throws Exception\RuntimeException When execution did not produce a result.
      */
     #[Override]
-    public function executeQuery(string|Driver\StatementInterface $sql): Driver\ResultInterface
+    public function executeQuery(Driver\StatementInterface|string $sql): Driver\ResultInterface
     {
         $result = $sql instanceof Driver\StatementInterface
             ? $sql->execute()
