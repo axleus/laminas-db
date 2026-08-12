@@ -9,6 +9,8 @@ use PDOStatement;
 use PhpDb\Adapter\Driver\Pdo\Result;
 use PhpDb\Adapter\Exception\InvalidArgumentException;
 use PhpDb\Adapter\Exception\RuntimeException;
+use PhpDb\ResultSet\ResultSet;
+use PhpDbTest\TestAsset\TemporaryResultSet;
 use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -27,6 +29,7 @@ use function uniqid;
 #[CoversMethod(Result::class, 'getResource')]
 #[CoversMethod(Result::class, 'getFieldCount')]
 #[CoversMethod(Result::class, 'isQueryResult')]
+#[CoversMethod(Result::class, 'getQueryResult')]
 #[CoversMethod(Result::class, 'getAffectedRows')]
 #[CoversMethod(Result::class, 'getGeneratedValue')]
 #[CoversMethod(Result::class, 'rewind')]
@@ -289,6 +292,55 @@ final class ResultTest extends TestCase
         $result->initialize($stub, null);
 
         self::assertFalse($result->isQueryResult());
+    }
+
+    public function testGetQueryResultThrowsWhenResultIsNotAQueryResult(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('columnCount')->willReturn(0);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        $this->expectException(RuntimeException::class);
+        $result->getQueryResult();
+    }
+
+    public function testGetQueryResultReturnsDefaultResultSetPrototypeWhenNoneGiven(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('columnCount')->willReturn(3);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        self::assertInstanceOf(ResultSet::class, $result->getQueryResult());
+    }
+
+    public function testGetQueryResultClonesGivenPrototypeRatherThanMutatingIt(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('columnCount')->willReturn(3);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+        $prototype = new TemporaryResultSet();
+
+        $returned = $result->getQueryResult($prototype);
+
+        self::assertInstanceOf(TemporaryResultSet::class, $returned);
+        self::assertNotSame($prototype, $returned);
+    }
+
+    public function testGetQueryResultInitializesReturnedResultSetWithThisResult(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('columnCount')->willReturn(3);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        self::assertSame($result->getFieldCount(), $result->getQueryResult()->getFieldCount());
     }
 
     public function testGetAffectedRowsDelegatesToRowCount(): void

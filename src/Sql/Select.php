@@ -762,8 +762,8 @@ class Select extends AbstractPreparableSql
     }
 
     /**
-     * @return array{0: string, 1: string}
-     * @phpstan-return array{0: string, 1: string}
+     * @return array{0: string|null, 1: string}
+     * @phpstan-return array{0: string|null, 1: string}
      */
     protected function resolveTable(
         Select|string|array|TableIdentifier|null $table,

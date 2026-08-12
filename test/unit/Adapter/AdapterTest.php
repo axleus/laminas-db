@@ -12,6 +12,7 @@ use PhpDb\Adapter\Driver\DriverInterface;
 use PhpDb\Adapter\Driver\ResultInterface;
 use PhpDb\Adapter\Driver\StatementInterface;
 use PhpDb\Adapter\Exception\InvalidArgumentException;
+use PhpDb\Adapter\Exception\RuntimeException;
 use PhpDb\Adapter\Exception\VunerablePlatformQuoteException;
 use PhpDb\Adapter\ParameterContainer;
 use PhpDb\Adapter\Platform\PlatformInterface;
@@ -33,6 +34,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversMethod(Adapter::class, 'getQueryResultSetPrototype')]
 #[CoversMethod(Adapter::class, 'getCurrentSchema')]
 #[CoversMethod(Adapter::class, 'query')]
+#[CoversMethod(Adapter::class, 'prepareQuery')]
+#[CoversMethod(Adapter::class, 'executeQuery')]
 #[CoversMethod(Adapter::class, 'createStatement')]
 #[CoversMethod(Adapter::class, '__get')]
 #[CoversMethod(Adapter::class, '__construct')]
@@ -132,15 +135,14 @@ final class AdapterTest extends TestCase
     #[Group('#210')]
     public function testProducedResultSetPrototypeIsDifferentForEachQuery(): void
     {
-        $statement = $this->createMock(StatementInterface::class);
-        $result    = $this->createMock(ResultInterface::class);
+        $result = $this->createMock(ResultInterface::class);
 
-        $this->mockDriver->method('createStatement')
-                         ->willReturn($statement);
         $this->mockStatement->method('execute')
                             ->willReturn($result);
         $result->method('isQueryResult')
                ->willReturn(true);
+        $result->method('getQueryResult')
+               ->willReturnCallback(static fn (): ResultSetInterface => new ResultSet());
 
         self::assertNotSame(
             $this->adapter->query('SELECT foo', []),
@@ -154,13 +156,11 @@ final class AdapterTest extends TestCase
     #[TestDox('unit test: Test query() in prepare mode, with array of parameters, produces a result object')]
     public function testQueryWhenPreparedWithParameterArrayProducesResult(): void
     {
-        $parray    = ['bar' => 'foo'];
-        $sql       = 'SELECT foo, :bar';
-        $statement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $result    = $this->getMockBuilder(ResultInterface::class)->getMock();
-        $this->mockDriver->expects($this->any())->method('createStatement')
-                         ->with($sql)->willReturn($statement);
+        $parray = ['bar' => 'foo'];
+        $sql    = 'SELECT foo, :bar';
+        $result = $this->getMockBuilder(ResultInterface::class)->getMock();
         $this->mockStatement->expects($this->any())->method('execute')->willReturn($result);
+        $result->expects($this->any())->method('isQueryResult')->willReturn(false);
 
         $r = $this->adapter->query($sql, $parray);
         self::assertSame($result, $r);
@@ -179,6 +179,7 @@ final class AdapterTest extends TestCase
                          ->with($sql)->willReturn($this->mockStatement);
         $this->mockStatement->expects($this->any())->method('execute')->willReturn($result);
         $result->expects($this->any())->method('isQueryResult')->willReturn(true);
+        $result->expects($this->any())->method('getQueryResult')->willReturn(new ResultSet());
 
         $r = $this->adapter->query($sql, $parameterContainer);
         self::assertInstanceOf(ResultSet::class, $r);
@@ -193,6 +194,7 @@ final class AdapterTest extends TestCase
         $sql    = 'SELECT foo';
         $result = $this->getMockBuilder(ResultInterface::class)->getMock();
         $this->mockConnection->expects($this->any())->method('execute')->with($sql)->willReturn($result);
+        $result->expects($this->any())->method('isQueryResult')->willReturn(false);
 
         $r = $this->adapter->query($sql, AdapterInterface::QUERY_MODE_EXECUTE);
         self::assertSame($result, $r);
@@ -209,12 +211,101 @@ final class AdapterTest extends TestCase
         $result = $this->getMockBuilder(ResultInterface::class)->getMock();
         $this->mockConnection->expects($this->any())->method('execute')->with($sql)->willReturn($result);
         $result->expects($this->any())->method('isQueryResult')->willReturn(true);
+        $result->expects($this->any())
+               ->method('getQueryResult')
+               ->willReturnCallback(
+                   static function (?ResultSetInterface $resultPrototype = null): ResultSetInterface {
+                       $resultPrototype ??= new ResultSet();
+
+                       return clone $resultPrototype;
+                   }
+               );
 
         $r = $this->adapter->query($sql, AdapterInterface::QUERY_MODE_EXECUTE);
         self::assertInstanceOf(ResultSet::class, $r);
 
         $r = $this->adapter->query($sql, AdapterInterface::QUERY_MODE_EXECUTE, new TemporaryResultSet());
         self::assertInstanceOf(TemporaryResultSet::class, $r);
+    }
+
+    #[TestDox('unit test: Test prepareQuery() prepares a statement without executing it')]
+    public function testPrepareQueryPreparesStatementWithoutExecuting(): void
+    {
+        $this->mockStatement->expects($this->once())->method('prepare');
+        $this->mockStatement->expects($this->never())->method('execute');
+
+        $statement = $this->adapter->prepareQuery('SELECT foo');
+
+        self::assertSame($this->mockStatement, $statement);
+    }
+
+    #[TestDox('unit test: Test prepareQuery() binds an array of parameters as a ParameterContainer')]
+    public function testPrepareQueryBindsParameterArray(): void
+    {
+        $this->mockStatement->expects($this->once())
+            ->method('setParameterContainer')
+            ->with(self::callback(
+                static fn (ParameterContainer $container): bool => $container->getNamedArray() === ['bar' => 'foo']
+            ));
+
+        $this->adapter->prepareQuery('SELECT foo, :bar', ['bar' => 'foo']);
+    }
+
+    #[TestDox('unit test: Test prepareQuery() binds a ParameterContainer directly')]
+    public function testPrepareQueryBindsParameterContainerDirectly(): void
+    {
+        $parameterContainer = new ParameterContainer(['bar' => 'foo']);
+
+        $this->mockStatement->expects($this->once())
+            ->method('setParameterContainer')
+            ->with($parameterContainer);
+
+        $this->adapter->prepareQuery('SELECT foo, :bar', $parameterContainer);
+    }
+
+    #[TestDox('unit test: Test executeQuery() with raw SQL delegates to connection execute')]
+    public function testExecuteQueryWithRawSqlDelegatesToConnectionExecute(): void
+    {
+        $sql    = 'SELECT foo';
+        $result = $this->createMock(ResultInterface::class);
+        $this->mockConnection->expects($this->once())->method('execute')->with($sql)->willReturn($result);
+
+        self::assertSame($result, $this->adapter->executeQuery($sql));
+    }
+
+    #[TestDox('unit test: Test executeQuery() with a prepared statement executes the statement')]
+    public function testExecuteQueryWithStatementExecutesStatement(): void
+    {
+        $result = $this->createMock(ResultInterface::class);
+        $this->mockStatement->expects($this->once())->method('execute')->willReturn($result);
+        $this->mockConnection->expects($this->never())->method('execute');
+
+        self::assertSame($result, $this->adapter->executeQuery($this->mockStatement));
+    }
+
+    #[TestDox('unit test: Test executeQuery() returns the raw result without wrapping query results')]
+    public function testExecuteQueryReturnsRawResultWithoutWrappingQueryResults(): void
+    {
+        $sql    = 'SELECT foo';
+        $result = $this->createMock(ResultInterface::class);
+
+        $this->mockConnection->method('execute')->willReturn($result);
+        $result->expects($this->any())->method('isQueryResult')->willReturn(true);
+        $result->expects($this->never())->method('getQueryResult');
+
+        self::assertSame($result, $this->adapter->executeQuery($sql));
+    }
+
+    #[TestDox('unit test: Test executeQuery() throws when execution does not produce a result')]
+    public function testExecuteQueryThrowsWhenExecutionDoesNotProduceAResult(): void
+    {
+        $sql = 'SELECT foo';
+        $this->mockConnection->method('execute')->willReturn(null);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Query execution did not produce a result');
+
+        $this->adapter->executeQuery($sql);
     }
 
     #[TestDox('unit test: Test createStatement() produces a statement object')]
@@ -284,7 +375,7 @@ final class AdapterTest extends TestCase
     public function testQueryThrowsOnInvalidParameterType(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Parameter 2 to this method must be a flag, an array, or ParameterContainer');
+        $this->expectExceptionMessage('Flag incorrectly set');
 
         $this->adapter->query('SELECT 1', 'invalid_mode');
     }

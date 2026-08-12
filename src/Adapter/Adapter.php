@@ -9,9 +9,7 @@ use Override;
 use PhpDb\ResultSet;
 
 use function func_get_args;
-use function in_array;
 use function is_array;
-use function is_string;
 use function strtolower;
 
 class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, SchemaAwareInterface
@@ -73,7 +71,10 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
     /**
      * query() is a convenience function
      *
+     * @deprecated Use prepareQuery() and executeQuery() instead. query() will be removed in a future version.
+     *
      * @throws Exception\InvalidArgumentException
+     * @throws Exception\RuntimeException When execution did not produce a result.
      * @throws PhpException
      */
     #[Override]
@@ -82,45 +83,69 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
         ParameterContainer|array|string $parametersOrQueryMode = self::QUERY_MODE_PREPARE,
         ?ResultSet\ResultSetInterface $resultPrototype = null
     ): Driver\StatementInterface|ResultSet\ResultSetInterface|Driver\ResultInterface {
-        if (
-            is_string($parametersOrQueryMode)
-            && in_array($parametersOrQueryMode, [self::QUERY_MODE_PREPARE, self::QUERY_MODE_EXECUTE])
-        ) {
-            $mode       = $parametersOrQueryMode;
-            $parameters = null;
-        } elseif (is_array($parametersOrQueryMode) || $parametersOrQueryMode instanceof ParameterContainer) {
-            $mode       = self::QUERY_MODE_PREPARE;
-            $parameters = $parametersOrQueryMode;
-        } else {
-            throw new Exception\InvalidArgumentException(
-                'Parameter 2 to this method must be a flag, an array, or ParameterContainer'
-            );
+        if ($parametersOrQueryMode === self::QUERY_MODE_PREPARE) {
+            return $this->prepareQuery($sql);
         }
 
-        if ($mode === self::QUERY_MODE_PREPARE) {
-            $lastPreparedStatement = $this->driver->createStatement($sql);
-            $lastPreparedStatement->prepare();
-            if (is_array($parameters) || $parameters instanceof ParameterContainer) {
-                if (is_array($parameters)) {
-                    $lastPreparedStatement->setParameterContainer(new ParameterContainer($parameters));
-                } else {
-                    $lastPreparedStatement->setParameterContainer($parameters);
-                }
-                $result = $lastPreparedStatement->execute();
-            } else {
-                return $lastPreparedStatement;
-            }
-        } else {
-            $result = $this->driver->getConnection()->execute($sql);
+        $sql = match (true) {
+            $parametersOrQueryMode === self::QUERY_MODE_EXECUTE
+                => $sql,
+            $parametersOrQueryMode instanceof ParameterContainer,
+            is_array($parametersOrQueryMode)
+                => $this->prepareQuery($sql, $parametersOrQueryMode),
+            default => throw new Exception\InvalidArgumentException(
+                'Flag incorrectly set'
+            ),
+        };
+
+        $result = $this->executeQuery($sql);
+
+        return $result->isQueryResult()
+            ? $result->getQueryResult($resultPrototype ?? $this->queryResultSetPrototype)
+            : $result;
+    }
+
+    /**
+     * Prepare a statement for the given SQL, optionally binding parameters.
+     *
+     * Always prepares the statement; never executes it. Use executeQuery()
+     * to run the returned statement.
+     */
+    #[Override]
+    public function prepareQuery(
+        string $sql,
+        ParameterContainer|array $parameters = []
+    ): Driver\StatementInterface {
+        $statement = $this->driver->createStatement($sql);
+
+        if (is_array($parameters)) {
+            $parameters = new ParameterContainer($parameters);
         }
 
-        if ($result instanceof Driver\ResultInterface && $result->isQueryResult()) {
-            $resultSet     = $resultPrototype ?? $this->queryResultSetPrototype;
-            $resultSetCopy = clone $resultSet;
+        $statement->setParameterContainer($parameters);
+        $statement->prepare();
 
-            $resultSetCopy->initialize($result);
+        return $statement;
+    }
 
-            return $resultSetCopy;
+    /**
+     * Execute raw SQL or a prepared statement.
+     *
+     * Narrows the driver's execution result to a Driver\ResultInterface,
+     * never a wrapped ResultSet. Callers can check isQueryResult() and use
+     * getQueryResult() themselves if they want the result wrapped.
+     *
+     * @throws Exception\RuntimeException When execution did not produce a result.
+     */
+    #[Override]
+    public function executeQuery(Driver\StatementInterface|string $sql): Driver\ResultInterface
+    {
+        $result = $sql instanceof Driver\StatementInterface
+            ? $sql->execute()
+            : $this->driver->getConnection()->execute($sql);
+
+        if (! $result instanceof Driver\ResultInterface) {
+            throw new Exception\RuntimeException('Query execution did not produce a result');
         }
 
         return $result;

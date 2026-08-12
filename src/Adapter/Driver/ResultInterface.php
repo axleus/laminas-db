@@ -6,6 +6,8 @@ namespace PhpDb\Adapter\Driver;
 
 use Countable;
 use Iterator;
+use PhpDb\Adapter\Exception;
+use PhpDb\ResultSet\ResultSetInterface;
 
 interface ResultInterface extends
     Countable,
@@ -25,6 +27,14 @@ interface ResultInterface extends
      * Is query result?
      */
     public function isQueryResult(): bool;
+
+    /**
+     * Get the seeded query result set, cloned from $resultPrototype (or a
+     * default prototype if none is given) and initialized from this result.
+     *
+     * @throws Exception\RuntimeException When isQueryResult() is false.
+     */
+    public function getQueryResult(?ResultSetInterface $resultPrototype = null): ResultSetInterface;
 
     /**
      * Get affected rows
