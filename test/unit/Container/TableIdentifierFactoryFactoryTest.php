@@ -17,27 +17,6 @@ use Psr\Container\ContainerInterface;
 #[CoversMethod(TableIdentifierFactoryFactory::class, '__invoke')]
 final class TableIdentifierFactoryFactoryTest extends TestCase
 {
-    public function testInvokeCreatesFactoryWithoutPrefixWhenContainerHasNoConfig(): void
-    {
-        $container = new ServiceManager();
-
-        $factory = new TableIdentifierFactoryFactory();
-        $result  = $factory($container);
-
-        self::assertNull($result->getPrefix());
-    }
-
-    public function testInvokeCreatesFactoryWithoutPrefixWhenConfigIsEmpty(): void
-    {
-        $container = new ServiceManager();
-        $container->setService('config', []);
-
-        $factory = new TableIdentifierFactoryFactory();
-        $result  = $factory($container);
-
-        self::assertNull($result->getPrefix());
-    }
-
     public function testInvokeCreatesFactoryWithConfiguredPrefix(): void
     {
         $container = new ServiceManager();
@@ -69,18 +48,6 @@ final class TableIdentifierFactoryFactoryTest extends TestCase
         self::assertSame('__', $result->getSeparator());
     }
 
-    public function testInvokeCreatesFactoryWithoutPrefixWhenConfigServiceIsNull(): void
-    {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('has')->with('config')->willReturn(true);
-        $container->method('get')->with('config')->willReturn(null);
-
-        $factory = new TableIdentifierFactoryFactory();
-        $result  = $factory($container);
-
-        self::assertNull($result->getPrefix());
-    }
-
     public function testInvokeCreatesFactoryWithConfiguredSeparatorWithoutPrefix(): void
     {
         $container = new ServiceManager();
@@ -97,19 +64,50 @@ final class TableIdentifierFactoryFactoryTest extends TestCase
         self::assertSame('__', $result->getSeparator());
     }
 
-    public function testInvokeUsesDefaultSeparatorWhenSeparatorKeyIsAbsent(): void
+    public function testInvokeCreatesFactoryWithoutPrefixWhenConfigIsEmpty(): void
+    {
+        $container = new ServiceManager();
+        $container->setService('config', []);
+
+        $factory = new TableIdentifierFactoryFactory();
+        $result  = $factory($container);
+
+        self::assertNull($result->getPrefix());
+    }
+
+    public function testInvokeCreatesFactoryWithoutPrefixWhenConfigServiceIsNull(): void
+    {
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('has')->with('config')->willReturn(true);
+        $container->method('get')->with('config')->willReturn(null);
+
+        $factory = new TableIdentifierFactoryFactory();
+        $result  = $factory($container);
+
+        self::assertNull($result->getPrefix());
+    }
+
+    public function testInvokeCreatesFactoryWithoutPrefixWhenContainerHasNoConfig(): void
+    {
+        $container = new ServiceManager();
+
+        $factory = new TableIdentifierFactoryFactory();
+        $result  = $factory($container);
+
+        self::assertNull($result->getPrefix());
+    }
+
+    public function testInvokeCreatesFactoryWithoutPrefixWhenPrefixKeyIsAbsent(): void
     {
         $container = new ServiceManager();
         $container->setService('config', [
-            TableIdentifierFactory::class => [
-                'prefix' => 'backup',
-            ],
+            TableIdentifierFactory::class => [],
         ]);
 
         $factory = new TableIdentifierFactoryFactory();
         $result  = $factory($container);
 
-        self::assertSame('_', $result->getSeparator());
+        self::assertNull($result->getPrefix());
     }
 
     public function testInvokeRejectsEmptyStringSeparatorFromConfig(): void
@@ -128,16 +126,18 @@ final class TableIdentifierFactoryFactoryTest extends TestCase
         $factory($container);
     }
 
-    public function testInvokeCreatesFactoryWithoutPrefixWhenPrefixKeyIsAbsent(): void
+    public function testInvokeUsesDefaultSeparatorWhenSeparatorKeyIsAbsent(): void
     {
         $container = new ServiceManager();
         $container->setService('config', [
-            TableIdentifierFactory::class => [],
+            TableIdentifierFactory::class => [
+                'prefix' => 'backup',
+            ],
         ]);
 
         $factory = new TableIdentifierFactoryFactory();
         $result  = $factory($container);
 
-        self::assertNull($result->getPrefix());
+        self::assertSame('_', $result->getSeparator());
     }
 }

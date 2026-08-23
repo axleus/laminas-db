@@ -25,13 +25,13 @@ final readonly class TableIdentifierFactory
     ) {
         if ('' === $prefix) {
             throw new Exception\InvalidArgumentException(
-                '$prefix must be a valid table prefix or null, empty string given'
+                '$prefix must be a valid table prefix or null, empty string given',
             );
         }
 
         if ('' === $separator) {
             throw new Exception\InvalidArgumentException(
-                '$separator must be a valid table separator, empty string given'
+                '$separator must be a valid table separator, empty string given',
             );
         }
     }
