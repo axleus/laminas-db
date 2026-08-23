@@ -17,7 +17,10 @@
     "config": {
         "sort-packages": true,
         "platform": {
-            "php": "8.2.99"
+            "php": "8.3.99"
+        },
+        "allow-plugins": {
+            "infection/extension-installer": true
         }
     },
     "extra": {
@@ -26,11 +29,12 @@
         }
     },
     "require": {
-        "php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
+        "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
         "laminas/laminas-servicemanager": "^3.0.0 || ^4.0.0",
         "laminas/laminas-stdlib": "^3.20.0"
     },
     "require-dev": {
+        "infection/infection": "^0.34.1",
         "laminas/laminas-eventmanager": "^3.14.0",
         "laminas/laminas-hydrator": "^4.6.0",
         "php-db/phpdb-qa-tools": "0.1.x-dev",
@@ -70,6 +74,7 @@
             "mago lint --fix"
         ],
         "static-analysis": "mago analyze",
+        "mutation-test": "infection",
         "test": "phpunit --colors=always --testsuite \"unit test\"",
         "test-coverage": "phpunit --colors=always --coverage-clover clover.xml",
         "test-integration": "phpunit --colors=always --testsuite \"integration test\"",

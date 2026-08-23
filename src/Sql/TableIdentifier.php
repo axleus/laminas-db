@@ -6,7 +6,7 @@ namespace PhpDb\Sql;
 
 final readonly class TableIdentifier
 {
-    public const SEPARATOR = '_';
+    public const string SEPARATOR = '_';
 
     /**
      * @throws Exception\InvalidArgumentException If $table, $schema, $prefix or $separator is an empty string.

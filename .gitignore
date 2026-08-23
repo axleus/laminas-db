@@ -9,3 +9,6 @@
 /phpunit.xml
 /vendor/
 /.vscode
+/infection.json5
+/infection.log
+/summary.log

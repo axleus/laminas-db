@@ -1,0 +1,26 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "src"
+        ]
+    },
+    "timeout": 10,
+    "threads": "max",
+    "logs": {
+        "text": "infection.log",
+        "summary": "summary.log",
+        "stryker": {
+            // matches versioned release branches, e.g. "0.1.x", "0.2.x"
+            "badge": "/^\\d+\\.\\d+\\.x$/"
+        }
+    },
+    "mutators": {
+        "@default": true
+    }
+    // "staticAnalysisTool": "mago" — no released Infection accepts "mago"; the
+    // schema enum is ["phpstan"] up to 0.33 and ["phpstan", "debug"] from 0.34,
+    // and passing it aborts the run. Re-enable once infection/infection#71311
+    // ships mago support. phpstan is not an alternative here: the repo dropped
+    // it when it moved to the Mago toolchain.
+}
