@@ -4,49 +4,39 @@ declare(strict_types=1);
 
 namespace PhpDb\Metadata\Object;
 
-class ConstraintObject
+final class ConstraintObject
 {
-    protected string $name;
-
-    protected string $tableName;
-
-    protected ?string $schemaName = null;
-
     /**
      * One of "PRIMARY KEY", "UNIQUE", "FOREIGN KEY", or "CHECK"
      */
-    protected ?string $type = null;
+    private ?string $type = null;
 
     /** @var string[] */
-    protected array $columns = [];
+    private array $columns = [];
 
-    protected ?string $referencedTableSchema = null;
+    private ?string $referencedTableSchema = null;
 
-    protected ?string $referencedTableName = null;
+    private ?string $referencedTableName = null;
 
     /** @var string[]|null */
-    protected ?array $referencedColumns = null;
+    private ?array $referencedColumns = null;
 
-    protected ?string $matchOption = null;
+    private ?string $matchOption = null;
 
-    protected ?string $updateRule = null;
+    private ?string $updateRule = null;
 
-    protected ?string $deleteRule = null;
+    private ?string $deleteRule = null;
 
-    protected ?string $checkClause = null;
+    private ?string $checkClause = null;
 
     /**
      * Constructor
      */
-    public function __construct(string $name, string $tableName, ?string $schemaName = null)
-    {
-        $this->setName($name);
-        $this->setTableName($tableName);
-
-        if (null !== $schemaName) {
-            $this->setSchemaName($schemaName);
-        }
-    }
+    public function __construct(
+        private string $name,
+        private string $tableName,
+        private ?string $schemaName = null,
+    ) {}
 
     /**
      * Get Check Clause.

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\Metadata\Object;
 
-class ViewObject extends AbstractTableObject
+final class ViewObject extends AbstractTableObject
 {
     protected ?string $viewDefinition = null;
 
