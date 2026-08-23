@@ -8,11 +8,13 @@ use PhpDb\Metadata\Object\AbstractTableObject;
 use PhpDb\Metadata\Object\ColumnObject;
 use PhpDb\Metadata\Object\ConstraintObject;
 use PhpDbTest\Metadata\Object\TestAsset\ConcreteTableObject;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class AbstractTableObjectTest extends TestCase
 {
-    public function testCompleteTableObjectWithAllProperties(): void
+    #[Test]
+    public function completeTableObjectWithAllProperties(): void
     {
         $table = $this->createConcreteTableObject('users');
 
@@ -31,54 +33,60 @@ final class AbstractTableObjectTest extends TestCase
         $table->setConstraints($constraints);
 
         // Verify all properties are set correctly
-        self::assertSame('users', $table->getName());
-        self::assertSame($columns, $table->getColumns());
-        self::assertCount(3, $table->getColumns());
-        self::assertSame($constraints, $table->getConstraints());
-        self::assertCount(2, $table->getConstraints());
+        static::assertSame('users', $table->getName());
+        static::assertSame($columns, $table->getColumns());
+        static::assertCount(3, $table->getColumns());
+        static::assertSame($constraints, $table->getConstraints());
+        static::assertCount(2, $table->getConstraints());
     }
 
-    public function testConstructorWithEmptyString(): void
+    #[Test]
+    public function constructorWithEmptyString(): void
     {
         $table = $this->createConcreteTableObject('');
 
         // Verify empty string is converted to null
-        self::assertNull($table->getName());
+        static::assertNull($table->getName());
     }
 
-    public function testConstructorWithName(): void
+    #[Test]
+    public function constructorWithName(): void
     {
         $table = $this->createConcreteTableObject('table_name');
 
         // Verify name is set correctly
-        self::assertSame('table_name', $table->getName());
+        static::assertSame('table_name', $table->getName());
     }
 
-    public function testConstructorWithNullName(): void
+    #[Test]
+    public function constructorWithNullName(): void
     {
         $table = $this->createConcreteTableObject(null);
 
         // Verify null name is preserved
-        self::assertNull($table->getName());
+        static::assertNull($table->getName());
     }
 
-    public function testGetColumnsReturnsNullWhenNotSet(): void
+    #[Test]
+    public function getColumnsReturnsNullWhenNotSet(): void
     {
         $table = $this->createConcreteTableObject('table');
 
         // Verify columns return null when not set
-        self::assertNull($table->getColumns());
+        static::assertNull($table->getColumns());
     }
 
-    public function testGetConstraintsReturnsNullWhenNotSet(): void
+    #[Test]
+    public function getConstraintsReturnsNullWhenNotSet(): void
     {
         $table = $this->createConcreteTableObject('table');
 
         // Verify constraints return null when not set
-        self::assertNull($table->getConstraints());
+        static::assertNull($table->getConstraints());
     }
 
-    public function testSetColumnsAndGetColumns(): void
+    #[Test]
+    public function setColumnsAndGetColumns(): void
     {
         $table   = $this->createConcreteTableObject('table');
         $columns = [
@@ -88,19 +96,21 @@ final class AbstractTableObjectTest extends TestCase
 
         // Set columns and verify retrieval
         $table->setColumns($columns);
-        self::assertSame($columns, $table->getColumns());
+        static::assertSame($columns, $table->getColumns());
     }
 
-    public function testSetColumnsWithEmptyArray(): void
+    #[Test]
+    public function setColumnsWithEmptyArray(): void
     {
         $table = $this->createConcreteTableObject('table');
 
         // Set empty columns array and verify
         $table->setColumns([]);
-        self::assertSame([], $table->getColumns());
+        static::assertSame([], $table->getColumns());
     }
 
-    public function testSetConstraintsAndGetConstraints(): void
+    #[Test]
+    public function setConstraintsAndGetConstraints(): void
     {
         $table       = $this->createConcreteTableObject('table');
         $constraints = [
@@ -110,25 +120,27 @@ final class AbstractTableObjectTest extends TestCase
 
         // Set constraints and verify retrieval
         $table->setConstraints($constraints);
-        self::assertSame($constraints, $table->getConstraints());
+        static::assertSame($constraints, $table->getConstraints());
     }
 
-    public function testSetConstraintsWithEmptyArray(): void
+    #[Test]
+    public function setConstraintsWithEmptyArray(): void
     {
         $table = $this->createConcreteTableObject('table');
 
         // Set empty constraints array and verify
         $table->setConstraints([]);
-        self::assertSame([], $table->getConstraints());
+        static::assertSame([], $table->getConstraints());
     }
 
-    public function testSetNameAndGetName(): void
+    #[Test]
+    public function setNameAndGetName(): void
     {
         $table = $this->createConcreteTableObject('initial_name');
 
         // Update name and verify change
         $table->setName('new_name');
-        self::assertSame('new_name', $table->getName());
+        static::assertSame('new_name', $table->getName());
     }
 
     private function createConcreteTableObject(?string $name): AbstractTableObject

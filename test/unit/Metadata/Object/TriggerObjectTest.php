@@ -6,11 +6,13 @@ namespace PhpDbTest\Metadata\Object;
 
 use DateTime;
 use PhpDb\Metadata\Object\TriggerObject;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class TriggerObjectTest extends TestCase
 {
-    public function testCompleteTriggerObject(): void
+    #[Test]
+    public function completeTriggerObject(): void
     {
         $trigger = new TriggerObject();
         $created = new DateTime('2025-11-13 10:30:00');
@@ -32,147 +34,159 @@ final class TriggerObjectTest extends TestCase
             ->setCreated($created);
 
         // Verify all properties are set correctly
-        self::assertSame('audit_trigger', $trigger->getName());
-        self::assertSame('UPDATE', $trigger->getEventManipulation());
-        self::assertSame('main_catalog', $trigger->getEventObjectCatalog());
-        self::assertSame('public', $trigger->getEventObjectSchema());
-        self::assertSame('orders', $trigger->getEventObjectTable());
-        self::assertSame('1', $trigger->getActionOrder());
-        self::assertSame('WHEN (OLD.status != NEW.status)', $trigger->getActionCondition());
-        self::assertSame('BEGIN INSERT INTO audit_log VALUES (OLD.id, NOW()); END', $trigger->getActionStatement());
-        self::assertSame('ROW', $trigger->getActionOrientation());
-        self::assertSame('AFTER', $trigger->getActionTiming());
-        self::assertSame('old_orders', $trigger->getActionReferenceOldTable());
-        self::assertSame('new_orders', $trigger->getActionReferenceNewTable());
-        self::assertSame('OLD', $trigger->getActionReferenceOldRow());
-        self::assertSame('NEW', $trigger->getActionReferenceNewRow());
-        self::assertSame($created, $trigger->getCreated());
+        static::assertSame('audit_trigger', $trigger->getName());
+        static::assertSame('UPDATE', $trigger->getEventManipulation());
+        static::assertSame('main_catalog', $trigger->getEventObjectCatalog());
+        static::assertSame('public', $trigger->getEventObjectSchema());
+        static::assertSame('orders', $trigger->getEventObjectTable());
+        static::assertSame('1', $trigger->getActionOrder());
+        static::assertSame('WHEN (OLD.status != NEW.status)', $trigger->getActionCondition());
+        static::assertSame('BEGIN INSERT INTO audit_log VALUES (OLD.id, NOW()); END', $trigger->getActionStatement());
+        static::assertSame('ROW', $trigger->getActionOrientation());
+        static::assertSame('AFTER', $trigger->getActionTiming());
+        static::assertSame('old_orders', $trigger->getActionReferenceOldTable());
+        static::assertSame('new_orders', $trigger->getActionReferenceNewTable());
+        static::assertSame('OLD', $trigger->getActionReferenceOldRow());
+        static::assertSame('NEW', $trigger->getActionReferenceNewRow());
+        static::assertSame($created, $trigger->getCreated());
     }
 
-    public function testNullValuesForAllProperties(): void
+    #[Test]
+    public function nullValuesForAllProperties(): void
     {
         $trigger = new TriggerObject();
 
         // Verify all properties default to null
-        self::assertNull($trigger->getName());
-        self::assertNull($trigger->getEventManipulation());
-        self::assertNull($trigger->getEventObjectCatalog());
-        self::assertNull($trigger->getEventObjectSchema());
-        self::assertNull($trigger->getEventObjectTable());
-        self::assertNull($trigger->getActionOrder());
-        self::assertNull($trigger->getActionCondition());
-        self::assertNull($trigger->getActionStatement());
-        self::assertNull($trigger->getActionOrientation());
-        self::assertNull($trigger->getActionTiming());
-        self::assertNull($trigger->getActionReferenceOldTable());
-        self::assertNull($trigger->getActionReferenceNewTable());
-        self::assertNull($trigger->getActionReferenceOldRow());
-        self::assertNull($trigger->getActionReferenceNewRow());
-        self::assertNull($trigger->getCreated());
+        static::assertNull($trigger->getName());
+        static::assertNull($trigger->getEventManipulation());
+        static::assertNull($trigger->getEventObjectCatalog());
+        static::assertNull($trigger->getEventObjectSchema());
+        static::assertNull($trigger->getEventObjectTable());
+        static::assertNull($trigger->getActionOrder());
+        static::assertNull($trigger->getActionCondition());
+        static::assertNull($trigger->getActionStatement());
+        static::assertNull($trigger->getActionOrientation());
+        static::assertNull($trigger->getActionTiming());
+        static::assertNull($trigger->getActionReferenceOldTable());
+        static::assertNull($trigger->getActionReferenceNewTable());
+        static::assertNull($trigger->getActionReferenceOldRow());
+        static::assertNull($trigger->getActionReferenceNewRow());
+        static::assertNull($trigger->getCreated());
     }
 
-    public function testSetActionConditionAndGetActionConditionWithFluentInterface(): void
+    #[Test]
+    public function setActionConditionAndGetActionConditionWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setActionCondition('WHEN (NEW.amount > 100)');
-        self::assertSame($trigger, $result);
-        self::assertSame('WHEN (NEW.amount > 100)', $trigger->getActionCondition());
+        static::assertSame($trigger, $result);
+        static::assertSame('WHEN (NEW.amount > 100)', $trigger->getActionCondition());
     }
 
-    public function testSetActionOrderAndGetActionOrderWithFluentInterface(): void
+    #[Test]
+    public function setActionOrderAndGetActionOrderWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setActionOrder('1');
-        self::assertSame($trigger, $result);
-        self::assertSame('1', $trigger->getActionOrder());
+        static::assertSame($trigger, $result);
+        static::assertSame('1', $trigger->getActionOrder());
     }
 
-    public function testSetActionOrientationAndGetActionOrientationWithFluentInterface(): void
+    #[Test]
+    public function setActionOrientationAndGetActionOrientationWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setActionOrientation('ROW');
-        self::assertSame($trigger, $result);
-        self::assertSame('ROW', $trigger->getActionOrientation());
+        static::assertSame($trigger, $result);
+        static::assertSame('ROW', $trigger->getActionOrientation());
     }
 
-    public function testSetActionReferenceNewRowAndGetActionReferenceNewRowWithFluentInterface(): void
+    #[Test]
+    public function setActionReferenceNewRowAndGetActionReferenceNewRowWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setActionReferenceNewRow('NEW');
-        self::assertSame($trigger, $result);
-        self::assertSame('NEW', $trigger->getActionReferenceNewRow());
+        static::assertSame($trigger, $result);
+        static::assertSame('NEW', $trigger->getActionReferenceNewRow());
     }
 
-    public function testSetActionReferenceNewTableAndGetActionReferenceNewTableWithFluentInterface(): void
+    #[Test]
+    public function setActionReferenceNewTableAndGetActionReferenceNewTableWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setActionReferenceNewTable('new_table');
-        self::assertSame($trigger, $result);
-        self::assertSame('new_table', $trigger->getActionReferenceNewTable());
+        static::assertSame($trigger, $result);
+        static::assertSame('new_table', $trigger->getActionReferenceNewTable());
     }
 
-    public function testSetActionReferenceOldRowAndGetActionReferenceOldRowWithFluentInterface(): void
+    #[Test]
+    public function setActionReferenceOldRowAndGetActionReferenceOldRowWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setActionReferenceOldRow('OLD');
-        self::assertSame($trigger, $result);
-        self::assertSame('OLD', $trigger->getActionReferenceOldRow());
+        static::assertSame($trigger, $result);
+        static::assertSame('OLD', $trigger->getActionReferenceOldRow());
     }
 
-    public function testSetActionReferenceOldTableAndGetActionReferenceOldTableWithFluentInterface(): void
+    #[Test]
+    public function setActionReferenceOldTableAndGetActionReferenceOldTableWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setActionReferenceOldTable('old_table');
-        self::assertSame($trigger, $result);
-        self::assertSame('old_table', $trigger->getActionReferenceOldTable());
+        static::assertSame($trigger, $result);
+        static::assertSame('old_table', $trigger->getActionReferenceOldTable());
     }
 
-    public function testSetActionStatementAndGetActionStatementWithFluentInterface(): void
+    #[Test]
+    public function setActionStatementAndGetActionStatementWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setActionStatement('BEGIN ... END');
-        self::assertSame($trigger, $result);
-        self::assertSame('BEGIN ... END', $trigger->getActionStatement());
+        static::assertSame($trigger, $result);
+        static::assertSame('BEGIN ... END', $trigger->getActionStatement());
     }
 
-    public function testSetActionTimingAndGetActionTimingWithFluentInterface(): void
+    #[Test]
+    public function setActionTimingAndGetActionTimingWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setActionTiming('BEFORE');
-        self::assertSame($trigger, $result);
-        self::assertSame('BEFORE', $trigger->getActionTiming());
+        static::assertSame($trigger, $result);
+        static::assertSame('BEFORE', $trigger->getActionTiming());
     }
 
-    public function testSetCreatedAndGetCreatedWithFluentInterface(): void
+    #[Test]
+    public function setCreatedAndGetCreatedWithFluentInterface(): void
     {
         $trigger  = new TriggerObject();
         $dateTime = new DateTime('2025-01-01 12:00:00');
 
         // Verify fluent interface and value update
         $result = $trigger->setCreated($dateTime);
-        self::assertSame($trigger, $result);
-        self::assertSame($dateTime, $trigger->getCreated());
+        static::assertSame($trigger, $result);
+        static::assertSame($dateTime, $trigger->getCreated());
     }
 
-    public function testSetCreatedWithDifferentDateTime(): void
+    #[Test]
+    public function setCreatedWithDifferentDateTime(): void
     {
         $trigger   = new TriggerObject();
         $dateTime1 = new DateTime('2025-01-01 12:00:00');
@@ -180,64 +194,69 @@ final class TriggerObjectTest extends TestCase
 
         // Set first datetime and verify
         $trigger->setCreated($dateTime1);
-        self::assertSame($dateTime1, $trigger->getCreated());
+        static::assertSame($dateTime1, $trigger->getCreated());
 
         // Update to second datetime and verify
         $trigger->setCreated($dateTime2);
-        self::assertSame($dateTime2, $trigger->getCreated());
+        static::assertSame($dateTime2, $trigger->getCreated());
     }
 
-    public function testSetEventManipulationAndGetEventManipulationWithFluentInterface(): void
+    #[Test]
+    public function setEventManipulationAndGetEventManipulationWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setEventManipulation('INSERT');
-        self::assertSame($trigger, $result);
-        self::assertSame('INSERT', $trigger->getEventManipulation());
+        static::assertSame($trigger, $result);
+        static::assertSame('INSERT', $trigger->getEventManipulation());
     }
 
-    public function testSetEventObjectCatalogAndGetEventObjectCatalogWithFluentInterface(): void
+    #[Test]
+    public function setEventObjectCatalogAndGetEventObjectCatalogWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setEventObjectCatalog('catalog_name');
-        self::assertSame($trigger, $result);
-        self::assertSame('catalog_name', $trigger->getEventObjectCatalog());
+        static::assertSame($trigger, $result);
+        static::assertSame('catalog_name', $trigger->getEventObjectCatalog());
     }
 
-    public function testSetEventObjectSchemaAndGetEventObjectSchemaWithFluentInterface(): void
+    #[Test]
+    public function setEventObjectSchemaAndGetEventObjectSchemaWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setEventObjectSchema('schema_name');
-        self::assertSame($trigger, $result);
-        self::assertSame('schema_name', $trigger->getEventObjectSchema());
+        static::assertSame($trigger, $result);
+        static::assertSame('schema_name', $trigger->getEventObjectSchema());
     }
 
-    public function testSetEventObjectTableAndGetEventObjectTableWithFluentInterface(): void
+    #[Test]
+    public function setEventObjectTableAndGetEventObjectTableWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setEventObjectTable('table_name');
-        self::assertSame($trigger, $result);
-        self::assertSame('table_name', $trigger->getEventObjectTable());
+        static::assertSame($trigger, $result);
+        static::assertSame('table_name', $trigger->getEventObjectTable());
     }
 
-    public function testSetNameAndGetNameWithFluentInterface(): void
+    #[Test]
+    public function setNameAndGetNameWithFluentInterface(): void
     {
         $trigger = new TriggerObject();
 
         // Verify fluent interface and value update
         $result = $trigger->setName('trigger_name');
-        self::assertSame($trigger, $result);
-        self::assertSame('trigger_name', $trigger->getName());
+        static::assertSame($trigger, $result);
+        static::assertSame('trigger_name', $trigger->getName());
 
         // Verify mutation with different name
         $trigger->setName('updated_trigger');
-        self::assertSame('updated_trigger', $trigger->getName());
+        static::assertSame('updated_trigger', $trigger->getName());
     }
 }
