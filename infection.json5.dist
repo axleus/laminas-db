@@ -17,10 +17,6 @@
     },
     "mutators": {
         "@default": true
-    }
-    // "staticAnalysisTool": "mago" — no released Infection accepts "mago"; the
-    // schema enum is ["phpstan"] up to 0.33 and ["phpstan", "debug"] from 0.34,
-    // and passing it aborts the run. Re-enable once infection/infection#71311
-    // ships mago support. phpstan is not an alternative here: the repo dropped
-    // it when it moved to the Mago toolchain.
+    },
+    "staticAnalysisTool": "mago"
 }
