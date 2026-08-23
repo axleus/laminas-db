@@ -798,12 +798,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-db/phpdb-qa-tools.git",
-                "reference": "7d8d8f56e65029d1d1cb8af6f8c5b2cd95fcec1d"
+                "reference": "f2323423deac77dd719f3f2ca7a9b2a7e21c93f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-db/phpdb-qa-tools/zipball/7d8d8f56e65029d1d1cb8af6f8c5b2cd95fcec1d",
-                "reference": "7d8d8f56e65029d1d1cb8af6f8c5b2cd95fcec1d",
+                "url": "https://api.github.com/repos/php-db/phpdb-qa-tools/zipball/f2323423deac77dd719f3f2ca7a9b2a7e21c93f6",
+                "reference": "f2323423deac77dd719f3f2ca7a9b2a7e21c93f6",
                 "shasum": ""
             },
             "require": {
@@ -834,7 +834,7 @@
                 "issues": "https://github.com/php-db/phpdb-qa-tools/issues",
                 "source": "https://github.com/php-db/phpdb-qa-tools"
             },
-            "time": "2026-07-23T05:13:10+00:00"
+            "time": "2026-08-10T01:10:13+00:00"
         },
         {
             "name": "phpbench/container",
