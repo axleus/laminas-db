@@ -12,9 +12,38 @@ use PHPUnit\Framework\TestCase;
 
 final class AbstractTableObjectTest extends TestCase
 {
-    private function createConcreteTableObject(?string $name): AbstractTableObject
+    public function testCompleteTableObjectWithAllProperties(): void
     {
-        return new ConcreteTableObject($name);
+        $table = $this->createConcreteTableObject('users');
+
+        $columns = [
+            new ColumnObject('id', 'users', 'public'),
+            new ColumnObject('username', 'users', 'public'),
+            new ColumnObject('email', 'users', 'public'),
+        ];
+
+        $constraints = [
+            new ConstraintObject('pk_users', 'users', 'public'),
+            new ConstraintObject('uq_users_email', 'users', 'public'),
+        ];
+
+        $table->setColumns($columns);
+        $table->setConstraints($constraints);
+
+        // Verify all properties are set correctly
+        self::assertSame('users', $table->getName());
+        self::assertSame($columns, $table->getColumns());
+        self::assertCount(3, $table->getColumns());
+        self::assertSame($constraints, $table->getConstraints());
+        self::assertCount(2, $table->getConstraints());
+    }
+
+    public function testConstructorWithEmptyString(): void
+    {
+        $table = $this->createConcreteTableObject('');
+
+        // Verify empty string is converted to null
+        self::assertNull($table->getName());
     }
 
     public function testConstructorWithName(): void
@@ -33,21 +62,20 @@ final class AbstractTableObjectTest extends TestCase
         self::assertNull($table->getName());
     }
 
-    public function testConstructorWithEmptyString(): void
+    public function testGetColumnsReturnsNullWhenNotSet(): void
     {
-        $table = $this->createConcreteTableObject('');
+        $table = $this->createConcreteTableObject('table');
 
-        // Verify empty string is converted to null
-        self::assertNull($table->getName());
+        // Verify columns return null when not set
+        self::assertNull($table->getColumns());
     }
 
-    public function testSetNameAndGetName(): void
+    public function testGetConstraintsReturnsNullWhenNotSet(): void
     {
-        $table = $this->createConcreteTableObject('initial_name');
+        $table = $this->createConcreteTableObject('table');
 
-        // Update name and verify change
-        $table->setName('new_name');
-        self::assertSame('new_name', $table->getName());
+        // Verify constraints return null when not set
+        self::assertNull($table->getConstraints());
     }
 
     public function testSetColumnsAndGetColumns(): void
@@ -94,45 +122,17 @@ final class AbstractTableObjectTest extends TestCase
         self::assertSame([], $table->getConstraints());
     }
 
-    public function testCompleteTableObjectWithAllProperties(): void
+    public function testSetNameAndGetName(): void
     {
-        $table = $this->createConcreteTableObject('users');
+        $table = $this->createConcreteTableObject('initial_name');
 
-        $columns = [
-            new ColumnObject('id', 'users', 'public'),
-            new ColumnObject('username', 'users', 'public'),
-            new ColumnObject('email', 'users', 'public'),
-        ];
-
-        $constraints = [
-            new ConstraintObject('pk_users', 'users', 'public'),
-            new ConstraintObject('uq_users_email', 'users', 'public'),
-        ];
-
-        $table->setColumns($columns);
-        $table->setConstraints($constraints);
-
-        // Verify all properties are set correctly
-        self::assertSame('users', $table->getName());
-        self::assertSame($columns, $table->getColumns());
-        self::assertCount(3, $table->getColumns());
-        self::assertSame($constraints, $table->getConstraints());
-        self::assertCount(2, $table->getConstraints());
+        // Update name and verify change
+        $table->setName('new_name');
+        self::assertSame('new_name', $table->getName());
     }
 
-    public function testGetColumnsReturnsNullWhenNotSet(): void
+    private function createConcreteTableObject(?string $name): AbstractTableObject
     {
-        $table = $this->createConcreteTableObject('table');
-
-        // Verify columns return null when not set
-        self::assertNull($table->getColumns());
-    }
-
-    public function testGetConstraintsReturnsNullWhenNotSet(): void
-    {
-        $table = $this->createConcreteTableObject('table');
-
-        // Verify constraints return null when not set
-        self::assertNull($table->getConstraints());
+        return new ConcreteTableObject($name);
     }
 }

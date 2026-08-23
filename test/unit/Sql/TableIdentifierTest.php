@@ -13,19 +13,37 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 use TypeError;
 
-use function array_merge;
-
 /**
  * Tests for {@see TableIdentifier}
  */
 #[CoversClass(TableIdentifier::class)]
 class TableIdentifierTest extends TestCase
 {
-    public function testGetTable(): void
+    /**
+     * Data provider
+     *
+     * @return array[]
+     */
+    public static function invalidSchemaProvider(): array
     {
-        $tableIdentifier = new TableIdentifier('foo');
+        return [
+            [''],
+            [new stdClass()],
+            [[]],
+        ];
+    }
 
-        self::assertSame('foo', $tableIdentifier->getTable());
+    /**
+     * Data provider
+     *
+     * @return array[]
+     */
+    public static function invalidTableProvider(): array
+    {
+        return [
+            [null],
+            ...self::invalidSchemaProvider(),
+        ];
     }
 
     public function testGetDefaultSchema(): void
@@ -42,15 +60,6 @@ class TableIdentifierTest extends TestCase
         self::assertSame('bar', $tableIdentifier->getSchema());
     }
 
-    public function testGetTableFromObjectStringCast(): void
-    {
-        $table           = new ObjectToString('castResult');
-        $tableIdentifier = new TableIdentifier((string) $table);
-
-        self::assertSame('castResult', $tableIdentifier->getTable());
-        self::assertSame('castResult', $tableIdentifier->getTable());
-    }
-
     /**
      * @todo Review test to see if relevant?
      */
@@ -63,46 +72,35 @@ class TableIdentifierTest extends TestCase
         self::assertSame('castResult', $tableIdentifier->getSchema());
     }
 
-    #[DataProvider('invalidTableProvider')]
-    public function testRejectsInvalidTable(mixed $invalidTable): void
+    public function testGetTable(): void
     {
-        $this->expectException($invalidTable === '' ? InvalidArgumentException::class : TypeError::class);
-        /** @psalm-suppress MixedArgument */
-        new TableIdentifier($invalidTable);
+        $tableIdentifier = new TableIdentifier('foo');
+
+        self::assertSame('foo', $tableIdentifier->getTable());
+    }
+
+    public function testGetTableFromObjectStringCast(): void
+    {
+        $table           = new ObjectToString('castResult');
+        $tableIdentifier = new TableIdentifier((string) $table);
+
+        self::assertSame('castResult', $tableIdentifier->getTable());
+        self::assertSame('castResult', $tableIdentifier->getTable());
     }
 
     #[DataProvider('invalidSchemaProvider')]
     public function testRejectsInvalidSchema(mixed $invalidSchema): void
     {
-        $this->expectException($invalidSchema === '' ? InvalidArgumentException::class : TypeError::class);
+        $this->expectException('' === $invalidSchema ? InvalidArgumentException::class : TypeError::class);
         /** @psalm-suppress MixedArgument */
         new TableIdentifier('foo', $invalidSchema);
     }
 
-    /**
-     * Data provider
-     *
-     * @return array[]
-     */
-    public static function invalidTableProvider(): array
+    #[DataProvider('invalidTableProvider')]
+    public function testRejectsInvalidTable(mixed $invalidTable): void
     {
-        return array_merge(
-            [[null]],
-            self::invalidSchemaProvider()
-        );
-    }
-
-    /**
-     * Data provider
-     *
-     * @return array[]
-     */
-    public static function invalidSchemaProvider(): array
-    {
-        return [
-            [''],
-            [new stdClass()],
-            [[]],
-        ];
+        $this->expectException('' === $invalidTable ? InvalidArgumentException::class : TypeError::class);
+        /** @psalm-suppress MixedArgument */
+        new TableIdentifier($invalidTable);
     }
 }

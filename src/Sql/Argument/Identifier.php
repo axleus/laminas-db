@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\Sql\Argument;
 
+use Override;
 use PhpDb\Sql\ArgumentInterface;
 use PhpDb\Sql\ArgumentType;
 
@@ -15,22 +16,24 @@ use PhpDb\Sql\ArgumentType;
 final readonly class Identifier implements ArgumentInterface
 {
     public function __construct(
-        private string $identifier
-    ) {
+        private string $identifier,
+    ) {}
+
+    #[Override]
+    public function getSpecification(): string
+    {
+        return '%s';
     }
 
+    #[Override]
     public function getType(): ArgumentType
     {
         return ArgumentType::Identifier;
     }
 
+    #[Override]
     public function getValue(): string
     {
         return $this->identifier;
-    }
-
-    public function getSpecification(): string
-    {
-        return '%s';
     }
 }

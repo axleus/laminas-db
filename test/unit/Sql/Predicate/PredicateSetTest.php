@@ -37,80 +37,6 @@ final class PredicateSetTest extends TestCase
 {
     use DeprecatedAssertionsTrait;
 
-    public function testEmptyConstructorYieldsCountOfZero(): void
-    {
-        $predicateSet = new PredicateSet();
-        self::assertCount(0, $predicateSet);
-    }
-
-    public function testCombinationIsAndByDefault(): void
-    {
-        $predicateSet = new PredicateSet();
-        $predicateSet
-            ->addPredicate(new IsNull('foo'))
-            ->addPredicate(new IsNull('bar'));
-
-        $expressionData = $predicateSet->getExpressionData();
-
-        // 2 predicates = 2 values
-        self::assertCount(2, $expressionData['values']);
-        self::assertStringContainsString('AND', $expressionData['spec']);
-        self::assertStringNotContainsString('OR', $expressionData['spec']);
-    }
-
-    public function testCanPassPredicatesAndDefaultCombinationViaConstructor(): void
-    {
-        new PredicateSet();
-        $predicateSet = new PredicateSet([
-            new IsNull('foo'),
-            new IsNull('bar'),
-        ], 'OR');
-
-        $expressionData = $predicateSet->getExpressionData();
-
-        // 2 predicates = 2 values
-        self::assertCount(2, $expressionData['values']);
-        self::assertStringContainsString('OR', $expressionData['spec']);
-        self::assertStringNotContainsString('AND', $expressionData['spec']);
-    }
-
-    public function testCanPassBothPredicateAndCombinationToAddPredicate(): void
-    {
-        $predicateSet = new PredicateSet();
-        $predicateSet
-            ->addPredicate(new IsNull('foo'), 'OR')
-            ->addPredicate(new IsNull('bar'), 'AND')
-            ->addPredicate(new IsNull('baz'), 'OR')
-            ->addPredicate(new IsNull('bat'), 'AND');
-
-        $expressionData = $predicateSet->getExpressionData();
-
-        // 4 predicates = 4 values
-        self::assertCount(4, $expressionData['values']);
-
-        // Verify combinators are in spec string: AND bar AND baz OR bat
-        $spec = $expressionData['spec'];
-        self::assertEquals('%s IS NULL AND %s IS NULL OR %s IS NULL AND %s IS NULL', $spec);
-    }
-
-    public function testCanUseOrPredicateAndAndPredicateMethods(): void
-    {
-        $predicateSet = new PredicateSet();
-        $predicateSet->orPredicate(new IsNull('foo'))
-                     ->andPredicate(new IsNull('bar'))
-                     ->orPredicate(new IsNull('baz'))
-                     ->andPredicate(new IsNull('bat'));
-
-        $expressionData = $predicateSet->getExpressionData();
-
-        // 4 predicates = 4 values
-        self::assertCount(4, $expressionData['values']);
-
-        // Verify spec contains correct pattern: foo AND bar OR baz AND bat
-        $spec = $expressionData['spec'];
-        self::assertEquals('%s IS NULL AND %s IS NULL OR %s IS NULL AND %s IS NULL', $spec);
-    }
-
     /**
      * @throws ReflectionException
      */
@@ -157,13 +83,23 @@ final class PredicateSetTest extends TestCase
         self::assertEquals('AND', $predicates[6][0]);
         self::assertInstanceOf(IsNotNull::class, $predicates[6][1]);
 
-        $predicateSet->addPredicates(function (PredicateSet $what) use ($predicateSet): void {
+        $predicateSet->addPredicates(static function (PredicateSet $what) use ($predicateSet): void {
             self::assertSame($predicateSet, $what);
         });
 
         $this->expectException(TypeError::class);
         /** @noinspection PhpStrictTypeCheckingInspection */
         $predicateSet->addPredicates(null);
+    }
+
+    public function testAddPredicatesThrowsWhenStringKeyUsedWithPredicateInterface(): void
+    {
+        $predicateSet = new PredicateSet();
+        $mock         = $this->createMock(PredicateInterface::class);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Using Predicate must not use string keys');
+        $predicateSet->addPredicates(['key' => $mock]);
     }
 
     /**
@@ -223,14 +159,76 @@ final class PredicateSetTest extends TestCase
         $predicateSet->addPredicate(new IsNull('foo'), 'XOR');
     }
 
-    public function testAddPredicatesThrowsWhenStringKeyUsedWithPredicateInterface(): void
+    public function testCanPassBothPredicateAndCombinationToAddPredicate(): void
     {
         $predicateSet = new PredicateSet();
-        $mock         = $this->createMock(PredicateInterface::class);
+        $predicateSet->addPredicate(new IsNull('foo'), 'OR')
+            ->addPredicate(new IsNull('bar'), 'AND')
+            ->addPredicate(new IsNull('baz'), 'OR')
+            ->addPredicate(new IsNull('bat'), 'AND');
 
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Using Predicate must not use string keys');
-        $predicateSet->addPredicates(['key' => $mock]);
+        $expressionData = $predicateSet->getExpressionData();
+
+        // 4 predicates = 4 values
+        self::assertCount(4, $expressionData['values']);
+
+        // Verify combinators are in spec string: AND bar AND baz OR bat
+        $spec = $expressionData['spec'];
+        self::assertEquals('%s IS NULL AND %s IS NULL OR %s IS NULL AND %s IS NULL', $spec);
+    }
+
+    public function testCanPassPredicatesAndDefaultCombinationViaConstructor(): void
+    {
+        new PredicateSet();
+        $predicateSet = new PredicateSet([
+            new IsNull('foo'),
+            new IsNull('bar'),
+        ], 'OR');
+
+        $expressionData = $predicateSet->getExpressionData();
+
+        // 2 predicates = 2 values
+        self::assertCount(2, $expressionData['values']);
+        self::assertStringContainsString('OR', $expressionData['spec']);
+        self::assertStringNotContainsString('AND', $expressionData['spec']);
+    }
+
+    public function testCanUseOrPredicateAndAndPredicateMethods(): void
+    {
+        $predicateSet = new PredicateSet();
+        $predicateSet->orPredicate(new IsNull('foo'))
+            ->andPredicate(new IsNull('bar'))
+            ->orPredicate(new IsNull('baz'))
+            ->andPredicate(new IsNull('bat'));
+
+        $expressionData = $predicateSet->getExpressionData();
+
+        // 4 predicates = 4 values
+        self::assertCount(4, $expressionData['values']);
+
+        // Verify spec contains correct pattern: foo AND bar OR baz AND bat
+        $spec = $expressionData['spec'];
+        self::assertEquals('%s IS NULL AND %s IS NULL OR %s IS NULL AND %s IS NULL', $spec);
+    }
+
+    public function testCombinationIsAndByDefault(): void
+    {
+        $predicateSet = new PredicateSet();
+        $predicateSet->addPredicate(new IsNull('foo'))
+            ->addPredicate(new IsNull('bar'));
+
+        $expressionData = $predicateSet->getExpressionData();
+
+        // 2 predicates = 2 values
+        self::assertCount(2, $expressionData['values']);
+        self::assertStringContainsString('AND', $expressionData['spec']);
+        self::assertStringNotContainsString('OR', $expressionData['spec']);
+    }
+
+    public function testEmptyConstructorYieldsCountOfZero(): void
+    {
+        $predicateSet = new PredicateSet();
+        self::assertCount(0, $predicateSet);
     }
 
     public function testGetExpressionDataReturnsEmptyWhenNoPredicates(): void

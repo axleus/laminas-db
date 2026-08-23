@@ -19,11 +19,41 @@ class Sql
 
     public function __construct(
         AdapterInterface $adapter,
-        array|string|TableIdentifier|null $table = null
+        array|string|TableIdentifier|null $table = null,
     ) {
         $this->table       = $table;
         $this->adapter     = $adapter;
         $this->sqlPlatform = $adapter->getPlatform()->getSqlPlatformDecorator();
+    }
+
+    /**
+     * @throws Exception\InvalidArgumentException
+     */
+    public function buildSqlString(SqlInterface $sqlObject, ?AdapterInterface $adapter = null): string
+    {
+        if (! $this->sqlPlatform instanceof SqlInterface) {
+            throw new Exception\RuntimeException(
+                'The subject does not implement SqlInterface',
+            );
+        }
+
+        $this->sqlPlatform->setSubject($sqlObject);
+
+        return $this->sqlPlatform->getSqlString(
+            $adapter instanceof AdapterInterface ? $adapter->getPlatform() : $this->adapter->getPlatform(),
+        );
+    }
+
+    public function delete(string|TableIdentifier|null $table = null): Delete
+    {
+        if (null !== $this->table && null !== $table) {
+            throw new Exception\InvalidArgumentException(sprintf(
+                'This Sql object is intended to work with only the table "%s" provided at construction time.',
+                $this->table,
+            ));
+        }
+
+        return new Delete($table ?: $this->table);
     }
 
     public function getAdapter(): ?AdapterInterface
@@ -31,19 +61,9 @@ class Sql
         return $this->adapter;
     }
 
-    public function hasTable(): bool
+    public function getSqlPlatform(): ?Platform\PlatformDecoratorInterface
     {
-        return $this->table !== null;
-    }
-
-    /**
-     * @throws Exception\InvalidArgumentException
-     */
-    public function setTable(array|string|TableIdentifier $table): self
-    {
-        $this->table = $table;
-
-        return $this;
+        return $this->sqlPlatform;
     }
 
     public function getTable(): array|string|TableIdentifier|null
@@ -51,67 +71,31 @@ class Sql
         return $this->table;
     }
 
-    public function getSqlPlatform(): ?Platform\PlatformDecoratorInterface
+    public function hasTable(): bool
     {
-        return $this->sqlPlatform;
+        return null !== $this->table;
     }
 
-    public function select(string|TableIdentifier|null $table = null): Select
+    public function insert(string|TableIdentifier|null $table = null): Insert
     {
-        if ($this->table !== null && $table !== null) {
+        if (null !== $this->table && null !== $table) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'This Sql object is intended to work with only the table "%s" provided at construction time.',
-                $this->table
-            ));
-        }
-
-        return new Select($table ?: $this->table);
-    }
-
-    public function insert(string|null|TableIdentifier $table = null): Insert
-    {
-        if ($this->table !== null && $table !== null) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                'This Sql object is intended to work with only the table "%s" provided at construction time.',
-                $this->table
+                $this->table,
             ));
         }
 
         return new Insert($table ?: $this->table);
     }
 
-    public function update(null|string|TableIdentifier $table = null): Update
-    {
-        if ($this->table !== null && $table !== null) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                'This Sql object is intended to work with only the table "%s" provided at construction time.',
-                $this->table
-            ));
-        }
-
-        return new Update($table ?: $this->table);
-    }
-
-    public function delete(null|string|TableIdentifier $table = null): Delete
-    {
-        if ($this->table !== null && $table !== null) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                'This Sql object is intended to work with only the table "%s" provided at construction time.',
-                $this->table
-            ));
-        }
-
-        return new Delete($table ?: $this->table);
-    }
-
     public function prepareStatementForSqlObject(
         PreparableSqlInterface $sqlObject,
         ?StatementInterface $statement = null,
-        ?AdapterInterface $adapter = null
+        ?AdapterInterface $adapter = null,
     ): StatementInterface {
         if (! $this->sqlPlatform instanceof PreparableSqlInterface) {
             throw new Exception\RuntimeException(
-                'The subject does not implement PreparableSqlInterface'
+                'The subject does not implement PreparableSqlInterface',
             );
         }
 
@@ -124,21 +108,37 @@ class Sql
         return $statement;
     }
 
+    public function select(string|TableIdentifier|null $table = null): Select
+    {
+        if (null !== $this->table && null !== $table) {
+            throw new Exception\InvalidArgumentException(sprintf(
+                'This Sql object is intended to work with only the table "%s" provided at construction time.',
+                $this->table,
+            ));
+        }
+
+        return new Select($table ?: $this->table);
+    }
+
     /**
      * @throws Exception\InvalidArgumentException
      */
-    public function buildSqlString(SqlInterface $sqlObject, ?AdapterInterface $adapter = null): string
+    public function setTable(array|string|TableIdentifier $table): self
     {
-        if (! $this->sqlPlatform instanceof SqlInterface) {
-            throw new Exception\RuntimeException(
-                'The subject does not implement SqlInterface'
-            );
+        $this->table = $table;
+
+        return $this;
+    }
+
+    public function update(string|TableIdentifier|null $table = null): Update
+    {
+        if (null !== $this->table && null !== $table) {
+            throw new Exception\InvalidArgumentException(sprintf(
+                'This Sql object is intended to work with only the table "%s" provided at construction time.',
+                $this->table,
+            ));
         }
 
-        $this->sqlPlatform->setSubject($sqlObject);
-
-        return $this->sqlPlatform->getSqlString(
-            $adapter instanceof AdapterInterface ? $adapter->getPlatform() : $this->adapter->getPlatform()
-        );
+        return new Update($table ?: $this->table);
     }
 }

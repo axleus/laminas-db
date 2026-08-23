@@ -24,7 +24,7 @@ final class TestPdo extends AbstractPdo implements DriverFeatureProviderInterfac
         array|AbstractPdoConnection|PDO $connection,
         ?Statement $statement = null,
         ?Result $result = null,
-        array $features = []
+        array $features = [],
     ) {
         if (! $connection instanceof AbstractPdoConnection && ! $connection instanceof PDO) {
             $connection = new TestConnection($connection);
@@ -41,7 +41,7 @@ final class TestPdo extends AbstractPdo implements DriverFeatureProviderInterfac
         $this->statementPrototype->setDriver($this);
 
         // $features is not constructor promoted because $this->features is defined in the trait
-        if ($features !== []) {
+        if ([] !== $features) {
             $this->addFeatures($features);
         }
     }

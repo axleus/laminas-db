@@ -30,31 +30,9 @@ interface AdapterInterface
 
     public const VALUE_QUOTE_SEPARATOR = 'quoteSeparator';
 
-    public function getDriver(): Driver\DriverInterface;
-
-    public function getPlatform(): Platform\PlatformInterface;
-
-    public function getProfiler(): ?Profiler\ProfilerInterface;
-
-    public function getQueryResultSetPrototype(): ResultSet\ResultSetInterface;
-
     public function createStatement(
         ?string $initialSql = null,
-        ParameterContainer|array $initialParameters = []
-    ): Driver\StatementInterface;
-
-    public function query(
-        string $sql,
-        ParameterContainer|array|string $parametersOrQueryMode = self::QUERY_MODE_PREPARE,
-        ?ResultSet\ResultSetInterface $resultPrototype = null
-    ): Driver\StatementInterface|ResultSet\ResultSetInterface|Driver\ResultInterface;
-
-    /**
-     * Prepares a statement for the given SQL without executing it.
-     */
-    public function prepareQuery(
-        string $sql,
-        ParameterContainer|array $parameters = []
+        ParameterContainer|array $initialParameters = [],
     ): Driver\StatementInterface;
 
     /**
@@ -64,9 +42,31 @@ interface AdapterInterface
      */
     public function executeQuery(Driver\StatementInterface|string $sql): Driver\ResultInterface;
 
+    public function getDriver(): Driver\DriverInterface;
+
     /**
      * @todo 0.3.x track down this usage!!!
      * @return array
      */
     public function getHelpers();
+
+    public function getPlatform(): Platform\PlatformInterface;
+
+    public function getProfiler(): ?Profiler\ProfilerInterface;
+
+    public function getQueryResultSetPrototype(): ResultSet\ResultSetInterface;
+
+    /**
+     * Prepares a statement for the given SQL without executing it.
+     */
+    public function prepareQuery(
+        string $sql,
+        ParameterContainer|array $parameters = [],
+    ): Driver\StatementInterface;
+
+    public function query(
+        string $sql,
+        ParameterContainer|array|string $parametersOrQueryMode = self::QUERY_MODE_PREPARE,
+        ?ResultSet\ResultSetInterface $resultPrototype = null,
+    ): Driver\StatementInterface|ResultSet\ResultSetInterface|Driver\ResultInterface;
 }

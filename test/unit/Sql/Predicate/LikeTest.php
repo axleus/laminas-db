@@ -22,28 +22,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversMethod(Like::class, 'getExpressionData')]
 final class LikeTest extends TestCase
 {
-    public function testConstructEmptyArgs(): void
-    {
-        $like = new Like();
-        self::assertEquals('', $like->getIdentifier());
-        self::assertEquals('', $like->getLike());
-    }
-
-    public function testConstructWithArgs(): void
-    {
-        $like = new Like('bar', 'Foo%');
-
-        $identifier = $like->getIdentifier();
-        self::assertInstanceOf(ArgumentInterface::class, $identifier);
-        self::assertEquals('bar', $identifier->getValue());
-        self::assertEquals(ArgumentType::Identifier, $identifier->getType());
-
-        $likeValue = $like->getLike();
-        self::assertInstanceOf(ArgumentInterface::class, $likeValue);
-        self::assertEquals('Foo%', $likeValue->getValue());
-        self::assertEquals(ArgumentType::Value, $likeValue->getType());
-    }
-
     public function testAccessorsMutators(): void
     {
         $like = new Like();
@@ -96,6 +74,28 @@ final class LikeTest extends TestCase
         self::assertEquals('custom spec', $like->getSpecification());
     }
 
+    public function testConstructEmptyArgs(): void
+    {
+        $like = new Like();
+        self::assertEquals('', $like->getIdentifier());
+        self::assertEquals('', $like->getLike());
+    }
+
+    public function testConstructWithArgs(): void
+    {
+        $like = new Like('bar', 'Foo%');
+
+        $identifier = $like->getIdentifier();
+        self::assertInstanceOf(ArgumentInterface::class, $identifier);
+        self::assertEquals('bar', $identifier->getValue());
+        self::assertEquals(ArgumentType::Identifier, $identifier->getType());
+
+        $likeValue = $like->getLike();
+        self::assertInstanceOf(ArgumentInterface::class, $likeValue);
+        self::assertEquals('Foo%', $likeValue->getValue());
+        self::assertEquals(ArgumentType::Value, $likeValue->getType());
+    }
+
     public function testGetExpressionData(): void
     {
         $like = new Like('bar', 'Foo%');
@@ -141,14 +141,6 @@ final class LikeTest extends TestCase
         self::assertEquals(ArgumentType::Identifier, $values[1]->getType());
     }
 
-    public function testInstanceOfPerSetters(): void
-    {
-        $like = new Like();
-        self::assertInstanceOf(Like::class, $like->setIdentifier('bar'));
-        self::assertInstanceOf(Like::class, $like->setSpecification('%s LIKE %s'));
-        self::assertInstanceOf(Like::class, $like->setLike('foo%'));
-    }
-
     public function testGetExpressionDataThrowsExceptionWhenIdentifierNotSet(): void
     {
         $like = new Like();
@@ -167,5 +159,13 @@ final class LikeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Like expression must be specified');
         $like->getExpressionData();
+    }
+
+    public function testInstanceOfPerSetters(): void
+    {
+        $like = new Like();
+        self::assertInstanceOf(Like::class, $like->setIdentifier('bar'));
+        self::assertInstanceOf(Like::class, $like->setSpecification('%s LIKE %s'));
+        self::assertInstanceOf(Like::class, $like->setLike('foo%'));
     }
 }

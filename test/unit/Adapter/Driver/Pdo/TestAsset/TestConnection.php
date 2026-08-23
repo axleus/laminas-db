@@ -41,32 +41,9 @@ final class TestConnection extends AbstractPdoConnection
         $this->resource = new PDO(
             $this->getDsn(),
             $this->connectionParameters['username'] ?? null,
-            $this->connectionParameters['password'] ?? null
+            $this->connectionParameters['password'] ?? null,
         );
         return $this;
-    }
-
-    private function buildDsn(): string
-    {
-        $pdoDriver = $this->connectionParameters['pdodriver'] ?? 'sqlite';
-        $database  = $this->connectionParameters['database'] ?? ':memory:';
-
-        return match ($pdoDriver) {
-            'sqlite' => "sqlite:$database",
-            'mysql' => sprintf(
-                'mysql:host=%s;dbname=%s',
-                $this->connectionParameters['hostname'] ?? 'localhost',
-                $database
-            ),
-            default => "$pdoDriver:$database",
-        };
-    }
-
-    /** @phpstan-ignore return.unusedType */
-    #[Override]
-    public function getLastGeneratedValue(?string $name = null): string|int|false
-    {
-        return $this->resource?->lastInsertId($name) ?? null;
     }
 
     #[Override]
@@ -78,5 +55,28 @@ final class TestConnection extends AbstractPdoConnection
 
         // For SQLite and other PDO drivers, return database name or false
         return $this->connectionParameters['database'] ?? false;
+    }
+
+    /** @phpstan-ignore return.unusedType */
+    #[Override]
+    public function getLastGeneratedValue(?string $name = null): string|int|false
+    {
+        return $this->resource?->lastInsertId($name) ?? null;
+    }
+
+    private function buildDsn(): string
+    {
+        $pdoDriver = $this->connectionParameters['pdodriver'] ?? 'sqlite';
+        $database  = $this->connectionParameters['database'] ?? ':memory:';
+
+        return match ($pdoDriver) {
+            'sqlite' => "sqlite:{$database}",
+            'mysql' => sprintf(
+                'mysql:host=%s;dbname=%s',
+                $this->connectionParameters['hostname'] ?? 'localhost',
+                $database,
+            ),
+            default  => "{$pdoDriver}:{$database}",
+        };
     }
 }

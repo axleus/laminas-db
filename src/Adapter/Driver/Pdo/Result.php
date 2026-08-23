@@ -29,11 +29,11 @@ class Result implements Iterator, ResultInterface
     /** @var int */
     protected $fetchMode = PDO::FETCH_ASSOC;
 
-     /**
-      * @internal
-      *
-      * @var array
-      */
+    /**
+     * @internal
+     *
+     * @var array
+     */
     public const VALID_FETCH_MODES = [
         PDO::FETCH_LAZY, // 1
         PDO::FETCH_ASSOC, // 2
@@ -86,159 +86,10 @@ class Result implements Iterator, ResultInterface
     protected Closure|int|null $rowCount = null;
 
     /**
-     * Initialize
-     *
-     * @param string|int|false|null $generatedValue
-     */
-    public function initialize(
-        PDOStatement $resource,
-        $generatedValue,
-        Closure|int|null $rowCount = null
-    ): ResultInterface&Result {
-        $this->resource       = $resource;
-        $this->generatedValue = $generatedValue;
-        $this->rowCount       = $rowCount;
-
-        return $this;
-    }
-
-    /**
      * {@inheritdoc}
      */
     #[Override]
-    public function buffer(): void
-    {
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    #[Override]
-    public function isBuffered(): bool
-    {
-        return false;
-    }
-
-    /**
-     * @throws Exception\InvalidArgumentException On invalid fetch mode.
-     */
-    public function setFetchMode(int $fetchMode): void
-    {
-        if (! in_array($fetchMode, self::VALID_FETCH_MODES, true)) {
-            throw new Exception\InvalidArgumentException(
-                'The fetch mode must be one of the PDO::FETCH_* constants.'
-            );
-        }
-
-        $this->fetchMode = (int) $fetchMode;
-    }
-
-    public function getFetchMode(): int
-    {
-        return $this->fetchMode;
-    }
-
-    public function setStatementMode(string $statementMode = self::STATEMENT_MODE_FORWARD): void
-    {
-        if (! in_array($statementMode, [self::STATEMENT_MODE_SCROLLABLE, self::STATEMENT_MODE_FORWARD], true)) {
-            throw new Exception\InvalidArgumentException(
-                'The statement mode must be one of the defined constants.'
-            );
-        }
-
-        $this->statementMode = $statementMode;
-    }
-
-    public function getStatementMode(): string
-    {
-        return $this->statementMode;
-    }
-
-    /**
-     * Get resource
-     */
-    #[Override]
-    public function getResource(): mixed
-    {
-        return $this->resource;
-    }
-
-    /**
-     * Get the data
-     *
-     * @return mixed
-     */
-    #[ReturnTypeWillChange]
-    #[Override]
-    public function current()
-    {
-        if ($this->currentComplete) {
-            return $this->currentData;
-        }
-
-        $this->currentData     = $this->resource->fetch($this->fetchMode);
-        $this->currentComplete = true;
-        return $this->currentData;
-    }
-
-    /**
-     * Next
-     *
-     * @return mixed
-     */
-    #[ReturnTypeWillChange]
-    #[Override]
-    public function next()
-    {
-        $this->currentData     = $this->resource->fetch($this->fetchMode);
-        $this->currentComplete = true;
-        $this->position++;
-        return $this->currentData;
-    }
-
-    /**
-     * Key
-     *
-     * @return int
-     */
-    #[ReturnTypeWillChange]
-    #[Override]
-    public function key()
-    {
-        return $this->position;
-    }
-
-    /**
-     * @throws Exception\RuntimeException
-     * @return void
-     */
-    #[ReturnTypeWillChange]
-    #[Override]
-    public function rewind()
-    {
-        if ($this->statementMode === self::STATEMENT_MODE_FORWARD && $this->position > 0) {
-            throw new Exception\RuntimeException(
-                'This result is a forward only result set, calling rewind() after moving forward is not supported'
-            );
-        }
-        if (! $this->currentComplete) {
-            $this->currentData     = $this->resource->fetch($this->fetchMode);
-            $this->currentComplete = true;
-        }
-        $this->position = 0;
-    }
-
-    /**
-     * Valid
-     *
-     * @return bool
-     */
-    #[ReturnTypeWillChange]
-    #[Override]
-    public function valid()
-    {
-        return $this->currentData !== false;
-    }
+    public function buffer(): void {}
 
     /**
      * Count
@@ -261,6 +112,38 @@ class Result implements Iterator, ResultInterface
     }
 
     /**
+     * Get the data
+     *
+     * @return mixed
+     */
+    #[ReturnTypeWillChange]
+    #[Override]
+    public function current()
+    {
+        if ($this->currentComplete) {
+            return $this->currentData;
+        }
+
+        $this->currentData     = $this->resource->fetch($this->fetchMode);
+        $this->currentComplete = true;
+        return $this->currentData;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    #[Override]
+    public function getAffectedRows(): int
+    {
+        return $this->resource->rowCount();
+    }
+
+    public function getFetchMode(): int
+    {
+        return $this->fetchMode;
+    }
+
+    /**
      * {@inheritdoc}
      */
     #[Override]
@@ -269,13 +152,10 @@ class Result implements Iterator, ResultInterface
         return $this->resource->columnCount();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     #[Override]
-    public function isQueryResult(): bool
+    public function getGeneratedValue(): string|int|false|null
     {
-        return $this->resource->columnCount() > 0;
+        return $this->generatedValue;
     }
 
     /**
@@ -289,29 +169,147 @@ class Result implements Iterator, ResultInterface
         if (! $this->isQueryResult()) {
             throw new Exception\RuntimeException(
                 'Cannot produce a query result set from a result that is not a query result;'
-                . ' check isQueryResult() first'
+                    . ' check isQueryResult() first',
             );
         }
 
         $resultPrototype ??= new ResultSet();
-        $resultSet         = clone $resultPrototype;
+        $resultSet       = clone $resultPrototype;
         $resultSet->initialize($this);
 
         return $resultSet;
     }
 
     /**
+     * Get resource
+     */
+    #[Override]
+    public function getResource(): mixed
+    {
+        return $this->resource;
+    }
+
+    public function getStatementMode(): string
+    {
+        return $this->statementMode;
+    }
+
+    /**
+     * Initialize
+     *
+     * @param string|int|false|null $generatedValue
+     */
+    public function initialize(
+        PDOStatement $resource,
+        $generatedValue,
+        Closure|int|null $rowCount = null,
+    ): self {
+        $this->resource       = $resource;
+        $this->generatedValue = $generatedValue;
+        $this->rowCount       = $rowCount;
+
+        return $this;
+    }
+
+    /**
      * {@inheritdoc}
      */
     #[Override]
-    public function getAffectedRows(): int
+    public function isBuffered(): bool
     {
-        return $this->resource->rowCount();
+        return false;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     #[Override]
-    public function getGeneratedValue(): string|int|false|null
+    public function isQueryResult(): bool
     {
-        return $this->generatedValue;
+        return $this->resource->columnCount() > 0;
+    }
+
+    /**
+     * Key
+     *
+     * @return int
+     */
+    #[ReturnTypeWillChange]
+    #[Override]
+    public function key()
+    {
+        return $this->position;
+    }
+
+    /**
+     * Next
+     *
+     * @return mixed
+     */
+    #[ReturnTypeWillChange]
+    #[Override]
+    public function next()
+    {
+        $this->currentData     = $this->resource->fetch($this->fetchMode);
+        $this->currentComplete = true;
+        $this->position++;
+        return $this->currentData;
+    }
+
+    /**
+     * @throws Exception\RuntimeException
+     * @return void
+     */
+    #[ReturnTypeWillChange]
+    #[Override]
+    public function rewind()
+    {
+        if (self::STATEMENT_MODE_FORWARD === $this->statementMode && $this->position > 0) {
+            throw new Exception\RuntimeException(
+                'This result is a forward only result set, calling rewind() after moving forward is not supported',
+            );
+        }
+        if (! $this->currentComplete) {
+            $this->currentData     = $this->resource->fetch($this->fetchMode);
+            $this->currentComplete = true;
+        }
+        $this->position = 0;
+    }
+
+    /**
+     * @throws Exception\InvalidArgumentException On invalid fetch mode.
+     */
+    public function setFetchMode(int $fetchMode): void
+    {
+        if (! in_array($fetchMode, self::VALID_FETCH_MODES, true)) {
+            throw new Exception\InvalidArgumentException(
+                'The fetch mode must be one of the PDO::FETCH_* constants.',
+            );
+        }
+
+        $this->fetchMode = (int) $fetchMode;
+    }
+
+    public function setStatementMode(string $statementMode = self::STATEMENT_MODE_FORWARD): void
+    {
+        if (! in_array($statementMode, [self::STATEMENT_MODE_SCROLLABLE, self::STATEMENT_MODE_FORWARD], true)) {
+            throw new Exception\InvalidArgumentException(
+                'The statement mode must be one of the defined constants.',
+            );
+        }
+
+        $this->statementMode = $statementMode;
+    }
+
+    /**
+     * Valid
+     *
+     * @return bool
+     */
+    #[ReturnTypeWillChange]
+    #[Override]
+    public function valid()
+    {
+        return false !== $this->currentData;
     }
 }

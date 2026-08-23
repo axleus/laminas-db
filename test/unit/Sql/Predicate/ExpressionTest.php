@@ -16,81 +16,21 @@ use PHPUnit\Framework\TestCase;
 
 final class ExpressionTest extends TestCase
 {
-    public function testEmptyConstructorYieldsEmptyLiteralAndParameter(): void
-    {
-        $expression = new Expression();
-        self::assertEquals('', $expression->getExpression());
-        self::assertEmpty($expression->getParameters());
-    }
-
     #[Group('6849')]
-    public function testCanPassLiteralAndSingleScalarParameterToConstructor(): void
+    public function testCanPassArrayOfMultiNullsParameterToConstructor(): void
     {
-        $expression = new Expression('foo.bar = ?', 'bar');
-        $bar        = new Value('bar');
-        self::assertEquals('foo.bar = ?', $expression->getExpression());
-        self::assertEquals([$bar], $expression->getParameters());
-    }
-
-    #[Group('6849')]
-    public function testCanPassNoParameterToConstructor(): void
-    {
-        $expression = new Expression('foo.bar');
-        self::assertEquals([], $expression->getParameters());
-    }
-
-    #[Group('6849')]
-    public function testCanPassSingleNullParameterToConstructor(): void
-    {
-        $expression = new Expression('?', null);
+        $expression = new Expression('? OR ?', [null, null]);
         $null       = new Value(null);
-        self::assertEquals([$null], $expression->getParameters());
-    }
-
-    #[Group('6849')]
-    public function testCanPassSingleZeroParameterValueToConstructor(): void
-    {
-        $predicate  = new Expression('?', 0);
-        $expression = new Value(0);
-        self::assertEquals([$expression], $predicate->getParameters());
-    }
-
-    #[Group('6849')]
-    public function testCanPassSinglePredicateParameterToConstructor(): void
-    {
-        $predicate  = new IsNull('foo.baz');
-        $expression = new Expression('?', $predicate);
-        $isNull     = new Select($predicate);
-        self::assertEquals([$isNull], $expression->getParameters());
-    }
-
-    #[Group('6849')]
-    public function testCanPassMultiScalarParametersToConstructor(): void
-    {
-        /** @psalm-suppress TooManyArguments */
-        $expression = new Expression('? OR ?', 'foo', 'bar');
-        $foo        = new Value('foo');
-        $bar        = new Value('bar');
-
-        self::assertEquals([$foo, $bar], $expression->getParameters());
-    }
-
-    #[Group('6849')]
-    public function testCanPassMultiNullParametersToConstructor(): void
-    {
-        /** @psalm-suppress TooManyArguments */
-        $expression = new Expression('? OR ?', null, null);
-        $null       = new Value(null);
-
         self::assertEquals([$null, $null], $expression->getParameters());
     }
 
     #[Group('6849')]
-    public function testCanPassArrayOfOneScalarParameterToConstructor(): void
+    public function testCanPassArrayOfMultiPredicatesParameterToConstructor(): void
     {
-        $expression = new Expression('?', ['foo']);
-        $foo        = new Value('foo');
-        self::assertEquals([$foo], $expression->getParameters());
+        $predicate  = new IsNull('foo.baz');
+        $expression = new Expression('? OR ?', [$predicate, $predicate]);
+        $isNull     = new Select($predicate);
+        self::assertEquals([$isNull, $isNull], $expression->getParameters());
     }
 
     #[Group('6849')]
@@ -111,14 +51,6 @@ final class ExpressionTest extends TestCase
     }
 
     #[Group('6849')]
-    public function testCanPassArrayOfMultiNullsParameterToConstructor(): void
-    {
-        $expression = new Expression('? OR ?', [null, null]);
-        $null       = new Value(null);
-        self::assertEquals([$null, $null], $expression->getParameters());
-    }
-
-    #[Group('6849')]
     public function testCanPassArrayOfOnePredicateParameterToConstructor(): void
     {
         $predicate  = new IsNull('foo.baz');
@@ -128,12 +60,80 @@ final class ExpressionTest extends TestCase
     }
 
     #[Group('6849')]
-    public function testCanPassArrayOfMultiPredicatesParameterToConstructor(): void
+    public function testCanPassArrayOfOneScalarParameterToConstructor(): void
+    {
+        $expression = new Expression('?', ['foo']);
+        $foo        = new Value('foo');
+        self::assertEquals([$foo], $expression->getParameters());
+    }
+
+    #[Group('6849')]
+    public function testCanPassLiteralAndSingleScalarParameterToConstructor(): void
+    {
+        $expression = new Expression('foo.bar = ?', 'bar');
+        $bar        = new Value('bar');
+        self::assertEquals('foo.bar = ?', $expression->getExpression());
+        self::assertEquals([$bar], $expression->getParameters());
+    }
+
+    #[Group('6849')]
+    public function testCanPassMultiNullParametersToConstructor(): void
+    {
+        /** @psalm-suppress TooManyArguments */
+        $expression = new Expression('? OR ?', null, null);
+        $null       = new Value(null);
+
+        self::assertEquals([$null, $null], $expression->getParameters());
+    }
+
+    #[Group('6849')]
+    public function testCanPassMultiScalarParametersToConstructor(): void
+    {
+        /** @psalm-suppress TooManyArguments */
+        $expression = new Expression('? OR ?', 'foo', 'bar');
+        $foo        = new Value('foo');
+        $bar        = new Value('bar');
+
+        self::assertEquals([$foo, $bar], $expression->getParameters());
+    }
+
+    #[Group('6849')]
+    public function testCanPassNoParameterToConstructor(): void
+    {
+        $expression = new Expression('foo.bar');
+        self::assertEquals([], $expression->getParameters());
+    }
+
+    #[Group('6849')]
+    public function testCanPassSingleNullParameterToConstructor(): void
+    {
+        $expression = new Expression('?', null);
+        $null       = new Value(null);
+        self::assertEquals([$null], $expression->getParameters());
+    }
+
+    #[Group('6849')]
+    public function testCanPassSinglePredicateParameterToConstructor(): void
     {
         $predicate  = new IsNull('foo.baz');
-        $expression = new Expression('? OR ?', [$predicate, $predicate]);
+        $expression = new Expression('?', $predicate);
         $isNull     = new Select($predicate);
-        self::assertEquals([$isNull, $isNull], $expression->getParameters());
+        self::assertEquals([$isNull], $expression->getParameters());
+    }
+
+    #[Group('6849')]
+    public function testCanPassSingleZeroParameterValueToConstructor(): void
+    {
+        $predicate  = new Expression('?', 0);
+        $expression = new Value(0);
+        self::assertEquals([$expression], $predicate->getParameters());
+    }
+
+    public function testEmptyConstructorYieldsEmptyLiteralAndParameter(): void
+    {
+        $expression = new Expression();
+        self::assertEquals('', $expression->getExpression());
+        self::assertEmpty($expression->getParameters());
     }
 
     public function testLiteralIsMutable(): void
@@ -187,8 +187,7 @@ final class ExpressionTest extends TestCase
     public function testRetrievingWherePartsReturnsSpecificationArrayOfLiteralAndParametersAndArrayOfTypes(): void
     {
         $expression = new Expression();
-        $expression
-            ->setExpression('foo.bar = ? AND id != ?')
+        $expression->setExpression('foo.bar = ? AND id != ?')
             ->setParameters(['foo', 'bar']);
 
         $parameter1 = new Value('foo');

@@ -35,9 +35,9 @@ class Expression extends AbstractExpression
      */
     public function __construct(
         string $expression = '',
-        null|bool|string|float|int|array|ArgumentInterface|ExpressionInterface $parameters = []
+        bool|string|float|int|array|ArgumentInterface|ExpressionInterface|null $parameters = [],
     ) {
-        if ($expression !== '') {
+        if ('' !== $expression) {
             $this->setExpression($expression);
         }
 
@@ -53,12 +53,60 @@ class Expression extends AbstractExpression
         $this->setParameters($parameters);
     }
 
+    public function getExpression(): string
+    {
+        return $this->expression;
+    }
+
+    /**
+     * @throws Exception\RuntimeException
+     * @inheritDoc
+     */
+    #[Override]
+    public function getExpressionData(): array
+    {
+        $parameters      = $this->parameters;
+        $parametersCount = count($parameters);
+        $specification   = str_replace('%', '%%', $this->expression);
+
+        if (0 === $parametersCount) {
+            return [
+                'spec'   => $specification,
+                'values' => [],
+            ];
+        }
+
+        // assign locally, escaping % signs
+        $specification = str_replace(self::PLACEHOLDER, '%s', $specification, $count);
+
+        // test number of replacements without considering same variable begin used many times first, which is
+        // faster, if the test fails then resort to regex which are slow and used rarely
+        if ($count !== $parametersCount) {
+            preg_match_all('/:\w*/', $specification, $matches);
+            if (count(array_unique($matches[0])) !== $parametersCount) {
+                throw new Exception\RuntimeException(
+                    'The number of replacements in the expression does not match the number of parameters',
+                );
+            }
+        }
+
+        return [
+            'spec'   => $specification,
+            'values' => $parameters,
+        ];
+    }
+
+    public function getParameters(): array
+    {
+        return $this->parameters;
+    }
+
     /**
      * @throws Exception\InvalidArgumentException
      */
     public function setExpression(string $expression): self
     {
-        if ($expression === '') {
+        if ('' === $expression) {
             throw new Exception\InvalidArgumentException('Supplied expression must not be an empty string.');
         }
 
@@ -66,16 +114,11 @@ class Expression extends AbstractExpression
         return $this;
     }
 
-    public function getExpression(): string
-    {
-        return $this->expression;
-    }
-
     /**
      * @throws Exception\InvalidArgumentException
      */
     public function setParameters(
-        null|bool|string|float|int|array|ExpressionInterface|ArgumentInterface $parameters = []
+        bool|string|float|int|array|ExpressionInterface|ArgumentInterface|null $parameters = [],
     ): self {
         if (! is_array($parameters)) {
             $parameters = [$parameters];
@@ -94,48 +137,5 @@ class Expression extends AbstractExpression
         }
 
         return $this;
-    }
-
-    public function getParameters(): array
-    {
-        return $this->parameters;
-    }
-
-    /**
-     * @throws Exception\RuntimeException
-     * @inheritDoc
-     */
-    #[Override]
-    public function getExpressionData(): array
-    {
-        $parameters      = $this->parameters;
-        $parametersCount = count($parameters);
-        $specification   = str_replace('%', '%%', $this->expression);
-
-        if ($parametersCount === 0) {
-            return [
-                'spec'   => $specification,
-                'values' => [],
-            ];
-        }
-
-        // assign locally, escaping % signs
-        $specification = str_replace(self::PLACEHOLDER, '%s', $specification, $count);
-
-        // test number of replacements without considering same variable begin used many times first, which is
-        // faster, if the test fails then resort to regex which are slow and used rarely
-        if ($count !== $parametersCount) {
-            preg_match_all('/:\w*/', $specification, $matches);
-            if ($parametersCount !== count(array_unique($matches[0]))) {
-                throw new Exception\RuntimeException(
-                    'The number of replacements in the expression does not match the number of parameters'
-                );
-            }
-        }
-
-        return [
-            'spec'   => $specification,
-            'values' => $parameters,
-        ];
     }
 }

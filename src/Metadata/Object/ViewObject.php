@@ -12,23 +12,24 @@ class ViewObject extends AbstractTableObject
 
     protected ?bool $isUpdatable = null;
 
+    public function getCheckOption(): ?string
+    {
+        return $this->checkOption;
+    }
+
+    public function getIsUpdatable(): ?bool
+    {
+        return $this->isUpdatable;
+    }
+
     public function getViewDefinition(): ?string
     {
         return $this->viewDefinition;
     }
 
-    /**
-     * @param null|string $viewDefinition to set
-     */
-    public function setViewDefinition(?string $viewDefinition): static
+    public function isUpdatable(): ?bool
     {
-        $this->viewDefinition = $viewDefinition;
-        return $this;
-    }
-
-    public function getCheckOption(): ?string
-    {
-        return $this->checkOption;
+        return $this->isUpdatable;
     }
 
     /**
@@ -40,22 +41,21 @@ class ViewObject extends AbstractTableObject
         return $this;
     }
 
-    public function getIsUpdatable(): ?bool
-    {
-        return $this->isUpdatable;
-    }
-
-    public function isUpdatable(): ?bool
-    {
-        return $this->isUpdatable;
-    }
-
     /**
      * @param bool $isUpdatable to set
      */
     public function setIsUpdatable(?bool $isUpdatable): static
     {
         $this->isUpdatable = $isUpdatable;
+        return $this;
+    }
+
+    /**
+     * @param null|string $viewDefinition to set
+     */
+    public function setViewDefinition(?string $viewDefinition): static
+    {
+        $this->viewDefinition = $viewDefinition;
         return $this;
     }
 }

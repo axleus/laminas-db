@@ -14,9 +14,23 @@ class TableGatewayEventTest extends TestCase
 {
     private TableGatewayEvent $event;
 
-    protected function setUp(): void
+    public function testGetParamWithDefault(): void
     {
-        $this->event = new TableGatewayEvent();
+        $result = $this->event->getParam('nonExistent', 'defaultValue');
+
+        self::assertEquals('defaultValue', $result);
+    }
+
+    public function testPropagationIsStoppedAlwaysReturnsFalse(): void
+    {
+        /** @phpstan-ignore staticMethod.impossibleType */
+        self::assertFalse($this->event->propagationIsStopped());
+
+        $this->event->stopPropagation(true);
+
+        // Still returns false as per implementation
+        /** @phpstan-ignore staticMethod.impossibleType */
+        self::assertFalse($this->event->propagationIsStopped());
     }
 
     public function testSetNameAndGetName(): void
@@ -28,16 +42,14 @@ class TableGatewayEventTest extends TestCase
         self::assertEquals('test.event', $this->event->getName());
     }
 
-    public function testSetTargetAndGetTarget(): void
+    public function testSetParamAndGetParam(): void
     {
-        /** @var AbstractTableGateway&MockObject $tableGateway */
-        $tableGateway = $this->getMockBuilder(AbstractTableGateway::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        self::assertNull($this->event->getParam('unknown'));
+        self::assertEquals('default', $this->event->getParam('unknown', 'default'));
 
-        $this->event->setTarget($tableGateway);
+        $this->event->setParam('myParam', 'myValue');
 
-        self::assertSame($tableGateway, $this->event->getTarget());
+        self::assertEquals('myValue', $this->event->getParam('myParam'));
     }
 
     public function testSetParamsAndGetParams(): void
@@ -60,21 +72,16 @@ class TableGatewayEventTest extends TestCase
         self::assertSame($params, $this->event->getParams());
     }
 
-    public function testSetParamAndGetParam(): void
+    public function testSetTargetAndGetTarget(): void
     {
-        self::assertNull($this->event->getParam('unknown'));
-        self::assertEquals('default', $this->event->getParam('unknown', 'default'));
+        /** @var AbstractTableGateway&MockObject $tableGateway */
+        $tableGateway = $this->getMockBuilder(AbstractTableGateway::class)
+            ->disableOriginalConstructor()
+            ->getMock();
 
-        $this->event->setParam('myParam', 'myValue');
+        $this->event->setTarget($tableGateway);
 
-        self::assertEquals('myValue', $this->event->getParam('myParam'));
-    }
-
-    public function testGetParamWithDefault(): void
-    {
-        $result = $this->event->getParam('nonExistent', 'defaultValue');
-
-        self::assertEquals('defaultValue', $result);
+        self::assertSame($tableGateway, $this->event->getTarget());
     }
 
     public function testStopPropagation(): void
@@ -87,15 +94,8 @@ class TableGatewayEventTest extends TestCase
         self::assertFalse($this->event->propagationIsStopped());
     }
 
-    public function testPropagationIsStoppedAlwaysReturnsFalse(): void
+    protected function setUp(): void
     {
-        /** @phpstan-ignore staticMethod.impossibleType */
-        self::assertFalse($this->event->propagationIsStopped());
-
-        $this->event->stopPropagation(true);
-
-        // Still returns false as per implementation
-        /** @phpstan-ignore staticMethod.impossibleType */
-        self::assertFalse($this->event->propagationIsStopped());
+        $this->event = new TableGatewayEvent();
     }
 }

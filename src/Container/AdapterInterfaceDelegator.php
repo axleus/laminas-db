@@ -17,14 +17,8 @@ use function sprintf;
 class AdapterInterfaceDelegator
 {
     public function __construct(
-        protected readonly string $adapterName = AdapterInterface::class
-    ) {
-    }
-
-    public static function __set_state(array $state): self
-    {
-        return new self($state['adapterName'] ?? AdapterInterface::class);
-    }
+        protected readonly string $adapterName = AdapterInterface::class,
+    ) {}
 
     /**
      * @throws ContainerExceptionInterface
@@ -34,7 +28,7 @@ class AdapterInterfaceDelegator
         ContainerInterface $container,
         string $name,
         callable $callback,
-        ?array $options = null
+        ?array $options = null,
     ): AdapterAwareInterface {
         $instance = $callback();
 
@@ -42,14 +36,14 @@ class AdapterInterfaceDelegator
             throw new Exception\RuntimeException(sprintf(
                 'Delegated service "%s" must implement %s',
                 $name,
-                AdapterAwareInterface::class
+                AdapterAwareInterface::class,
             ));
         }
 
         if (! $container->has($this->adapterName)) {
             throw new ServiceNotFoundException(sprintf(
                 'Service "%s" not found in container',
-                $this->adapterName
+                $this->adapterName,
             ));
         }
 
@@ -62,5 +56,10 @@ class AdapterInterfaceDelegator
         $instance->setDbAdapter($databaseAdapter);
 
         return $instance;
+    }
+
+    public static function __set_state(array $state): self
+    {
+        return new self($state['adapterName'] ?? AdapterInterface::class);
     }
 }

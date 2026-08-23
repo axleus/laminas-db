@@ -31,7 +31,7 @@ class UpdateIgnore extends Update
     protected function processupdateIgnore(
         PlatformInterface $platform,
         ?DriverInterface $driver = null,
-        ?ParameterContainer $parameterContainer = null
+        ?ParameterContainer $parameterContainer = null,
     ): string {
         return parent::processUpdate($platform, $driver, $parameterContainer);
     }

@@ -14,8 +14,7 @@ final class TestPlatform extends AbstractPlatform
 {
     public function __construct(
         protected ?DriverInterface $driver = null,
-    ) {
-    }
+    ) {}
 
     #[Override]
     public function getName(): string

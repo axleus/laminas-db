@@ -42,130 +42,12 @@ use function uniqid;
 #[Group('unit')]
 final class ResultTest extends TestCase
 {
-    /**
-     * Tests current method returns same data on consecutive calls.
-     */
-    public function testCurrentReturnsSameDataOnConsecutiveCalls(): void
-    {
-        $stub = $this->getMockBuilder('PDOStatement')->getMock();
-        $stub->expects($this->any())
-            ->method('fetch')
-            ->willReturnCallback(fn() => uniqid());
-
-        $result = new Result();
-        $result->initialize($stub, null);
-
-        self::assertEquals($result->current(), $result->current());
-    }
-
-    public function testSetFetchModeThrowsOnInvalidMode(): void
+    public function testBufferIsCallableWithNoEffect(): void
     {
         $result = new Result();
+        $result->buffer();
 
-        $this->expectException(InvalidArgumentException::class);
-        $result->setFetchMode(13);
-    }
-
-    /**
-     * Tests whether the fetch mode was set properly and
-     */
-    public function testFetchModeObjReturnsStdClass(): void
-    {
-        $stub = $this->getMockBuilder('PDOStatement')->getMock();
-        $stub->expects($this->any())
-            ->method('fetch')
-            ->willReturnCallback(fn() => new stdClass());
-
-        $result = new Result();
-        $result->initialize($stub, null);
-        $result->setFetchMode(PDO::FETCH_OBJ);
-
-        self::assertEquals(5, $result->getFetchMode());
-        self::assertInstanceOf('stdClass', $result->current());
-    }
-
-    /**
-     * Tests whether the fetch mode has a broader range
-     */
-    public function testFetchModeAcceptsNamedMode(): void
-    {
-        $stub = $this->getMockBuilder('PDOStatement')->getMock();
-        $stub->expects($this->any())
-            ->method('fetch')
-            ->willReturnCallback(fn() => new stdClass());
-        $result = new Result();
-        $result->initialize($stub, null);
-        $result->setFetchMode(PDO::FETCH_NAMED);
-        self::assertEquals(11, $result->getFetchMode());
-        self::assertInstanceOf('stdClass', $result->current());
-    }
-
-    public function testRewindResetsIterationToStart(): void
-    {
-        $data     = [
-            ['test' => 1],
-            ['test' => 2],
-        ];
-        $position = 0;
-
-        $stub = $this->getMockBuilder('PDOStatement')->getMock();
-        assert($stub instanceof PDOStatement); // to suppress IDE type warnings
-        $stub->expects($this->any())
-            ->method('fetch')
-            ->willReturnCallback(function () use ($data, &$position) {
-                return $data[$position++];
-            });
-        $result = new Result();
-        $result->initialize($stub, null);
-
-        $result->rewind();
-        $result->rewind();
-
-        $this->assertEquals(0, $result->key());
-        $this->assertEquals(1, $position);
-        $this->assertEquals($data[0], $result->current());
-
-        $result->next();
-        $this->assertEquals(1, $result->key());
-        $this->assertEquals(2, $position);
-        $this->assertEquals($data[1], $result->current());
-    }
-
-    public function testCountWithNoRowCountFallsBackToStatementRowCount(): void
-    {
-        $stub = $this->getMockBuilder(PDOStatement::class)->getMock();
-        $stub->expects($this->once())
-            ->method('rowCount')
-            ->willReturn(5);
-
-        $result = new Result();
-        $result->initialize($stub, null);
-
-        self::assertSame(5, $result->count());
-    }
-
-    public function testCountWithClosureInvokesClosureAndReturnsValue(): void
-    {
-        $stub = $this->getMockBuilder(PDOStatement::class)->getMock();
-        $stub->expects($this->never())->method('rowCount');
-
-        $rowCount = static fn(): int => 42;
-
-        $result = new Result();
-        $result->initialize($stub, null, $rowCount);
-
-        self::assertSame(42, $result->count());
-    }
-
-    public function testCountWithIntReturnsProvidedValue(): void
-    {
-        $stub = $this->getMockBuilder(PDOStatement::class)->getMock();
-        $stub->expects($this->never())->method('rowCount');
-
-        $result = new Result();
-        $result->initialize($stub, null, 10);
-
-        self::assertSame(10, $result->count());
+        self::assertFalse($result->isBuffered());
     }
 
     public function testCountCachesResultFromClosure(): void
@@ -201,22 +83,102 @@ final class ResultTest extends TestCase
         self::assertSame(3, $result->count());
     }
 
-    public function testInitializeStoresResourceAndValues(): void
+    public function testCountWithClosureInvokesClosureAndReturnsValue(): void
     {
-        $stub   = $this->createMock(PDOStatement::class);
+        $stub = $this->getMockBuilder(PDOStatement::class)->getMock();
+        $stub->expects($this->never())->method('rowCount');
+
+        $rowCount = static fn(): int => 42;
+
         $result = new Result();
+        $result->initialize($stub, null, $rowCount);
 
-        $result->initialize($stub, 42, 5);
+        self::assertSame(42, $result->count());
+    }
 
-        self::assertSame(42, $result->getGeneratedValue());
+    public function testCountWithIntReturnsProvidedValue(): void
+    {
+        $stub = $this->getMockBuilder(PDOStatement::class)->getMock();
+        $stub->expects($this->never())->method('rowCount');
+
+        $result = new Result();
+        $result->initialize($stub, null, 10);
+
+        self::assertSame(10, $result->count());
+    }
+
+    public function testCountWithNoRowCountFallsBackToStatementRowCount(): void
+    {
+        $stub = $this->getMockBuilder(PDOStatement::class)->getMock();
+        $stub->expects($this->once())
+            ->method('rowCount')
+            ->willReturn(5);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+
         self::assertSame(5, $result->count());
     }
 
-    public function testIsBufferedReturnsFalse(): void
+    /**
+     * Tests current method returns same data on consecutive calls.
+     */
+    public function testCurrentReturnsSameDataOnConsecutiveCalls(): void
     {
-        $result = new Result();
+        $stub = $this->getMockBuilder('PDOStatement')->getMock();
+        $stub->expects($this->any())
+            ->method('fetch')
+            ->willReturnCallback(static fn() => uniqid());
 
-        self::assertFalse($result->isBuffered());
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        self::assertEquals($result->current(), $result->current());
+    }
+
+    /**
+     * Tests whether the fetch mode has a broader range
+     */
+    public function testFetchModeAcceptsNamedMode(): void
+    {
+        $stub = $this->getMockBuilder('PDOStatement')->getMock();
+        $stub->expects($this->any())
+            ->method('fetch')
+            ->willReturnCallback(static fn() => new stdClass());
+        $result = new Result();
+        $result->initialize($stub, null);
+        $result->setFetchMode(PDO::FETCH_NAMED);
+        self::assertEquals(11, $result->getFetchMode());
+        self::assertInstanceOf('stdClass', $result->current());
+    }
+
+    /**
+     * Tests whether the fetch mode was set properly and
+     */
+    public function testFetchModeObjReturnsStdClass(): void
+    {
+        $stub = $this->getMockBuilder('PDOStatement')->getMock();
+        $stub->expects($this->any())
+            ->method('fetch')
+            ->willReturnCallback(static fn() => new stdClass());
+
+        $result = new Result();
+        $result->initialize($stub, null);
+        $result->setFetchMode(PDO::FETCH_OBJ);
+
+        self::assertEquals(5, $result->getFetchMode());
+        self::assertInstanceOf('stdClass', $result->current());
+    }
+
+    public function testGetAffectedRowsDelegatesToRowCount(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('rowCount')->willReturn(5);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        self::assertSame(5, $result->getAffectedRows());
     }
 
     public function testGetFetchModeDefaultIsAssoc(): void
@@ -224,41 +186,6 @@ final class ResultTest extends TestCase
         $result = new Result();
 
         self::assertSame(PDO::FETCH_ASSOC, $result->getFetchMode());
-    }
-
-    public function testSetStatementModeToScrollable(): void
-    {
-        $result = new Result();
-
-        $result->setStatementMode(Result::STATEMENT_MODE_SCROLLABLE);
-
-        self::assertSame(Result::STATEMENT_MODE_SCROLLABLE, $result->getStatementMode());
-    }
-
-    public function testSetStatementModeToForward(): void
-    {
-        $result = new Result();
-
-        $result->setStatementMode(Result::STATEMENT_MODE_FORWARD);
-
-        self::assertSame(Result::STATEMENT_MODE_FORWARD, $result->getStatementMode());
-    }
-
-    public function testSetStatementModeThrowsOnInvalidMode(): void
-    {
-        $result = new Result();
-
-        $this->expectException(InvalidArgumentException::class);
-        $result->setStatementMode('invalid');
-    }
-
-    public function testGetResourceReturnsPdoStatement(): void
-    {
-        $stub   = $this->createMock(PDOStatement::class);
-        $result = new Result();
-        $result->initialize($stub, null);
-
-        self::assertSame($stub, $result->getResource());
     }
 
     public function testGetFieldCountDelegatesToColumnCount(): void
@@ -272,49 +199,20 @@ final class ResultTest extends TestCase
         self::assertSame(3, $result->getFieldCount());
     }
 
-    public function testIsQueryResultReturnsTrueWhenColumnsExist(): void
+    public function testGetGeneratedValueReturnsInitializedValue(): void
     {
-        $stub = $this->createMock(PDOStatement::class);
-        $stub->method('columnCount')->willReturn(3);
-
+        $stub   = $this->createMock(PDOStatement::class);
         $result = new Result();
-        $result->initialize($stub, null);
+        $result->initialize($stub, 42);
 
-        self::assertTrue($result->isQueryResult());
+        self::assertSame(42, $result->getGeneratedValue());
     }
 
-    public function testIsQueryResultReturnsFalseWhenNoColumns(): void
+    public function testGetGeneratedValueReturnsNullByDefault(): void
     {
-        $stub = $this->createMock(PDOStatement::class);
-        $stub->method('columnCount')->willReturn(0);
-
         $result = new Result();
-        $result->initialize($stub, null);
 
-        self::assertFalse($result->isQueryResult());
-    }
-
-    public function testGetQueryResultThrowsWhenResultIsNotAQueryResult(): void
-    {
-        $stub = $this->createMock(PDOStatement::class);
-        $stub->method('columnCount')->willReturn(0);
-
-        $result = new Result();
-        $result->initialize($stub, null);
-
-        $this->expectException(RuntimeException::class);
-        $result->getQueryResult();
-    }
-
-    public function testGetQueryResultReturnsDefaultResultSetPrototypeWhenNoneGiven(): void
-    {
-        $stub = $this->createMock(PDOStatement::class);
-        $stub->method('columnCount')->willReturn(3);
-
-        $result = new Result();
-        $result->initialize($stub, null);
-
-        self::assertInstanceOf(ResultSet::class, $result->getQueryResult());
+        self::assertNull($result->getGeneratedValue());
     }
 
     public function testGetQueryResultClonesGivenPrototypeRatherThanMutatingIt(): void
@@ -343,31 +241,122 @@ final class ResultTest extends TestCase
         self::assertSame($result->getFieldCount(), $result->getQueryResult()->getFieldCount());
     }
 
-    public function testGetAffectedRowsDelegatesToRowCount(): void
+    public function testGetQueryResultReturnsDefaultResultSetPrototypeWhenNoneGiven(): void
     {
         $stub = $this->createMock(PDOStatement::class);
-        $stub->method('rowCount')->willReturn(5);
+        $stub->method('columnCount')->willReturn(3);
 
         $result = new Result();
         $result->initialize($stub, null);
 
-        self::assertSame(5, $result->getAffectedRows());
+        self::assertInstanceOf(ResultSet::class, $result->getQueryResult());
     }
 
-    public function testGetGeneratedValueReturnsInitializedValue(): void
+    public function testGetQueryResultThrowsWhenResultIsNotAQueryResult(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('columnCount')->willReturn(0);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        $this->expectException(RuntimeException::class);
+        $result->getQueryResult();
+    }
+
+    public function testGetResourceReturnsPdoStatement(): void
     {
         $stub   = $this->createMock(PDOStatement::class);
         $result = new Result();
-        $result->initialize($stub, 42);
+        $result->initialize($stub, null);
 
-        self::assertSame(42, $result->getGeneratedValue());
+        self::assertSame($stub, $result->getResource());
     }
 
-    public function testGetGeneratedValueReturnsNullByDefault(): void
+    public function testInitializeStoresResourceAndValues(): void
+    {
+        $stub   = $this->createMock(PDOStatement::class);
+        $result = new Result();
+
+        $result->initialize($stub, 42, 5);
+
+        self::assertSame(42, $result->getGeneratedValue());
+        self::assertSame(5, $result->count());
+    }
+
+    public function testIsBufferedReturnsFalse(): void
     {
         $result = new Result();
 
-        self::assertNull($result->getGeneratedValue());
+        self::assertFalse($result->isBuffered());
+    }
+
+    public function testIsQueryResultReturnsFalseWhenNoColumns(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('columnCount')->willReturn(0);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        self::assertFalse($result->isQueryResult());
+    }
+
+    public function testIsQueryResultReturnsTrueWhenColumnsExist(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('columnCount')->willReturn(3);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        self::assertTrue($result->isQueryResult());
+    }
+
+    public function testNextAdvancesPositionAndFetchesData(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('fetch')->willReturn(['name' => 'test']);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        $result->rewind();
+        self::assertSame(0, $result->key());
+
+        $result->next();
+        self::assertSame(1, $result->key());
+    }
+
+    public function testRewindResetsIterationToStart(): void
+    {
+        $data = [
+            ['test' => 1],
+            ['test' => 2],
+        ];
+        $position = 0;
+
+        $stub = $this->getMockBuilder('PDOStatement')->getMock();
+        assert($stub instanceof PDOStatement); // to suppress IDE type warnings
+        $stub->expects($this->any())
+            ->method('fetch')
+            ->willReturnCallback(static function () use ($data, &$position) {
+                return $data[$position++];
+            });
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        $result->rewind();
+        $result->rewind();
+
+        $this->assertEquals(0, $result->key());
+        $this->assertEquals(1, $position);
+        $this->assertEquals($data[0], $result->current());
+
+        $result->next();
+        $this->assertEquals(1, $result->key());
+        $this->assertEquals(2, $position);
+        $this->assertEquals($data[1], $result->current());
     }
 
     public function testRewindThrowsExceptionOnForwardOnlyAfterAdvancing(): void
@@ -386,27 +375,12 @@ final class ResultTest extends TestCase
         $result->rewind();
     }
 
-    public function testNextAdvancesPositionAndFetchesData(): void
-    {
-        $stub = $this->createMock(PDOStatement::class);
-        $stub->method('fetch')->willReturn(['name' => 'test']);
-
-        $result = new Result();
-        $result->initialize($stub, null);
-
-        $result->rewind();
-        self::assertSame(0, $result->key());
-
-        $result->next();
-        self::assertSame(1, $result->key());
-    }
-
-    public function testBufferIsCallableWithNoEffect(): void
+    public function testSetFetchModeStoresValidMode(): void
     {
         $result = new Result();
-        $result->buffer();
+        $result->setFetchMode(PDO::FETCH_NUM);
 
-        self::assertFalse($result->isBuffered());
+        self::assertSame(PDO::FETCH_NUM, $result->getFetchMode());
     }
 
     public function testSetFetchModeThrowsOnInvalidFetchMode(): void
@@ -419,12 +393,38 @@ final class ResultTest extends TestCase
         $result->setFetchMode(9999);
     }
 
-    public function testSetFetchModeStoresValidMode(): void
+    public function testSetFetchModeThrowsOnInvalidMode(): void
     {
         $result = new Result();
-        $result->setFetchMode(PDO::FETCH_NUM);
 
-        self::assertSame(PDO::FETCH_NUM, $result->getFetchMode());
+        $this->expectException(InvalidArgumentException::class);
+        $result->setFetchMode(13);
+    }
+
+    public function testSetStatementModeThrowsOnInvalidMode(): void
+    {
+        $result = new Result();
+
+        $this->expectException(InvalidArgumentException::class);
+        $result->setStatementMode('invalid');
+    }
+
+    public function testSetStatementModeToForward(): void
+    {
+        $result = new Result();
+
+        $result->setStatementMode(Result::STATEMENT_MODE_FORWARD);
+
+        self::assertSame(Result::STATEMENT_MODE_FORWARD, $result->getStatementMode());
+    }
+
+    public function testSetStatementModeToScrollable(): void
+    {
+        $result = new Result();
+
+        $result->setStatementMode(Result::STATEMENT_MODE_SCROLLABLE);
+
+        self::assertSame(Result::STATEMENT_MODE_SCROLLABLE, $result->getStatementMode());
     }
 
     public function testValidReturnsFalseWhenCurrentDataIsFalse(): void

@@ -8,7 +8,6 @@ use PhpDb\ResultSet\ResultSet;
 use PhpDb\RowGateway\RowGateway;
 use PhpDb\RowGateway\RowGatewayInterface;
 use PhpDb\TableGateway\Exception;
-use PhpDb\TableGateway\Feature\MetadataFeature;
 
 use function is_string;
 
@@ -30,7 +29,7 @@ class RowGatewayFeature extends AbstractFeature
 
         if (! $this->tableGateway->resultSetPrototype instanceof ResultSet) {
             throw new Exception\RuntimeException(
-                'This feature ' . self::class . ' expects the ResultSet to be an instance of ' . ResultSet::class
+                'This feature ' . self::class . ' expects the ResultSet to be an instance of ' . ResultSet::class,
             );
         }
 
@@ -40,7 +39,7 @@ class RowGatewayFeature extends AbstractFeature
                 $rowGatewayPrototype = new RowGateway(
                     $primaryKey,
                     $this->tableGateway->table,
-                    $this->tableGateway->adapter
+                    $this->tableGateway->adapter,
                 );
                 $resultSetPrototype->setArrayObjectPrototype($rowGatewayPrototype);
             } elseif ($args[0] instanceof RowGatewayInterface) {
@@ -50,19 +49,19 @@ class RowGatewayFeature extends AbstractFeature
         } else {
             // get from metadata feature
             $metadata = $this->tableGateway->featureSet->getFeatureByClassName(
-                MetadataFeature::class
+                MetadataFeature::class,
             );
-            if ($metadata === null || ! isset($metadata->sharedData['metadata'])) {
+            if (null === $metadata || ! isset($metadata->sharedData['metadata'])) {
                 throw new Exception\RuntimeException(
                     'No information was provided to the RowGatewayFeature and/or no MetadataFeature could be consulted '
-                    . 'to find the primary key necessary for RowGateway object creation.'
+                        . 'to find the primary key necessary for RowGateway object creation.',
                 );
             }
             $primaryKey          = $metadata->sharedData['metadata']['primaryKey'];
             $rowGatewayPrototype = new RowGateway(
                 $primaryKey,
                 $this->tableGateway->table,
-                $this->tableGateway->adapter
+                $this->tableGateway->adapter,
             );
             $resultSetPrototype->setArrayObjectPrototype($rowGatewayPrototype);
         }

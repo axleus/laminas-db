@@ -6,6 +6,4 @@ namespace PhpDbTest\Metadata\Object\TestAsset;
 
 use PhpDb\Metadata\Object\AbstractTableObject;
 
-class ConcreteTableObject extends AbstractTableObject
-{
-}
+class ConcreteTableObject extends AbstractTableObject {}

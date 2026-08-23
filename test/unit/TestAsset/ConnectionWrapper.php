@@ -14,7 +14,7 @@ use PhpDb\Adapter\Driver\Pdo\AbstractPdoConnection;
 final class ConnectionWrapper extends AbstractPdoConnection
 {
     public function __construct(
-        PDO $connectionParameters = new PdoStubDriver()
+        PDO $connectionParameters = new PdoStubDriver(),
     ) {
         $this->setResource($connectionParameters);
     }

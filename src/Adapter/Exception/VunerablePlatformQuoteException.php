@@ -15,7 +15,7 @@ final class VunerablePlatformQuoteException extends RuntimeException implements 
                 'Attempting to quote in %s::%s without extension/driver support'
                     . ' can introduce security vulnerabilities in a production environment.',
                 $platformName,
-                $methodName
+                $methodName,
             ),
         );
     }

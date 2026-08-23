@@ -12,9 +12,9 @@ class ConcreteAdapterAwareObject implements AdapterAwareInterface
 {
     use AdapterAwareTrait;
 
-    public function __construct(private readonly array $options = [])
-    {
-    }
+    public function __construct(
+        private readonly array $options = [],
+    ) {}
 
     public function getAdapter(): ?AdapterInterface
     {

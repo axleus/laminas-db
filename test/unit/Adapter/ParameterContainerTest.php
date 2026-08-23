@@ -42,14 +42,70 @@ final class ParameterContainerTest extends TestCase
 {
     protected ParameterContainer $parameterContainer;
 
-    /**
-     * Sets up the fixture, for example, opens a network connection.
-     * This method is called before a test is executed.
-     */
-    #[Override]
-    protected function setUp(): void
+    public function testConstructorWithDataPopulatesContainer(): void
     {
-        $this->parameterContainer = new ParameterContainer(['foo' => 'bar']);
+        $container = new ParameterContainer(['a' => 1, 'b' => 2]);
+
+        self::assertSame(2, $container->count());
+        self::assertSame(1, $container->offsetGet('a'));
+        self::assertSame(2, $container->offsetGet('b'));
+    }
+
+    #[TestDox('unit test: Test count() returns the proper count')]
+    public function testCount(): void
+    {
+        self::assertEquals(1, $this->parameterContainer->count());
+    }
+
+    #[TestDox('unit test: Test current() returns the current element when used as an iterator')]
+    public function testCurrent(): void
+    {
+        $value = $this->parameterContainer->current();
+        self::assertEquals('bar', $value);
+    }
+
+    #[TestDox('unit test: Test getErrataIterator() will return an iterator for the errata data')]
+    public function testGetErrataIterator(): void
+    {
+        $this->parameterContainer->offsetSetErrata('foo', ParameterContainer::TYPE_INTEGER);
+        $data = $this->parameterContainer->getErrataIterator();
+        self::assertInstanceOf('ArrayIterator', $data);
+    }
+
+    #[TestDox('unit test: Test getMaxLengthIterator() will return an iterator for the errata data')]
+    public function testGetMaxLengthIterator(): void
+    {
+        $this->parameterContainer->offsetSetMaxLength('foo', 100);
+        $data = $this->parameterContainer->getMaxLengthIterator();
+        self::assertInstanceOf('ArrayIterator', $data);
+    }
+
+    #[TestDox('unit test: Test getNamedArray()')]
+    public function testGetNamedArray(): void
+    {
+        $data = $this->parameterContainer->getNamedArray();
+        self::assertEquals(['foo' => 'bar'], $data);
+    }
+
+    public function testGetPositionalArrayReturnsValues(): void
+    {
+        $container = new ParameterContainer(['a' => 1, 'b' => 2, 'c' => 3]);
+
+        self::assertSame([1, 2, 3], $container->getPositionalArray());
+    }
+
+    #[TestDox("unit test: Test key() returns the name of the current item's name")]
+    public function testKey(): void
+    {
+        self::assertEquals('foo', $this->parameterContainer->key());
+    }
+
+    #[TestDox('unit test: Test next() increases the pointer when used as an iterator')]
+    public function testNext(): void
+    {
+        $this->parameterContainer['bar'] = 'baz';
+        $this->parameterContainer->next();
+        self::assertEquals('baz', $this->parameterContainer->current());
     }
 
     #[TestDox('unit test: Test offsetExists() returns proper values via method call and isset()')]
@@ -68,7 +124,81 @@ final class ParameterContainerTest extends TestCase
         self::assertEquals('bar', $this->parameterContainer['foo']);
 
         self::assertNull($this->parameterContainer->offsetGet('bar'));
+
         // @todo determine what should come back here
+    }
+
+    #[TestDox('unit test: Test offsetGetErrata() return persisted errata data, if it exists')]
+    public function testOffsetGetErrata(): void
+    {
+        $this->parameterContainer->offsetSetErrata('foo', ParameterContainer::TYPE_INTEGER);
+        self::assertEquals(ParameterContainer::TYPE_INTEGER, $this->parameterContainer->offsetGetErrata('foo'));
+    }
+
+    public function testOffsetGetErrataByPositionalIndex(): void
+    {
+        $container = new ParameterContainer(['foo' => 'bar']);
+        $container->offsetSetErrata('foo', ParameterContainer::TYPE_INTEGER);
+
+        self::assertSame(ParameterContainer::TYPE_INTEGER, $container->offsetGetErrata(0));
+    }
+
+    public function testOffsetGetErrataThrowsWhenNameDoesNotExist(): void
+    {
+        $container = new ParameterContainer();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Data does not exist for this name/position');
+
+        $container->offsetGetErrata('nonexistent');
+    }
+
+    public function testOffsetGetMaxLengthByPositionalIndex(): void
+    {
+        $container = new ParameterContainer(['foo' => 'bar']);
+        $container->offsetSetMaxLength('foo', 50);
+
+        self::assertSame(50, $container->offsetGetMaxLength(0));
+    }
+
+    public function testOffsetGetMaxLengthThrowsWhenNameDoesNotExist(): void
+    {
+        $container = new ParameterContainer();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Data does not exist for this name/position');
+
+        $container->offsetGetMaxLength('nonexistent');
+    }
+
+    #[TestDox('unit test: Test offsetHasErrata() will check if errata exists for a particular key')]
+    public function testOffsetHasErrata(): void
+    {
+        $this->parameterContainer->offsetSetErrata('foo', ParameterContainer::TYPE_INTEGER);
+        self::assertTrue($this->parameterContainer->offsetHasErrata('foo'));
+    }
+
+    public function testOffsetHasErrataByPositionalIndex(): void
+    {
+        $container = new ParameterContainer(['foo' => 'bar']);
+        $container->offsetSetErrata('foo', ParameterContainer::TYPE_STRING);
+
+        self::assertTrue($container->offsetHasErrata(0));
+    }
+
+    #[TestDox('unit test: Test offsetHasMaxLength() will check if errata exists for a particular key')]
+    public function testOffsetHasMaxLength(): void
+    {
+        $this->parameterContainer->offsetSetMaxLength('foo', 100);
+        self::assertTrue($this->parameterContainer->offsetHasMaxLength('foo'));
+    }
+
+    public function testOffsetHasMaxLengthByPositionalIndex(): void
+    {
+        $container = new ParameterContainer(['foo' => 'bar']);
+        $container->offsetSetMaxLength('foo', 50);
+
+        self::assertTrue($container->offsetHasMaxLength(0));
     }
 
     #[TestDox('unit test: Test offsetSet() works via method call and array access')]
@@ -80,7 +210,7 @@ final class ParameterContainerTest extends TestCase
         $this->parameterContainer->offsetSet('1', 'book', ParameterContainer::TYPE_STRING, 4);
         self::assertEquals(
             ['foo' => 'bar', 'boo' => 'baz', '1' => 'book'],
-            $this->parameterContainer->getNamedArray()
+            $this->parameterContainer->getNamedArray(),
         );
 
         self::assertEquals('string', $this->parameterContainer->offsetGetErrata('1'));
@@ -91,11 +221,11 @@ final class ParameterContainerTest extends TestCase
         $this->parameterContainer[1] = 'One';
         self::assertEquals(
             ['foo' => 'Zero', 'boo' => 'One', '1' => 'book'],
-            $this->parameterContainer->getNamedArray()
+            $this->parameterContainer->getNamedArray(),
         );
         self::assertEquals(
             [0 => 'Zero', 1 => 'One', 2 => 'book'],
-            $this->parameterContainer->getPositionalArray()
+            $this->parameterContainer->getPositionalArray(),
         );
 
         // test no-index applies
@@ -111,12 +241,80 @@ final class ParameterContainerTest extends TestCase
                 '4'      => 'Second To Last',
                 '5'      => 'Last',
             ],
-            $this->parameterContainer->getNamedArray()
+            $this->parameterContainer->getNamedArray(),
         );
         self::assertEquals(
             [0 => 'Zero', 1 => 'One', 2 => 'book', 3 => 'A buffer Element', 4 => 'Second To Last', 5 => 'Last'],
-            $this->parameterContainer->getPositionalArray()
+            $this->parameterContainer->getPositionalArray(),
         );
+    }
+
+    #[TestDox('
+        unit test: Test offsetSetMaxLength() will persist errata data
+        unit test: Test offsetGetMaxLength() return persisted errata data, if it exists
+    ')]
+    public function testOffsetSetAndGetMaxLength(): void
+    {
+        $this->parameterContainer->offsetSetMaxLength('foo', 100);
+        self::assertEquals(100, $this->parameterContainer->offsetGetMaxLength('foo'));
+    }
+
+    #[TestDox('unit test: Test offsetSetErrata() will persist errata data')]
+    public function testOffsetSetErrata(): void
+    {
+        $this->parameterContainer->offsetSetErrata('foo', ParameterContainer::TYPE_INTEGER);
+        self::assertEquals(ParameterContainer::TYPE_INTEGER, $this->parameterContainer->offsetGetErrata('foo'));
+    }
+
+    public function testOffsetSetErrataByPositionalIndex(): void
+    {
+        $container = new ParameterContainer(['foo' => 'bar']);
+        $container->offsetSetErrata(0, ParameterContainer::TYPE_STRING);
+
+        self::assertSame(ParameterContainer::TYPE_STRING, $container->offsetGetErrata('foo'));
+    }
+
+    public function testOffsetSetMaxLengthByPositionalIndex(): void
+    {
+        $container = new ParameterContainer(['foo' => 'bar']);
+        $container->offsetSetMaxLength(0, 50);
+
+        self::assertSame(50, $container->offsetGetMaxLength('foo'));
+    }
+
+    public function testOffsetSetReferenceCreatesReference(): void
+    {
+        $container = new ParameterContainer(['source' => 'original']);
+        $container->offsetSetReference('alias', 'source');
+
+        self::assertSame('original', $container->offsetGet('alias'));
+    }
+
+    public function testOffsetSetThrowsOnInvalidKeyType(): void
+    {
+        $container = new ParameterContainer();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Keys must be string, integer or null');
+
+        $container->offsetSet(1.5, 'value');
+    }
+
+    public function testOffsetSetWithIntNotInPositionsCastsToString(): void
+    {
+        $container = new ParameterContainer();
+        $container->offsetSet(5, 'value');
+
+        self::assertSame('value', $container->offsetGet('5'));
+    }
+
+    public function testOffsetSetWithNameMappingMatchForNonColonName(): void
+    {
+        $container = new ParameterContainer();
+        $container->offsetSet('c_0', ':myparam');
+        $container->offsetSet('myparam', 'updated');
+
+        self::assertSame('updated', $container->offsetGet('c_0'));
     }
 
     #[TestDox('unit test: Test offsetUnset() works via method call and array access')]
@@ -127,6 +325,79 @@ final class ParameterContainerTest extends TestCase
 
         $this->parameterContainer->offsetUnset('boo');
         self::assertFalse($this->parameterContainer->offsetExists('boo'));
+    }
+
+    public function testOffsetUnsetByPositionalIndex(): void
+    {
+        $container = new ParameterContainer(['a' => 'one', 'b' => 'two']);
+        $container->offsetUnset(0);
+
+        self::assertFalse($container->offsetExists('a'));
+        self::assertTrue($container->offsetExists('b'));
+    }
+
+    #[TestDox('unit test: Test offsetUnsetErrata() will unset data for a particular key')]
+    public function testOffsetUnsetErrata(): void
+    {
+        $this->parameterContainer->offsetSetErrata('foo', ParameterContainer::TYPE_INTEGER);
+        $this->parameterContainer->offsetUnsetErrata('foo');
+        self::assertNull($this->parameterContainer->offsetGetErrata('foo'));
+    }
+
+    public function testOffsetUnsetErrataByPositionalIndex(): void
+    {
+        $container = new ParameterContainer(['foo' => 'bar']);
+        $container->offsetSetErrata('foo', ParameterContainer::TYPE_STRING);
+        $container->offsetUnsetErrata(0);
+
+        self::assertNull($container->offsetGetErrata('foo'));
+    }
+
+    public function testOffsetUnsetErrataThrowsWhenNameDoesNotExist(): void
+    {
+        $container = new ParameterContainer(['foo' => 'bar']);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Data does not exist for this name/position');
+
+        $container->offsetUnsetErrata('foo');
+    }
+
+    #[TestDox('unit test: Test offsetUnsetMaxLength() will unset data for a particular key')]
+    public function testOffsetUnsetMaxLength(): void
+    {
+        $this->parameterContainer->offsetSetMaxLength('foo', 100);
+        $this->parameterContainer->offsetUnsetMaxLength('foo');
+        self::assertNull($this->parameterContainer->offsetGetMaxLength('foo'));
+    }
+
+    public function testOffsetUnsetMaxLengthByPositionalIndex(): void
+    {
+        $container = new ParameterContainer(['foo' => 'bar']);
+        $container->offsetSetMaxLength('foo', 50);
+        $container->offsetUnsetMaxLength(0);
+
+        self::assertNull($container->offsetGetMaxLength('foo'));
+    }
+
+    public function testOffsetUnsetMaxLengthThrowsWhenNameDoesNotExist(): void
+    {
+        $container = new ParameterContainer(['foo' => 'bar']);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Data does not exist for this name/position');
+
+        $container->offsetUnsetMaxLength('foo');
+    }
+
+    #[TestDox('unit test: Test rewind() resets the iterators pointer')]
+    public function testRewind(): void
+    {
+        $this->parameterContainer->offsetSet('bar', 'baz');
+        $this->parameterContainer->next();
+        self::assertEquals('bar', $this->parameterContainer->key());
+        $this->parameterContainer->rewind();
+        self::assertEquals('foo', $this->parameterContainer->key());
     }
 
     #[TestDox('unit test: Test setFromArray() will populate the container')]
@@ -149,110 +420,6 @@ final class ParameterContainerTest extends TestCase
         self::assertEquals('baz', $this->parameterContainer[':myparam']);
     }
 
-    #[TestDox('
-        unit test: Test offsetSetMaxLength() will persist errata data
-        unit test: Test offsetGetMaxLength() return persisted errata data, if it exists
-    ')]
-    public function testOffsetSetAndGetMaxLength(): void
-    {
-        $this->parameterContainer->offsetSetMaxLength('foo', 100);
-        self::assertEquals(100, $this->parameterContainer->offsetGetMaxLength('foo'));
-    }
-
-    #[TestDox('unit test: Test offsetHasMaxLength() will check if errata exists for a particular key')]
-    public function testOffsetHasMaxLength(): void
-    {
-        $this->parameterContainer->offsetSetMaxLength('foo', 100);
-        self::assertTrue($this->parameterContainer->offsetHasMaxLength('foo'));
-    }
-
-    #[TestDox('unit test: Test offsetUnsetMaxLength() will unset data for a particular key')]
-    public function testOffsetUnsetMaxLength(): void
-    {
-        $this->parameterContainer->offsetSetMaxLength('foo', 100);
-        $this->parameterContainer->offsetUnsetMaxLength('foo');
-        self::assertNull($this->parameterContainer->offsetGetMaxLength('foo'));
-    }
-
-    #[TestDox('unit test: Test getMaxLengthIterator() will return an iterator for the errata data')]
-    public function testGetMaxLengthIterator(): void
-    {
-        $this->parameterContainer->offsetSetMaxLength('foo', 100);
-        $data = $this->parameterContainer->getMaxLengthIterator();
-        self::assertInstanceOf('ArrayIterator', $data);
-    }
-
-    #[TestDox('unit test: Test offsetSetErrata() will persist errata data')]
-    public function testOffsetSetErrata(): void
-    {
-        $this->parameterContainer->offsetSetErrata('foo', ParameterContainer::TYPE_INTEGER);
-        self::assertEquals(ParameterContainer::TYPE_INTEGER, $this->parameterContainer->offsetGetErrata('foo'));
-    }
-
-    #[TestDox('unit test: Test offsetGetErrata() return persisted errata data, if it exists')]
-    public function testOffsetGetErrata(): void
-    {
-        $this->parameterContainer->offsetSetErrata('foo', ParameterContainer::TYPE_INTEGER);
-        self::assertEquals(ParameterContainer::TYPE_INTEGER, $this->parameterContainer->offsetGetErrata('foo'));
-    }
-
-    #[TestDox('unit test: Test offsetHasErrata() will check if errata exists for a particular key')]
-    public function testOffsetHasErrata(): void
-    {
-        $this->parameterContainer->offsetSetErrata('foo', ParameterContainer::TYPE_INTEGER);
-        self::assertTrue($this->parameterContainer->offsetHasErrata('foo'));
-    }
-
-    #[TestDox('unit test: Test offsetUnsetErrata() will unset data for a particular key')]
-    public function testOffsetUnsetErrata(): void
-    {
-        $this->parameterContainer->offsetSetErrata('foo', ParameterContainer::TYPE_INTEGER);
-        $this->parameterContainer->offsetUnsetErrata('foo');
-        self::assertNull($this->parameterContainer->offsetGetErrata('foo'));
-    }
-
-    #[TestDox('unit test: Test getErrataIterator() will return an iterator for the errata data')]
-    public function testGetErrataIterator(): void
-    {
-        $this->parameterContainer->offsetSetErrata('foo', ParameterContainer::TYPE_INTEGER);
-        $data = $this->parameterContainer->getErrataIterator();
-        self::assertInstanceOf('ArrayIterator', $data);
-    }
-
-    #[TestDox('unit test: Test getNamedArray()')]
-    public function testGetNamedArray(): void
-    {
-        $data = $this->parameterContainer->getNamedArray();
-        self::assertEquals(['foo' => 'bar'], $data);
-    }
-
-    #[TestDox('unit test: Test count() returns the proper count')]
-    public function testCount(): void
-    {
-        self::assertEquals(1, $this->parameterContainer->count());
-    }
-
-    #[TestDox('unit test: Test current() returns the current element when used as an iterator')]
-    public function testCurrent(): void
-    {
-        $value = $this->parameterContainer->current();
-        self::assertEquals('bar', $value);
-    }
-
-    #[TestDox('unit test: Test next() increases the pointer when used as an iterator')]
-    public function testNext(): void
-    {
-        $this->parameterContainer['bar'] = 'baz';
-        $this->parameterContainer->next();
-        self::assertEquals('baz', $this->parameterContainer->current());
-    }
-
-    #[TestDox("unit test: Test key() returns the name of the current item's name")]
-    public function testKey(): void
-    {
-        self::assertEquals('foo', $this->parameterContainer->key());
-    }
-
     #[TestDox('unit test: Test valid() returns whether the iterators current position is valid')]
     public function testValid(): void
     {
@@ -261,179 +428,13 @@ final class ParameterContainerTest extends TestCase
         self::assertFalse($this->parameterContainer->valid());
     }
 
-    #[TestDox('unit test: Test rewind() resets the iterators pointer')]
-    public function testRewind(): void
+    /**
+     * Sets up the fixture, for example, opens a network connection.
+     * This method is called before a test is executed.
+     */
+    #[Override]
+    protected function setUp(): void
     {
-        $this->parameterContainer->offsetSet('bar', 'baz');
-        $this->parameterContainer->next();
-        self::assertEquals('bar', $this->parameterContainer->key());
-        $this->parameterContainer->rewind();
-        self::assertEquals('foo', $this->parameterContainer->key());
-    }
-
-    public function testConstructorWithDataPopulatesContainer(): void
-    {
-        $container = new ParameterContainer(['a' => 1, 'b' => 2]);
-
-        self::assertSame(2, $container->count());
-        self::assertSame(1, $container->offsetGet('a'));
-        self::assertSame(2, $container->offsetGet('b'));
-    }
-
-    public function testOffsetSetReferenceCreatesReference(): void
-    {
-        $container = new ParameterContainer(['source' => 'original']);
-        $container->offsetSetReference('alias', 'source');
-
-        self::assertSame('original', $container->offsetGet('alias'));
-    }
-
-    public function testOffsetSetWithIntNotInPositionsCastsToString(): void
-    {
-        $container = new ParameterContainer();
-        $container->offsetSet(5, 'value');
-
-        self::assertSame('value', $container->offsetGet('5'));
-    }
-
-    public function testOffsetSetWithNameMappingMatchForNonColonName(): void
-    {
-        $container = new ParameterContainer();
-        $container->offsetSet('c_0', ':myparam');
-        $container->offsetSet('myparam', 'updated');
-
-        self::assertSame('updated', $container->offsetGet('c_0'));
-    }
-
-    public function testOffsetSetThrowsOnInvalidKeyType(): void
-    {
-        $container = new ParameterContainer();
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Keys must be string, integer or null');
-
-        $container->offsetSet(1.5, 'value');
-    }
-
-    public function testOffsetUnsetByPositionalIndex(): void
-    {
-        $container = new ParameterContainer(['a' => 'one', 'b' => 'two']);
-        $container->offsetUnset(0);
-
-        self::assertFalse($container->offsetExists('a'));
-        self::assertTrue($container->offsetExists('b'));
-    }
-
-    public function testOffsetSetMaxLengthByPositionalIndex(): void
-    {
-        $container = new ParameterContainer(['foo' => 'bar']);
-        $container->offsetSetMaxLength(0, 50);
-
-        self::assertSame(50, $container->offsetGetMaxLength('foo'));
-    }
-
-    public function testOffsetGetMaxLengthByPositionalIndex(): void
-    {
-        $container = new ParameterContainer(['foo' => 'bar']);
-        $container->offsetSetMaxLength('foo', 50);
-
-        self::assertSame(50, $container->offsetGetMaxLength(0));
-    }
-
-    public function testOffsetGetMaxLengthThrowsWhenNameDoesNotExist(): void
-    {
-        $container = new ParameterContainer();
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Data does not exist for this name/position');
-
-        $container->offsetGetMaxLength('nonexistent');
-    }
-
-    public function testOffsetHasMaxLengthByPositionalIndex(): void
-    {
-        $container = new ParameterContainer(['foo' => 'bar']);
-        $container->offsetSetMaxLength('foo', 50);
-
-        self::assertTrue($container->offsetHasMaxLength(0));
-    }
-
-    public function testOffsetUnsetMaxLengthByPositionalIndex(): void
-    {
-        $container = new ParameterContainer(['foo' => 'bar']);
-        $container->offsetSetMaxLength('foo', 50);
-        $container->offsetUnsetMaxLength(0);
-
-        self::assertNull($container->offsetGetMaxLength('foo'));
-    }
-
-    public function testOffsetUnsetMaxLengthThrowsWhenNameDoesNotExist(): void
-    {
-        $container = new ParameterContainer(['foo' => 'bar']);
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Data does not exist for this name/position');
-
-        $container->offsetUnsetMaxLength('foo');
-    }
-
-    public function testOffsetSetErrataByPositionalIndex(): void
-    {
-        $container = new ParameterContainer(['foo' => 'bar']);
-        $container->offsetSetErrata(0, ParameterContainer::TYPE_STRING);
-
-        self::assertSame(ParameterContainer::TYPE_STRING, $container->offsetGetErrata('foo'));
-    }
-
-    public function testOffsetGetErrataByPositionalIndex(): void
-    {
-        $container = new ParameterContainer(['foo' => 'bar']);
-        $container->offsetSetErrata('foo', ParameterContainer::TYPE_INTEGER);
-
-        self::assertSame(ParameterContainer::TYPE_INTEGER, $container->offsetGetErrata(0));
-    }
-
-    public function testOffsetGetErrataThrowsWhenNameDoesNotExist(): void
-    {
-        $container = new ParameterContainer();
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Data does not exist for this name/position');
-
-        $container->offsetGetErrata('nonexistent');
-    }
-
-    public function testOffsetHasErrataByPositionalIndex(): void
-    {
-        $container = new ParameterContainer(['foo' => 'bar']);
-        $container->offsetSetErrata('foo', ParameterContainer::TYPE_STRING);
-
-        self::assertTrue($container->offsetHasErrata(0));
-    }
-
-    public function testOffsetUnsetErrataByPositionalIndex(): void
-    {
-        $container = new ParameterContainer(['foo' => 'bar']);
-        $container->offsetSetErrata('foo', ParameterContainer::TYPE_STRING);
-        $container->offsetUnsetErrata(0);
-
-        self::assertNull($container->offsetGetErrata('foo'));
-    }
-
-    public function testOffsetUnsetErrataThrowsWhenNameDoesNotExist(): void
-    {
-        $container = new ParameterContainer(['foo' => 'bar']);
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Data does not exist for this name/position');
-
-        $container->offsetUnsetErrata('foo');
-    }
-
-    public function testGetPositionalArrayReturnsValues(): void
-    {
-        $container = new ParameterContainer(['a' => 1, 'b' => 2, 'c' => 3]);
-
-        self::assertSame([1, 2, 3], $container->getPositionalArray());
+        $this->parameterContainer = new ParameterContainer(['foo' => 'bar']);
     }
 }

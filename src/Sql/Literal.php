@@ -10,20 +10,10 @@ use function str_replace;
 
 class Literal implements ExpressionInterface
 {
-    public function __construct(protected string $literal = '')
-    {
+    public function __construct(
+        protected string $literal = '',
+    ) {
         $this->literal = $literal;
-    }
-
-    public function setLiteral(string $literal): static
-    {
-        $this->literal = $literal;
-        return $this;
-    }
-
-    public function getLiteral(): string
-    {
-        return $this->literal;
     }
 
     /** @inheritDoc */
@@ -34,5 +24,16 @@ class Literal implements ExpressionInterface
             'spec'   => str_replace('%', '%%', $this->literal),
             'values' => [],
         ];
+    }
+
+    public function getLiteral(): string
+    {
+        return $this->literal;
+    }
+
+    public function setLiteral(string $literal): static
+    {
+        $this->literal = $literal;
+        return $this;
     }
 }

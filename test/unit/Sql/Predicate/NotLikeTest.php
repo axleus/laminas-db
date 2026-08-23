@@ -12,28 +12,6 @@ use PHPUnit\Framework\TestCase;
 
 final class NotLikeTest extends TestCase
 {
-    public function testConstructEmptyArgs(): void
-    {
-        $notLike = new NotLike();
-        self::assertEquals('', $notLike->getIdentifier());
-        self::assertEquals('', $notLike->getLike());
-    }
-
-    public function testConstructWithArgs(): void
-    {
-        $notLike = new NotLike('bar', 'Foo%');
-
-        $identifier = $notLike->getIdentifier();
-        self::assertInstanceOf(ArgumentInterface::class, $identifier);
-        self::assertEquals('bar', $identifier->getValue());
-        self::assertEquals(ArgumentType::Identifier, $identifier->getType());
-
-        $likeValue = $notLike->getLike();
-        self::assertInstanceOf(ArgumentInterface::class, $likeValue);
-        self::assertEquals('Foo%', $likeValue->getValue());
-        self::assertEquals(ArgumentType::Value, $likeValue->getType());
-    }
-
     public function testAccessorsMutators(): void
     {
         $notLike = new NotLike();
@@ -84,6 +62,28 @@ final class NotLikeTest extends TestCase
         // Second mutation to verify mutability
         $notLike->setSpecification('custom spec');
         self::assertEquals('custom spec', $notLike->getSpecification());
+    }
+
+    public function testConstructEmptyArgs(): void
+    {
+        $notLike = new NotLike();
+        self::assertEquals('', $notLike->getIdentifier());
+        self::assertEquals('', $notLike->getLike());
+    }
+
+    public function testConstructWithArgs(): void
+    {
+        $notLike = new NotLike('bar', 'Foo%');
+
+        $identifier = $notLike->getIdentifier();
+        self::assertInstanceOf(ArgumentInterface::class, $identifier);
+        self::assertEquals('bar', $identifier->getValue());
+        self::assertEquals(ArgumentType::Identifier, $identifier->getType());
+
+        $likeValue = $notLike->getLike();
+        self::assertInstanceOf(ArgumentInterface::class, $likeValue);
+        self::assertEquals('Foo%', $likeValue->getValue());
+        self::assertEquals(ArgumentType::Value, $likeValue->getType());
     }
 
     public function testGetExpressionData(): void

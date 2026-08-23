@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\Sql\Platform;
 
+use Override;
 use PhpDb\Adapter\AdapterInterface;
 use PhpDb\Adapter\Platform\PlatformInterface;
 use PhpDb\Adapter\StatementContainerInterface;
@@ -18,35 +19,6 @@ class AbstractPlatform implements PlatformDecoratorInterface, PreparableSqlInter
     protected array $decorators = [];
 
     /**
-     * {@inheritDoc}
-     */
-    public function setSubject($subject): static
-    {
-        $this->subject = $subject;
-
-        return $this;
-    }
-
-    public function setTypeDecorator(string $type, PlatformDecoratorInterface $decorator): void
-    {
-        $this->decorators[$type] = $decorator;
-    }
-
-    public function getTypeDecorator(
-        PreparableSqlInterface|SqlInterface $subject
-    ): PlatformDecoratorInterface|PreparableSqlInterface|SqlInterface {
-        foreach ($this->decorators as $type => $decorator) {
-            /** @phpstan-ignore-next-line instanceof with string class name is valid */
-            if ($subject instanceof $type) {
-                $decorator->setSubject($subject);
-                return $decorator;
-            }
-        }
-
-        return $subject;
-    }
-
-    /**
      * @return array|PlatformDecoratorInterface[]
      */
     public function getDecorators(): array
@@ -55,16 +27,51 @@ class AbstractPlatform implements PlatformDecoratorInterface, PreparableSqlInter
     }
 
     /**
+     * {@inheritDoc}
+     *
      * @throws Exception\RuntimeException
      */
+    #[Override]
+    public function getSqlString(?PlatformInterface $adapterPlatform = null): string
+    {
+        if (! $this->subject instanceof SqlInterface) {
+            throw new Exception\RuntimeException(
+                'The subject does not appear to implement PhpDb\Sql\SqlInterface, thus calling '
+                    . 'getSqlString() has no effect',
+            );
+        }
+
+        return $this->getTypeDecorator($this->subject)->getSqlString($adapterPlatform);
+    }
+
+    public function getTypeDecorator(
+        PreparableSqlInterface|SqlInterface $subject,
+    ): PlatformDecoratorInterface|PreparableSqlInterface|SqlInterface {
+        foreach ($this->decorators as $type => $decorator) {
+            /** @phpstan-ignore-next-line instanceof with string class name is valid */
+            if (! $subject instanceof $type) {
+                continue;
+            }
+
+            $decorator->setSubject($subject);
+            return $decorator;
+        }
+
+        return $subject;
+    }
+
+    /**
+     * @throws Exception\RuntimeException
+     */
+    #[Override]
     public function prepareStatement(
         AdapterInterface $adapter,
-        StatementContainerInterface $statementContainer
+        StatementContainerInterface $statementContainer,
     ): StatementContainerInterface {
         if (! $this->subject instanceof PreparableSqlInterface) {
             throw new Exception\RuntimeException(
                 'The subject does not appear to implement PhpDb\Sql\PreparableSqlInterface, thus calling '
-                . 'prepareStatement() has no effect'
+                    . 'prepareStatement() has no effect',
             );
         }
 
@@ -75,18 +82,17 @@ class AbstractPlatform implements PlatformDecoratorInterface, PreparableSqlInter
 
     /**
      * {@inheritDoc}
-     *
-     * @throws Exception\RuntimeException
      */
-    public function getSqlString(?PlatformInterface $adapterPlatform = null): string
+    #[Override]
+    public function setSubject($subject): static
     {
-        if (! $this->subject instanceof SqlInterface) {
-            throw new Exception\RuntimeException(
-                'The subject does not appear to implement PhpDb\Sql\SqlInterface, thus calling '
-                . 'getSqlString() has no effect'
-            );
-        }
+        $this->subject = $subject;
 
-        return $this->getTypeDecorator($this->subject)->getSqlString($adapterPlatform);
+        return $this;
+    }
+
+    public function setTypeDecorator(string $type, PlatformDecoratorInterface $decorator): void
+    {
+        $this->decorators[$type] = $decorator;
     }
 }

@@ -33,36 +33,74 @@ final class HydratingResultSetTest extends TestCase
 
     private string $classMethodsHydratorClass;
 
-    #[Override]
-    protected function setUp(): void
+    public function testConstructorDefaultsToArraySerializableHydrator(): void
     {
-        $this->arraySerializableHydratorClass = ArraySerializableHydrator::class;
-        $this->classMethodsHydratorClass      = ClassMethodsHydrator::class;
+        $hydratingRs = new HydratingResultSet();
+
+        self::assertInstanceOf(ArraySerializableHydrator::class, $hydratingRs->getHydrator());
     }
 
-    public function testSetObjectPrototype(): void
+    public function testCurrentDisablesBufferingImplicitly(): void
     {
-        $prototype1            = new stdClass();
-        $prototype1->property1 = 'value1';
-        $prototype2            = new stdClass();
-        $prototype2->property2 = 'value2';
-        $hydratingRs           = new HydratingResultSet();
+        $hydratingRs = new HydratingResultSet();
+        $hydratingRs->initialize(new ArrayIterator([
+            ['id' => 1],
+        ]));
 
-        // First mutation
-        $result = $hydratingRs->setObjectPrototype($prototype1);
+        $hydratingRs->current();
 
-        // Verify fluent interface
-        self::assertSame($hydratingRs, $result);
+        $this->expectException(RuntimeException::class);
+        $hydratingRs->buffer();
+    }
 
-        // Verify the first mutation occurred
-        self::assertSame($prototype1, $hydratingRs->getObjectPrototype());
+    /**
+     * @throws Exception
+     */
+    public function testCurrentDoesnotHasData(): void
+    {
+        $hydratingRs = new HydratingResultSet();
+        $hydratingRs->initialize([]);
 
-        // Second mutation to verify mutability
-        $hydratingRs->setObjectPrototype($prototype2);
+        // Verify current() returns null when no data exists
+        $result = $hydratingRs->current();
+        self::assertNull($result);
+    }
 
-        // Verify the instance was actually mutated
-        self::assertSame($prototype2, $hydratingRs->getObjectPrototype());
-        self::assertNotSame($prototype1, $hydratingRs->getObjectPrototype());
+    /**
+     * @throws Exception
+     */
+    public function testCurrentHasData(): void
+    {
+        $hydratingRs = new HydratingResultSet();
+        $hydratingRs->initialize([
+            ['id' => 1, 'name' => 'one'],
+        ]);
+        // Verify current() returns hydrated object when data exists
+        $obj = $hydratingRs->current();
+        self::assertInstanceOf('ArrayObject', $obj);
+    }
+
+    public function testCurrentWithBufferReturnsBufferedObject(): void
+    {
+        $hydratingRs = new HydratingResultSet();
+        $hydratingRs->initialize(new ArrayIterator([
+            ['id' => 1, 'name' => 'one'],
+            ['id' => 2, 'name' => 'two'],
+        ]));
+        $hydratingRs->buffer();
+
+        $first = $hydratingRs->current();
+        $hydratingRs->rewind();
+        $buffered = $hydratingRs->current();
+
+        self::assertSame($first, $buffered);
+    }
+
+    public function testGetHydrator(): void
+    {
+        $hydratingRs = new HydratingResultSet();
+        // Verify getHydrator() returns default ArraySerializable hydrator
+        self::assertInstanceOf($this->arraySerializableHydratorClass, $hydratingRs->getHydrator());
     }
 
     public function testGetObjectPrototype(): void
@@ -70,6 +108,13 @@ final class HydratingResultSetTest extends TestCase
         $hydratingRs = new HydratingResultSet();
         // Verify getObjectPrototype() returns default ArrayObject prototype
         self::assertInstanceOf('ArrayObject', $hydratingRs->getObjectPrototype());
+    }
+
+    public function testGetRowPrototypeReturnsDefaultArrayObject(): void
+    {
+        $hydratingRs = new HydratingResultSet();
+
+        self::assertInstanceOf(ArrayObject::class, $hydratingRs->getRowPrototype());
     }
 
     public function testSetHydrator(): void
@@ -98,38 +143,40 @@ final class HydratingResultSetTest extends TestCase
         self::assertNotSame($hydrator1, $hydratingRs->getHydrator());
     }
 
-    public function testGetHydrator(): void
+    public function testSetObjectPrototype(): void
     {
-        $hydratingRs = new HydratingResultSet();
-        // Verify getHydrator() returns default ArraySerializable hydrator
-        self::assertInstanceOf($this->arraySerializableHydratorClass, $hydratingRs->getHydrator());
+        $prototype1            = new stdClass();
+        $prototype1->property1 = 'value1';
+        $prototype2            = new stdClass();
+        $prototype2->property2 = 'value2';
+        $hydratingRs           = new HydratingResultSet();
+
+        // First mutation
+        $result = $hydratingRs->setObjectPrototype($prototype1);
+
+        // Verify fluent interface
+        self::assertSame($hydratingRs, $result);
+
+        // Verify the first mutation occurred
+        self::assertSame($prototype1, $hydratingRs->getObjectPrototype());
+
+        // Second mutation to verify mutability
+        $hydratingRs->setObjectPrototype($prototype2);
+
+        // Verify the instance was actually mutated
+        self::assertSame($prototype2, $hydratingRs->getObjectPrototype());
+        self::assertNotSame($prototype1, $hydratingRs->getObjectPrototype());
     }
 
-    /**
-     * @throws Exception
-     */
-    public function testCurrentHasData(): void
+    public function testSetRowPrototypeStoresPrototype(): void
     {
         $hydratingRs = new HydratingResultSet();
-        $hydratingRs->initialize([
-            ['id' => 1, 'name' => 'one'],
-        ]);
-        // Verify current() returns hydrated object when data exists
-        $obj = $hydratingRs->current();
-        self::assertInstanceOf('ArrayObject', $obj);
-    }
+        $prototype   = new stdClass();
 
-    /**
-     * @throws Exception
-     */
-    public function testCurrentDoesnotHasData(): void
-    {
-        $hydratingRs = new HydratingResultSet();
-        $hydratingRs->initialize([]);
+        $result = $hydratingRs->setRowPrototype($prototype);
 
-        // Verify current() returns null when no data exists
-        $result = $hydratingRs->current();
-        self::assertNull($result);
+        self::assertSame($hydratingRs, $result);
+        self::assertSame($prototype, $hydratingRs->getRowPrototype());
     }
 
     /**
@@ -147,47 +194,6 @@ final class HydratingResultSetTest extends TestCase
         self::assertIsArray($obj);
     }
 
-    public function testConstructorDefaultsToArraySerializableHydrator(): void
-    {
-        $hydratingRs = new HydratingResultSet();
-
-        self::assertInstanceOf(ArraySerializableHydrator::class, $hydratingRs->getHydrator());
-    }
-
-    public function testSetRowPrototypeStoresPrototype(): void
-    {
-        $hydratingRs = new HydratingResultSet();
-        $prototype   = new stdClass();
-
-        $result = $hydratingRs->setRowPrototype($prototype);
-
-        self::assertSame($hydratingRs, $result);
-        self::assertSame($prototype, $hydratingRs->getRowPrototype());
-    }
-
-    public function testGetRowPrototypeReturnsDefaultArrayObject(): void
-    {
-        $hydratingRs = new HydratingResultSet();
-
-        self::assertInstanceOf(ArrayObject::class, $hydratingRs->getRowPrototype());
-    }
-
-    public function testCurrentWithBufferReturnsBufferedObject(): void
-    {
-        $hydratingRs = new HydratingResultSet();
-        $hydratingRs->initialize(new ArrayIterator([
-            ['id' => 1, 'name' => 'one'],
-            ['id' => 2, 'name' => 'two'],
-        ]));
-        $hydratingRs->buffer();
-
-        $first = $hydratingRs->current();
-        $hydratingRs->rewind();
-        $buffered = $hydratingRs->current();
-
-        self::assertSame($first, $buffered);
-    }
-
     public function testToArrayUsesHydratorExtract(): void
     {
         $hydratingRs = new HydratingResultSet();
@@ -202,16 +208,10 @@ final class HydratingResultSetTest extends TestCase
         self::assertSame(1, $result[0]['id']);
     }
 
-    public function testCurrentDisablesBufferingImplicitly(): void
+    #[Override]
+    protected function setUp(): void
     {
-        $hydratingRs = new HydratingResultSet();
-        $hydratingRs->initialize(new ArrayIterator([
-            ['id' => 1],
-        ]));
-
-        $hydratingRs->current();
-
-        $this->expectException(RuntimeException::class);
-        $hydratingRs->buffer();
+        $this->arraySerializableHydratorClass = ArraySerializableHydrator::class;
+        $this->classMethodsHydratorClass      = ClassMethodsHydrator::class;
     }
 }

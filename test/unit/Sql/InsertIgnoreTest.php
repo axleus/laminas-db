@@ -35,200 +35,26 @@ final class InsertIgnoreTest extends TestCase
 
     protected InsertIgnore $insert;
 
-    /**
-     * Sets up the fixture, for example, opens a network connection.
-     * This method is called before a test is executed.
-     */
-    #[Override]
-    protected function setUp(): void
+    // @codingStandardsIgnoreStart
+    public function test__get(): void
     {
-        $this->insert = new InsertIgnore();
+        // @codingStandardsIgnoreEnd
+        $this->insert->foo = 'bar';
+        self::assertEquals('bar', $this->insert->foo);
+
+        $this->insert->foo = null;
+        self::assertNull($this->insert->foo);
     }
 
-    public function testInto(): void
+    // @codingStandardsIgnoreStart
+    public function test__isset(): void
     {
-        $this->insert->into('table');
-        self::assertEquals('table', $this->insert->getRawState('table'));
+        // @codingStandardsIgnoreEnd
+        $this->insert->foo = 'bar';
+        self::assertTrue(isset($this->insert->foo));
 
-        $tableIdentifier = new TableIdentifier('table', 'schema');
-        $this->insert->into($tableIdentifier);
-        self::assertEquals($tableIdentifier, $this->insert->getRawState('table'));
-    }
-
-    public function testColumns(): void
-    {
-        $columns = ['foo', 'bar'];
-        $this->insert->columns($columns);
-        self::assertEquals($columns, $this->insert->getRawState('columns'));
-    }
-
-    public function testValues(): void
-    {
-        $this->insert->values(['foo' => 'bar']);
-        self::assertEquals(['foo'], $this->insert->getRawState('columns'));
-        self::assertEquals(['bar'], $this->insert->getRawState('values'));
-
-        // test will merge cols and values of previously set stuff
-        $this->insert->values(['foo' => 'bax'], Insert::VALUES_MERGE);
-        $this->insert->values(['boom' => 'bam'], Insert::VALUES_MERGE);
-        self::assertEquals(['foo', 'boom'], $this->insert->getRawState('columns'));
-        self::assertEquals(['bax', 'bam'], $this->insert->getRawState('values'));
-
-        $this->insert->values(['foo' => 'bax']);
-        self::assertEquals(['foo'], $this->insert->getRawState('columns'));
-        self::assertEquals(['bax'], $this->insert->getRawState('values'));
-    }
-
-    public function testValuesThrowsExceptionWhenNotArrayOrSelect(): void
-    {
-        $this->expectException(TypeError::class);
-        $this->insert->values(5);
-    }
-
-    public function testValuesThrowsExceptionWhenSelectMergeOverArray(): void
-    {
-        $this->insert->values(['foo' => 'bar']);
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('A PhpDb\Sql\Select instance cannot be provided with the merge flag');
-        $this->insert->values(new Select(), Insert::VALUES_MERGE);
-    }
-
-    public function testValuesThrowsExceptionWhenArrayMergeOverSelect(): void
-    {
-        $this->insert->values(new Select());
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'An array of values cannot be provided with the merge flag when a PhpDb\Sql\Select instance already '
-            . 'exists as the value source'
-        );
-        $this->insert->values(['foo' => 'bar'], Insert::VALUES_MERGE);
-    }
-
-    /**
-     * @throws ReflectionException
-     */
-    #[Group('Laminas-4926')]
-    public function testEmptyArrayValues(): void
-    {
-        $this->insert->values([]);
-        self::assertEquals([], $this->readAttribute($this->insert, 'columns'));
-    }
-
-    public function testPrepareStatement(): void
-    {
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
-        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $pContainer    = new ParameterContainer([]);
-        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
-        $mockStatement->expects($this->once())
-            ->method('setSql')
-            ->with($this->equalTo('INSERT IGNORE INTO "foo" ("bar", "boo") VALUES (?, NOW())'));
-
-        $this->insert->into('foo')
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()')]);
-
-        $this->insert->prepareStatement($mockAdapter, $mockStatement);
-
-        // with TableIdentifier
-        $this->insert = new InsertIgnore();
-
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
-        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $pContainer    = new ParameterContainer([]);
-        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
-        $mockStatement->expects($this->once())
-            ->method('setSql')
-            ->with($this->equalTo('INSERT IGNORE INTO "sch"."foo" ("bar", "boo") VALUES (?, NOW())'));
-
-        $this->insert->into(new TableIdentifier('foo', 'sch'))
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()')]);
-
-        $this->insert->prepareStatement($mockAdapter, $mockStatement);
-    }
-
-    public function testPrepareStatementWithSelect(): void
-    {
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
-        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = new StatementContainer();
-
-        $select = new Select('bar');
-        $this->insert
-                ->into('foo')
-                ->columns(['col1'])
-                ->select($select->where(['x' => 5]))
-                ->prepareStatement($mockAdapter, $mockStatement);
-
-        self::assertEquals(
-            'INSERT IGNORE INTO "foo" ("col1") SELECT "bar".* FROM "bar" WHERE "x" = ?',
-            $mockStatement->getSql()
-        );
-        $parameters = $mockStatement->getParameterContainer()->getNamedArray();
-        self::assertSame(['subselect1where1' => 5], $parameters);
-    }
-
-    public function testGetSqlString(): void
-    {
-        $this->insert->into('foo')
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
-
-        self::assertEquals(
-            'INSERT IGNORE INTO "foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
-            $this->insert->getSqlString(new TrustingSql92Platform())
-        );
-
-        // with TableIdentifier
-        $this->insert = new InsertIgnore();
-        $this->insert->into(new TableIdentifier('foo', 'sch'))
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
-
-        self::assertEquals(
-            'INSERT IGNORE INTO "sch"."foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
-            $this->insert->getSqlString(new TrustingSql92Platform())
-        );
-
-        // with Select
-        $this->insert = new InsertIgnore();
-        $select       = new Select();
-        $this->insert->into('foo')->select($select->from('bar'));
-
-        self::assertEquals(
-            'INSERT IGNORE INTO "foo"  SELECT "bar".* FROM "bar"',
-            $this->insert->getSqlString(new TrustingSql92Platform())
-        );
-
-        // with Select and columns
-        $this->insert->columns(['col1', 'col2']);
-        self::assertEquals(
-            'INSERT IGNORE INTO "foo" ("col1", "col2") SELECT "bar".* FROM "bar"',
-            $this->insert->getSqlString(new TrustingSql92Platform())
-        );
-    }
-
-    public function testGetSqlStringUsingColumnsAndValuesMethods(): void
-    {
-        // With columns() and values()
-        $this->insert
-            ->into('foo')
-            ->columns(['col1', 'col2', 'col3'])
-            ->values(['val1', 'val2', 'val3']);
-        self::assertEquals(
-            'INSERT IGNORE INTO "foo" ("col1", "col2", "col3") VALUES (\'val1\', \'val2\', \'val3\')',
-            $this->insert->getSqlString(new TrustingSql92Platform())
-        );
+        $this->insert->foo = null;
+        self::assertTrue(isset($this->insert->foo));
     }
 
     // @codingStandardsIgnoreStart
@@ -260,39 +86,167 @@ final class InsertIgnoreTest extends TestCase
         self::assertEquals([], $this->insert->getRawState('values'));
     }
 
-    // @codingStandardsIgnoreStart
-    public function test__isset(): void
+    public function testColumns(): void
     {
-        // @codingStandardsIgnoreEnd
-        $this->insert->foo = 'bar';
-        self::assertTrue(isset($this->insert->foo));
-
-        $this->insert->foo = null;
-        self::assertTrue(isset($this->insert->foo));
+        $columns = ['foo', 'bar'];
+        $this->insert->columns($columns);
+        self::assertEquals($columns, $this->insert->getRawState('columns'));
     }
 
-    // @codingStandardsIgnoreStart
-    public function test__get(): void
+    /**
+     * @throws ReflectionException
+     */
+    #[Group('Laminas-4926')]
+    public function testEmptyArrayValues(): void
     {
-        // @codingStandardsIgnoreEnd
-        $this->insert->foo = 'bar';
-        self::assertEquals('bar', $this->insert->foo);
-
-        $this->insert->foo = null;
-        self::assertNull($this->insert->foo);
+        $this->insert->values([]);
+        self::assertEquals([], $this->readAttribute($this->insert, 'columns'));
     }
 
-    #[Group('Laminas-536')]
-    public function testValuesMerge(): void
+    public function testGetSqlString(): void
     {
-        $this->insert->into('foo')
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
-        $this->insert->into('foo')
-            ->values(['qux' => 100], Insert::VALUES_MERGE);
+        $this->insert->into('foo')->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
 
         self::assertEquals(
-            'INSERT IGNORE INTO "foo" ("bar", "boo", "bam", "qux") VALUES (\'baz\', NOW(), NULL, \'100\')',
-            $this->insert->getSqlString(new TrustingSql92Platform())
+            'INSERT IGNORE INTO "foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
+            $this->insert->getSqlString(new TrustingSql92Platform()),
+        );
+
+        // with TableIdentifier
+        $this->insert = new InsertIgnore();
+        $this->insert
+            ->into(new TableIdentifier('foo', 'sch'))
+            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
+
+        self::assertEquals(
+            'INSERT IGNORE INTO "sch"."foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
+            $this->insert->getSqlString(new TrustingSql92Platform()),
+        );
+
+        // with Select
+        $this->insert = new InsertIgnore();
+        $select       = new Select();
+        $this->insert->into('foo')->select($select->from('bar'));
+
+        self::assertEquals(
+            'INSERT IGNORE INTO "foo"  SELECT "bar".* FROM "bar"',
+            $this->insert->getSqlString(new TrustingSql92Platform()),
+        );
+
+        // with Select and columns
+        $this->insert->columns(['col1', 'col2']);
+        self::assertEquals(
+            'INSERT IGNORE INTO "foo" ("col1", "col2") SELECT "bar".* FROM "bar"',
+            $this->insert->getSqlString(new TrustingSql92Platform()),
+        );
+    }
+
+    public function testGetSqlStringUsingColumnsAndValuesMethods(): void
+    {
+        // With columns() and values()
+        $this->insert
+            ->into('foo')
+            ->columns(['col1', 'col2', 'col3'])
+            ->values(['val1', 'val2', 'val3']);
+        self::assertEquals(
+            'INSERT IGNORE INTO "foo" ("col1", "col2", "col3") VALUES (\'val1\', \'val2\', \'val3\')',
+            $this->insert->getSqlString(new TrustingSql92Platform()),
+        );
+    }
+
+    public function testInto(): void
+    {
+        $this->insert->into('table');
+        self::assertEquals('table', $this->insert->getRawState('table'));
+
+        $tableIdentifier = new TableIdentifier('table', 'schema');
+        $this->insert->into($tableIdentifier);
+        self::assertEquals($tableIdentifier, $this->insert->getRawState('table'));
+    }
+
+    public function testPrepareStatement(): void
+    {
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
+        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $pContainer    = new ParameterContainer([]);
+        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
+        $mockStatement->expects($this->once())
+            ->method('setSql')
+            ->with($this->equalTo('INSERT IGNORE INTO "foo" ("bar", "boo") VALUES (?, NOW())'));
+
+        $this->insert->into('foo')->values(['bar' => 'baz', 'boo' => new Expression('NOW()')]);
+
+        $this->insert->prepareStatement($mockAdapter, $mockStatement);
+
+        // with TableIdentifier
+        $this->insert = new InsertIgnore();
+
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
+        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $pContainer    = new ParameterContainer([]);
+        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
+        $mockStatement->expects($this->once())
+            ->method('setSql')
+            ->with($this->equalTo('INSERT IGNORE INTO "sch"."foo" ("bar", "boo") VALUES (?, NOW())'));
+
+        $this->insert
+            ->into(new TableIdentifier('foo', 'sch'))
+            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()')]);
+
+        $this->insert->prepareStatement($mockAdapter, $mockStatement);
+    }
+
+    public function testPrepareStatementWithSelect(): void
+    {
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
+        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = new StatementContainer();
+
+        $select = new Select('bar');
+        $this->insert
+            ->into('foo')
+            ->columns(['col1'])
+            ->select($select->where(['x' => 5]))
+            ->prepareStatement($mockAdapter, $mockStatement);
+
+        self::assertEquals(
+            'INSERT IGNORE INTO "foo" ("col1") SELECT "bar".* FROM "bar" WHERE "x" = ?',
+            $mockStatement->getSql(),
+        );
+        $parameters = $mockStatement->getParameterContainer()->getNamedArray();
+        self::assertSame(['subselect1where1' => 5], $parameters);
+    }
+
+    public function testSpecificationconstantsCouldBeOverridedByExtensionInGetSqlString(): void
+    {
+        $replace = new Replace();
+        $replace->into('foo')
+            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
+
+        self::assertEquals(
+            'REPLACE INTO "foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
+            $replace->getSqlString(new TrustingSql92Platform()),
+        );
+
+        // with TableIdentifier
+        $replace = new Replace();
+        $replace->into(new TableIdentifier('foo', 'sch'))
+            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
+
+        self::assertEquals(
+            'REPLACE INTO "sch"."foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
+            $replace->getSqlString(new TrustingSql92Platform()),
         );
     }
 
@@ -338,25 +292,70 @@ final class InsertIgnoreTest extends TestCase
         $replace->prepareStatement($mockAdapter, $mockStatement);
     }
 
-    public function testSpecificationconstantsCouldBeOverridedByExtensionInGetSqlString(): void
+    public function testValues(): void
     {
-        $replace = new Replace();
-        $replace->into('foo')
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
+        $this->insert->values(['foo' => 'bar']);
+        self::assertEquals(['foo'], $this->insert->getRawState('columns'));
+        self::assertEquals(['bar'], $this->insert->getRawState('values'));
+
+        // test will merge cols and values of previously set stuff
+        $this->insert->values(['foo' => 'bax'], Insert::VALUES_MERGE);
+        $this->insert->values(['boom' => 'bam'], Insert::VALUES_MERGE);
+        self::assertEquals(['foo', 'boom'], $this->insert->getRawState('columns'));
+        self::assertEquals(['bax', 'bam'], $this->insert->getRawState('values'));
+
+        $this->insert->values(['foo' => 'bax']);
+        self::assertEquals(['foo'], $this->insert->getRawState('columns'));
+        self::assertEquals(['bax'], $this->insert->getRawState('values'));
+    }
+
+    #[Group('Laminas-536')]
+    public function testValuesMerge(): void
+    {
+        $this->insert->into('foo')->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
+        $this->insert->into('foo')
+            ->values(['qux' => 100], Insert::VALUES_MERGE);
 
         self::assertEquals(
-            'REPLACE INTO "foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
-            $replace->getSqlString(new TrustingSql92Platform())
+            'INSERT IGNORE INTO "foo" ("bar", "boo", "bam", "qux") VALUES (\'baz\', NOW(), NULL, \'100\')',
+            $this->insert->getSqlString(new TrustingSql92Platform()),
         );
+    }
 
-        // with TableIdentifier
-        $replace = new Replace();
-        $replace->into(new TableIdentifier('foo', 'sch'))
-            ->values(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null]);
+    public function testValuesThrowsExceptionWhenArrayMergeOverSelect(): void
+    {
+        $this->insert->values(new Select());
 
-        self::assertEquals(
-            'REPLACE INTO "sch"."foo" ("bar", "boo", "bam") VALUES (\'baz\', NOW(), NULL)',
-            $replace->getSqlString(new TrustingSql92Platform())
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'An array of values cannot be provided with the merge flag when a PhpDb\Sql\Select instance already '
+                . 'exists as the value source',
         );
+        $this->insert->values(['foo' => 'bar'], Insert::VALUES_MERGE);
+    }
+
+    public function testValuesThrowsExceptionWhenNotArrayOrSelect(): void
+    {
+        $this->expectException(TypeError::class);
+        $this->insert->values(5);
+    }
+
+    public function testValuesThrowsExceptionWhenSelectMergeOverArray(): void
+    {
+        $this->insert->values(['foo' => 'bar']);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A PhpDb\Sql\Select instance cannot be provided with the merge flag');
+        $this->insert->values(new Select(), Insert::VALUES_MERGE);
+    }
+
+    /**
+     * Sets up the fixture, for example, opens a network connection.
+     * This method is called before a test is executed.
+     */
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->insert = new InsertIgnore();
     }
 }

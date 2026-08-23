@@ -18,20 +18,6 @@ final class AbstractResultSetIntegrationTest extends TestCase
     protected MockObject|AbstractResultSet $resultSet;
 
     /**
-     * Sets up the fixture, for example, opens a network connection.
-     * This method is called before a test is executed.
-     *
-     * @throws Exception
-     */
-    #[Override]
-    protected function setUp(): void
-    {
-        $this->resultSet = $this->getMockBuilder(AbstractResultSet::class)
-            ->onlyMethods(['setRowPrototype', 'getRowPrototype'])
-            ->getMock();
-    }
-
-    /**
      * @throws \Exception
      */
     public function testCurrentCallsDataSourceCurrentAsManyTimesWithoutBuffer(): void
@@ -60,5 +46,19 @@ final class AbstractResultSetIntegrationTest extends TestCase
         $value2 = $this->resultSet->current();
         $this->resultSet->current();
         self::assertEquals($value1, $value2);
+    }
+
+    /**
+     * Sets up the fixture, for example, opens a network connection.
+     * This method is called before a test is executed.
+     *
+     * @throws Exception
+     */
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->resultSet = $this->getMockBuilder(AbstractResultSet::class)
+            ->onlyMethods(['setRowPrototype', 'getRowPrototype'])
+            ->getMock();
     }
 }

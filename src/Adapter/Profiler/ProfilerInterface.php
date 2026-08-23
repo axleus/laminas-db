@@ -8,10 +8,10 @@ use PhpDb\Adapter\StatementContainerInterface;
 
 interface ProfilerInterface
 {
-    public function profilerStart(string|StatementContainerInterface $target): ProfilerInterface;
-
     /**
      * @return $this
      */
-    public function profilerFinish(): ProfilerInterface;
+    public function profilerFinish(): self;
+
+    public function profilerStart(string|StatementContainerInterface $target): self;
 }

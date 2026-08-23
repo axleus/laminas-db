@@ -6,15 +6,15 @@ namespace PhpDb\Adapter;
 
 interface StatementContainerInterface
 {
-    /** Set sql */
-    public function setSql(?string $sql): StatementContainerInterface;
+    /** Get parameter container */
+    public function getParameterContainer(): ?ParameterContainer;
 
     /** Get sql */
     public function getSql(): ?string;
 
     /** Set parameter container */
-    public function setParameterContainer(ParameterContainer $parameterContainer): StatementContainerInterface;
+    public function setParameterContainer(ParameterContainer $parameterContainer): self;
 
-    /** Get parameter container */
-    public function getParameterContainer(): ?ParameterContainer;
+    /** Set sql */
+    public function setSql(?string $sql): self;
 }

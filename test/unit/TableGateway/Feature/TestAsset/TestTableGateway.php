@@ -8,7 +8,5 @@ use PhpDb\TableGateway\TableGateway;
 
 class TestTableGateway extends TableGateway
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 }

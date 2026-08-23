@@ -27,19 +27,6 @@ use PHPUnit\Framework\TestCase;
 #[Group('unit')]
 final class OperatorTest extends TestCase
 {
-    public function testEmptyConstructorYieldsNullLeftAndRightValues(): void
-    {
-        $operator = new Operator();
-        self::assertNull($operator->getLeft());
-        self::assertNull($operator->getRight());
-    }
-
-    public function testEmptyConstructorYieldsDefaultsForOperatorAndLeftAndRightTypes(): void
-    {
-        $operator = new Operator();
-        self::assertEquals(Operator::OP_EQ, $operator->getOperator());
-    }
-
     public function testCanPassAllValuesToConstructor(): void
     {
         $operator = new Operator('bar', '>=', 'foo.bar');
@@ -76,6 +63,39 @@ final class OperatorTest extends TestCase
         self::assertEquals(ArgumentType::Value, $right->getType());
     }
 
+    public function testEmptyConstructorYieldsDefaultsForOperatorAndLeftAndRightTypes(): void
+    {
+        $operator = new Operator();
+        self::assertEquals(Operator::OP_EQ, $operator->getOperator());
+    }
+
+    public function testEmptyConstructorYieldsNullLeftAndRightValues(): void
+    {
+        $operator = new Operator();
+        self::assertNull($operator->getLeft());
+        self::assertNull($operator->getRight());
+    }
+
+    public function testGetExpressionDataThrowsExceptionWhenLeftNotSet(): void
+    {
+        $operator = new Operator();
+        $operator->setRight('value');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Left expression must be specified');
+        $operator->getExpressionData();
+    }
+
+    public function testGetExpressionDataThrowsExceptionWhenRightNotSet(): void
+    {
+        $operator = new Operator();
+        $operator->setLeft('left');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Right expression must be specified');
+        $operator->getExpressionData();
+    }
+
     public function testLeftIsMutable(): void
     {
         $operator = new Operator();
@@ -100,6 +120,40 @@ final class OperatorTest extends TestCase
         self::assertInstanceOf(ArgumentInterface::class, $left2);
         self::assertEquals('baz.qux', $left2->getValue());
         self::assertEquals(ArgumentType::Identifier, $left2->getType());
+    }
+
+    public function testOperatorIsMutable(): void
+    {
+        $operator = new Operator();
+        $operator->setOperator(Operator::OP_LTE);
+        self::assertEquals(Operator::OP_LTE, $operator->getOperator());
+    }
+
+    public function testRetrievingWherePartsReturnsSpecificationArrayOfLeftAndRightAndArrayOfTypes(): void
+    {
+        $operator = new Operator();
+        $operator->setLeft(new Value('foo'))
+            ->setOperator('>=')
+            ->setRight(new Identifier('foo.bar'));
+
+        $expressionData = $operator->getExpressionData();
+
+        // Verify specification
+        self::assertEquals('%s >= %s', $expressionData['spec']);
+
+        // Verify expression values
+        $values = $expressionData['values'];
+        self::assertCount(2, $values);
+
+        // Verify left argument
+        self::assertInstanceOf(ArgumentInterface::class, $values[0]);
+        self::assertEquals('foo', $values[0]->getValue());
+        self::assertEquals(ArgumentType::Value, $values[0]->getType());
+
+        // Verify right argument
+        self::assertInstanceOf(ArgumentInterface::class, $values[1]);
+        self::assertEquals('foo.bar', $values[1]->getValue());
+        self::assertEquals(ArgumentType::Identifier, $values[1]->getType());
     }
 
     public function testRightIsMutable(): void
@@ -135,61 +189,6 @@ final class OperatorTest extends TestCase
         self::assertInstanceOf(ArgumentInterface::class, $right3);
         self::assertEquals('qux', $right3->getValue());
         self::assertEquals(ArgumentType::Value, $right3->getType());
-    }
-
-    public function testOperatorIsMutable(): void
-    {
-        $operator = new Operator();
-        $operator->setOperator(Operator::OP_LTE);
-        self::assertEquals(Operator::OP_LTE, $operator->getOperator());
-    }
-
-    public function testRetrievingWherePartsReturnsSpecificationArrayOfLeftAndRightAndArrayOfTypes(): void
-    {
-        $operator = new Operator();
-        $operator
-            ->setLeft(new Value('foo'))
-            ->setOperator('>=')
-            ->setRight(new Identifier('foo.bar'));
-
-        $expressionData = $operator->getExpressionData();
-
-        // Verify specification
-        self::assertEquals('%s >= %s', $expressionData['spec']);
-
-        // Verify expression values
-        $values = $expressionData['values'];
-        self::assertCount(2, $values);
-
-        // Verify left argument
-        self::assertInstanceOf(ArgumentInterface::class, $values[0]);
-        self::assertEquals('foo', $values[0]->getValue());
-        self::assertEquals(ArgumentType::Value, $values[0]->getType());
-
-        // Verify right argument
-        self::assertInstanceOf(ArgumentInterface::class, $values[1]);
-        self::assertEquals('foo.bar', $values[1]->getValue());
-        self::assertEquals(ArgumentType::Identifier, $values[1]->getType());
-    }
-
-    public function testGetExpressionDataThrowsExceptionWhenLeftNotSet(): void
-    {
-        $operator = new Operator();
-        $operator->setRight('value');
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Left expression must be specified');
-        $operator->getExpressionData();
-    }
-
-    public function testGetExpressionDataThrowsExceptionWhenRightNotSet(): void
-    {
-        $operator = new Operator();
-        $operator->setLeft('left');
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Right expression must be specified');
-        $operator->getExpressionData();
     }
 
     public function testSetLeftWithExpressionInterfaceWrapsInSelect(): void

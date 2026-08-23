@@ -20,10 +20,13 @@ final class CharTest extends TestCase
         $expressionData = $column->getExpressionData();
 
         self::assertEquals('%s %s(%s) NOT NULL', $expressionData['spec']);
-        self::assertEquals([
-            new Identifier('foo'),
-            new Literal('CHAR'),
-            new Literal('20'),
-        ], $expressionData['values']);
+        self::assertEquals(
+            [
+                new Identifier('foo'),
+                new Literal('CHAR'),
+                new Literal('20'),
+            ],
+            $expressionData['values'],
+        );
     }
 }

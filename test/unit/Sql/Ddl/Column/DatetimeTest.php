@@ -19,9 +19,12 @@ final class DatetimeTest extends TestCase
         $expressionData = $column->getExpressionData();
 
         self::assertEquals('%s %s NOT NULL', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('foo'),
-            Argument::literal('DATETIME'),
-        ], $expressionData['values']);
+        self::assertEquals(
+            [
+                Argument::identifier('foo'),
+                Argument::literal('DATETIME'),
+            ],
+            $expressionData['values'],
+        );
     }
 }

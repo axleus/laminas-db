@@ -30,7 +30,7 @@ trait DriverFeatureProviderTrait
             throw new RuntimeException(sprintf(
                 '%s can only be composed into %s',
                 __TRAIT__,
-                DriverInterface::class
+                DriverInterface::class,
             ));
         }
 

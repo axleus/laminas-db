@@ -48,6 +48,172 @@ final class SqlTest extends TestCase
      */
     protected Sql $sql;
 
+    // @codingStandardsIgnoreStart
+    public function test__construct(): void
+    {
+        // @codingStandardsIgnoreEnd
+        $sql = new Sql($this->mockAdapter);
+
+        self::assertFalse($sql->hasTable());
+
+        $sql->setTable('foo');
+        self::assertSame('foo', $sql->getTable());
+
+        $this->expectException(TypeError::class);
+        /** @noinspection PhpStrictTypeCheckingInspection */
+        $sql->setTable(null);
+    }
+
+    public function testBuildSqlString(): void
+    {
+        $select    = $this->sql->select()->where(['bar' => 'baz']);
+        $sqlString = $this->sql->buildSqlString($select);
+        self::assertEquals('SELECT "foo".* FROM "foo" WHERE "bar" = \'baz\'', $sqlString);
+    }
+
+    public function testBuildSqlStringThrowsWhenPlatformNotSqlInterface(): void
+    {
+        $decorator = $this->createMock(PlatformDecoratorInterface::class);
+        $platform  = $this->createMock(PlatformInterface::class);
+        $platform->method('getSqlPlatformDecorator')->willReturn($decorator);
+
+        $adapter = $this->getMockBuilder(Adapter::class)
+            ->setConstructorArgs([
+                $this->createMock(DriverInterface::class),
+                $platform,
+            ])
+            ->getMock();
+        $adapter->method('getPlatform')->willReturn($platform);
+
+        $sql = new Sql($adapter);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('does not implement SqlInterface');
+        $sql->buildSqlString($this->sql->select());
+    }
+
+    public function testDelete(): void
+    {
+        $delete = $this->sql->delete();
+
+        self::assertInstanceOf(Delete::class, $delete);
+        self::assertSame('foo', $delete->getRawState('table'));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'This Sql object is intended to work with only the table "foo" provided at construction time.',
+        );
+        $this->sql->delete('bar');
+    }
+
+    public function testDeleteThrowsWhenTableConflicts(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'This Sql object is intended to work with only the table "foo" provided at construction time.',
+        );
+        $this->sql->delete(new TableIdentifier('bar'));
+    }
+
+    public function testGetSqlPlatformReturnsPlatformDecorator(): void
+    {
+        self::assertInstanceOf(PlatformDecoratorInterface::class, $this->sql->getSqlPlatform());
+    }
+
+    public function testInsert(): void
+    {
+        $insert = $this->sql->insert();
+        self::assertInstanceOf(Insert::class, $insert);
+        self::assertSame('foo', $insert->getRawState('table'));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'This Sql object is intended to work with only the table "foo" provided at construction time.',
+        );
+        $this->sql->insert('bar');
+    }
+
+    public function testInsertThrowsWhenTableConflicts(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'This Sql object is intended to work with only the table "foo" provided at construction time.',
+        );
+        $this->sql->insert(new TableIdentifier('bar'));
+    }
+
+    public function testPrepareStatementForSqlObject(): void
+    {
+        $insert = $this->sql->insert()->columns(['foo'])->values(['foo' => 'bar']);
+        $stmt   = $this->sql->prepareStatementForSqlObject($insert);
+        self::assertInstanceOf(StatementInterface::class, $stmt);
+    }
+
+    public function testPrepareStatementThrowsWhenPlatformNotPreparable(): void
+    {
+        $decorator = $this->createMock(PlatformDecoratorInterface::class);
+        $platform  = $this->createMock(PlatformInterface::class);
+        $platform->method('getSqlPlatformDecorator')->willReturn($decorator);
+
+        $adapter = $this->getMockBuilder(Adapter::class)
+            ->setConstructorArgs([
+                $this->createMock(DriverInterface::class),
+                $platform,
+            ])
+            ->getMock();
+        $adapter->method('getPlatform')->willReturn($platform);
+
+        $sql = new Sql($adapter);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('does not implement PreparableSqlInterface');
+        $sql->prepareStatementForSqlObject($this->sql->select());
+    }
+
+    public function testSelect(): void
+    {
+        $select = $this->sql->select();
+        self::assertInstanceOf(Select::class, $select);
+        self::assertSame('foo', $select->getRawState('table'));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'This Sql object is intended to work with only the table "foo" provided at construction time.',
+        );
+        $this->sql->select('bar');
+    }
+
+    public function testSelectThrowsWhenTableConflicts(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'This Sql object is intended to work with only the table "foo" provided at construction time.',
+        );
+        $this->sql->select(new TableIdentifier('bar'));
+    }
+
+    public function testUpdate(): void
+    {
+        $update = $this->sql->update();
+        self::assertInstanceOf(Update::class, $update);
+        self::assertSame('foo', $update->getRawState('table'));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'This Sql object is intended to work with only the table "foo" provided at construction time.',
+        );
+        $this->sql->update('bar');
+    }
+
+    public function testUpdateThrowsWhenTableConflicts(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'This Sql object is intended to work with only the table "foo" provided at construction time.',
+        );
+        $this->sql->update(new TableIdentifier('bar'));
+    }
+
     /**
      * @throws Exception
      */
@@ -78,171 +244,5 @@ final class SqlTest extends TestCase
             ->getMock();
 
         $this->sql = new Sql($this->mockAdapter, 'foo');
-    }
-
-    // @codingStandardsIgnoreStart
-    public function test__construct(): void
-    {
-        // @codingStandardsIgnoreEnd
-        $sql = new Sql($this->mockAdapter);
-
-        self::assertFalse($sql->hasTable());
-
-        $sql->setTable('foo');
-        self::assertSame('foo', $sql->getTable());
-
-        $this->expectException(TypeError::class);
-        /** @noinspection PhpStrictTypeCheckingInspection */
-        $sql->setTable(null);
-    }
-
-    public function testSelect(): void
-    {
-        $select = $this->sql->select();
-        self::assertInstanceOf(Select::class, $select);
-        self::assertSame('foo', $select->getRawState('table'));
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'This Sql object is intended to work with only the table "foo" provided at construction time.'
-        );
-        $this->sql->select('bar');
-    }
-
-    public function testInsert(): void
-    {
-        $insert = $this->sql->insert();
-        self::assertInstanceOf(Insert::class, $insert);
-        self::assertSame('foo', $insert->getRawState('table'));
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'This Sql object is intended to work with only the table "foo" provided at construction time.'
-        );
-        $this->sql->insert('bar');
-    }
-
-    public function testUpdate(): void
-    {
-        $update = $this->sql->update();
-        self::assertInstanceOf(Update::class, $update);
-        self::assertSame('foo', $update->getRawState('table'));
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'This Sql object is intended to work with only the table "foo" provided at construction time.'
-        );
-        $this->sql->update('bar');
-    }
-
-    public function testDelete(): void
-    {
-        $delete = $this->sql->delete();
-
-        self::assertInstanceOf(Delete::class, $delete);
-        self::assertSame('foo', $delete->getRawState('table'));
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'This Sql object is intended to work with only the table "foo" provided at construction time.'
-        );
-        $this->sql->delete('bar');
-    }
-
-    public function testPrepareStatementForSqlObject(): void
-    {
-        $insert = $this->sql->insert()->columns(['foo'])->values(['foo' => 'bar']);
-        $stmt   = $this->sql->prepareStatementForSqlObject($insert);
-        self::assertInstanceOf(StatementInterface::class, $stmt);
-    }
-
-    public function testBuildSqlString(): void
-    {
-        $select    = $this->sql->select()->where(['bar' => 'baz']);
-        $sqlString = $this->sql->buildSqlString($select);
-        self::assertEquals('SELECT "foo".* FROM "foo" WHERE "bar" = \'baz\'', $sqlString);
-    }
-
-    public function testSelectThrowsWhenTableConflicts(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'This Sql object is intended to work with only the table "foo" provided at construction time.'
-        );
-        $this->sql->select(new TableIdentifier('bar'));
-    }
-
-    public function testInsertThrowsWhenTableConflicts(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'This Sql object is intended to work with only the table "foo" provided at construction time.'
-        );
-        $this->sql->insert(new TableIdentifier('bar'));
-    }
-
-    public function testUpdateThrowsWhenTableConflicts(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'This Sql object is intended to work with only the table "foo" provided at construction time.'
-        );
-        $this->sql->update(new TableIdentifier('bar'));
-    }
-
-    public function testDeleteThrowsWhenTableConflicts(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'This Sql object is intended to work with only the table "foo" provided at construction time.'
-        );
-        $this->sql->delete(new TableIdentifier('bar'));
-    }
-
-    public function testGetSqlPlatformReturnsPlatformDecorator(): void
-    {
-        self::assertInstanceOf(PlatformDecoratorInterface::class, $this->sql->getSqlPlatform());
-    }
-
-    public function testPrepareStatementThrowsWhenPlatformNotPreparable(): void
-    {
-        $decorator = $this->createMock(PlatformDecoratorInterface::class);
-        $platform  = $this->createMock(PlatformInterface::class);
-        $platform->method('getSqlPlatformDecorator')->willReturn($decorator);
-
-        $adapter = $this->getMockBuilder(Adapter::class)
-            ->setConstructorArgs([
-                $this->createMock(DriverInterface::class),
-                $platform,
-            ])
-            ->getMock();
-        $adapter->method('getPlatform')->willReturn($platform);
-
-        $sql = new Sql($adapter);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('does not implement PreparableSqlInterface');
-        $sql->prepareStatementForSqlObject($this->sql->select());
-    }
-
-    public function testBuildSqlStringThrowsWhenPlatformNotSqlInterface(): void
-    {
-        $decorator = $this->createMock(PlatformDecoratorInterface::class);
-        $platform  = $this->createMock(PlatformInterface::class);
-        $platform->method('getSqlPlatformDecorator')->willReturn($decorator);
-
-        $adapter = $this->getMockBuilder(Adapter::class)
-            ->setConstructorArgs([
-                $this->createMock(DriverInterface::class),
-                $platform,
-            ])
-            ->getMock();
-        $adapter->method('getPlatform')->willReturn($platform);
-
-        $sql = new Sql($adapter);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('does not implement SqlInterface');
-        $sql->buildSqlString($this->sql->select());
     }
 }

@@ -39,6 +39,17 @@ use PHPUnit\Framework\TestCase;
 #[CoversMethod(FeatureSet::class, 'callMagicCall')]
 class FeatureSetTest extends TestCase
 {
+    public function testAddFeaturesReturnsFluentInterface(): void
+    {
+        $feature1 = new SequenceFeature('id', 'seq1');
+        $feature2 = new SequenceFeature('id', 'seq2');
+
+        $featureSet = new FeatureSet();
+        $result     = $featureSet->addFeatures([$feature1, $feature2]);
+
+        self::assertSame($featureSet, $result);
+    }
+
     /**
      * @cover FeatureSet::addFeature
      * @throws Exception
@@ -97,90 +108,16 @@ class FeatureSetTest extends TestCase
         self::assertInstanceOf(FeatureSet::class, $featureSet->addFeature($feature));
     }
 
-    public function testCanCallMagicCallReturnsTrueForAddedMethodOfAddedFeature(): void
+    public function testApplyCallsAllFeaturesWhenNoHalt(): void
     {
-        $feature    = new SequenceFeature('id', 'table_sequence');
-        $featureSet = new FeatureSet();
-        $featureSet->addFeature($feature);
+        $feature1 = new TestTableGatewayFeature();
+        $feature2 = new TestTableGatewayFeature();
 
-        self::assertTrue(
-            $featureSet->canCallMagicCall('lastSequenceId'),
-            'Should have been able to call lastSequenceId from the Sequence Feature'
-        );
-    }
+        $featureSet = new FeatureSet([$feature1, $feature2]);
+        $featureSet->apply('testMethod', []);
 
-    public function testCanCallMagicCallReturnsFalseForAddedMethodOfAddedFeature(): void
-    {
-        $feature    = new SequenceFeature('id', 'table_sequence');
-        $featureSet = new FeatureSet();
-        $featureSet->addFeature($feature);
-
-        self::assertFalse(
-            $featureSet->canCallMagicCall('postInitialize'),
-            'Should have been able to call postInitialize from the MetaData Feature'
-        );
-    }
-
-    public function testCanCallMagicCallReturnsFalseWhenNoFeaturesHaveBeenAdded(): void
-    {
-        $featureSet = new FeatureSet();
-        self::assertFalse(
-            $featureSet->canCallMagicCall('lastSequenceId')
-        );
-    }
-
-    public function testCallMagicCallSucceedsForValidMethodOfAddedFeature(): void
-    {
-        $feature = new TestTableGatewayFeature();
-
-        $featureSet = new FeatureSet();
-        $featureSet->addFeature($feature);
-
-        $result = $featureSet->callMagicCall('customMethod', ['test_value']);
-
-        self::assertEquals('result: test_value', $result);
-    }
-
-    public function testConstructorWithFeatures(): void
-    {
-        $feature    = new SequenceFeature('id', 'table_sequence');
-        $featureSet = new FeatureSet([$feature]);
-
-        self::assertSame($feature, $featureSet->getFeatureByClassName(SequenceFeature::class));
-    }
-
-    public function testSetTableGateway(): void
-    {
-        $tableGatewayMock = $this->getMockBuilder(AbstractTableGateway::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $feature    = new SequenceFeature('id', 'table_sequence');
-        $featureSet = new FeatureSet([$feature]);
-
-        $result = $featureSet->setTableGateway($tableGatewayMock);
-
-        self::assertSame($featureSet, $result);
-    }
-
-    public function testGetFeatureByClassNameReturnsNullWhenNotFound(): void
-    {
-        $featureSet = new FeatureSet();
-
-        $result = $featureSet->getFeatureByClassName(SequenceFeature::class);
-
-        self::assertNull($result);
-    }
-
-    public function testAddFeaturesReturnsFluentInterface(): void
-    {
-        $feature1 = new SequenceFeature('id', 'seq1');
-        $feature2 = new SequenceFeature('id', 'seq2');
-
-        $featureSet = new FeatureSet();
-        $result     = $featureSet->addFeatures([$feature1, $feature2]);
-
-        self::assertSame($featureSet, $result);
+        self::assertTrue($feature1->called);
+        self::assertTrue($feature2->called);
     }
 
     public function testApplyCallsMethodOnFeatures(): void
@@ -190,7 +127,7 @@ class FeatureSetTest extends TestCase
             ->getMock();
 
         $feature = new MasterSlaveFeature(
-            $this->getMockBuilder(AdapterInterface::class)->getMock()
+            $this->getMockBuilder(AdapterInterface::class)->getMock(),
         );
 
         $featureSet = new FeatureSet([$feature]);
@@ -200,52 +137,6 @@ class FeatureSetTest extends TestCase
 
         /** @phpstan-ignore staticMethod.alreadyNarrowedType */
         self::assertTrue(true);
-    }
-
-    public function testApplySkipsFeatureWithoutMethod(): void
-    {
-        $feature    = new SequenceFeature('id', 'table_sequence');
-        $featureSet = new FeatureSet([$feature]);
-
-        $featureSet->apply('nonExistentMethod', []);
-
-        /** @phpstan-ignore staticMethod.alreadyNarrowedType */
-        self::assertTrue(true);
-    }
-
-    public function testCanCallMagicGetReturnsFalse(): void
-    {
-        $featureSet = new FeatureSet();
-
-        self::assertFalse($featureSet->canCallMagicGet('property'));
-    }
-
-    public function testCallMagicGetReturnsNull(): void
-    {
-        $featureSet = new FeatureSet();
-
-        self::assertNull($featureSet->callMagicGet('property'));
-    }
-
-    public function testCanCallMagicSetReturnsFalse(): void
-    {
-        $featureSet = new FeatureSet();
-
-        self::assertFalse($featureSet->canCallMagicSet('property'));
-    }
-
-    public function testCallMagicSetReturnsNull(): void
-    {
-        $featureSet = new FeatureSet();
-
-        self::assertNull($featureSet->callMagicSet('property', 'value'));
-    }
-
-    public function testCallMagicCallReturnsNullWhenNoFeatureHasMethod(): void
-    {
-        $featureSet = new FeatureSet();
-
-        self::assertNull($featureSet->callMagicCall('nonExistentMethod', []));
     }
 
     public function testApplyHaltsWhenFeatureReturnsHalt(): void
@@ -262,18 +153,6 @@ class FeatureSetTest extends TestCase
         self::assertFalse($feature2->called);
     }
 
-    public function testApplyCallsAllFeaturesWhenNoHalt(): void
-    {
-        $feature1 = new TestTableGatewayFeature();
-        $feature2 = new TestTableGatewayFeature();
-
-        $featureSet = new FeatureSet([$feature1, $feature2]);
-        $featureSet->apply('testMethod', []);
-
-        self::assertTrue($feature1->called);
-        self::assertTrue($feature2->called);
-    }
-
     public function testApplyPassesArgumentsToFeatures(): void
     {
         $feature = new TestTableGatewayFeature();
@@ -282,5 +161,126 @@ class FeatureSetTest extends TestCase
         $featureSet->apply('testMethod', ['test value']);
 
         self::assertEquals(['test value'], $feature->receivedArgs);
+    }
+
+    public function testApplySkipsFeatureWithoutMethod(): void
+    {
+        $feature    = new SequenceFeature('id', 'table_sequence');
+        $featureSet = new FeatureSet([$feature]);
+
+        $featureSet->apply('nonExistentMethod', []);
+
+        /** @phpstan-ignore staticMethod.alreadyNarrowedType */
+        self::assertTrue(true);
+    }
+
+    public function testCallMagicCallReturnsNullWhenNoFeatureHasMethod(): void
+    {
+        $featureSet = new FeatureSet();
+
+        self::assertNull($featureSet->callMagicCall('nonExistentMethod', []));
+    }
+
+    public function testCallMagicCallSucceedsForValidMethodOfAddedFeature(): void
+    {
+        $feature = new TestTableGatewayFeature();
+
+        $featureSet = new FeatureSet();
+        $featureSet->addFeature($feature);
+
+        $result = $featureSet->callMagicCall('customMethod', ['test_value']);
+
+        self::assertEquals('result: test_value', $result);
+    }
+
+    public function testCallMagicGetReturnsNull(): void
+    {
+        $featureSet = new FeatureSet();
+
+        self::assertNull($featureSet->callMagicGet('property'));
+    }
+
+    public function testCallMagicSetReturnsNull(): void
+    {
+        $featureSet = new FeatureSet();
+
+        self::assertNull($featureSet->callMagicSet('property', 'value'));
+    }
+
+    public function testCanCallMagicCallReturnsFalseForAddedMethodOfAddedFeature(): void
+    {
+        $feature    = new SequenceFeature('id', 'table_sequence');
+        $featureSet = new FeatureSet();
+        $featureSet->addFeature($feature);
+
+        self::assertFalse(
+            $featureSet->canCallMagicCall('postInitialize'),
+            'Should have been able to call postInitialize from the MetaData Feature',
+        );
+    }
+
+    public function testCanCallMagicCallReturnsFalseWhenNoFeaturesHaveBeenAdded(): void
+    {
+        $featureSet = new FeatureSet();
+        self::assertFalse(
+            $featureSet->canCallMagicCall('lastSequenceId'),
+        );
+    }
+
+    public function testCanCallMagicCallReturnsTrueForAddedMethodOfAddedFeature(): void
+    {
+        $feature    = new SequenceFeature('id', 'table_sequence');
+        $featureSet = new FeatureSet();
+        $featureSet->addFeature($feature);
+
+        self::assertTrue(
+            $featureSet->canCallMagicCall('lastSequenceId'),
+            'Should have been able to call lastSequenceId from the Sequence Feature',
+        );
+    }
+
+    public function testCanCallMagicGetReturnsFalse(): void
+    {
+        $featureSet = new FeatureSet();
+
+        self::assertFalse($featureSet->canCallMagicGet('property'));
+    }
+
+    public function testCanCallMagicSetReturnsFalse(): void
+    {
+        $featureSet = new FeatureSet();
+
+        self::assertFalse($featureSet->canCallMagicSet('property'));
+    }
+
+    public function testConstructorWithFeatures(): void
+    {
+        $feature    = new SequenceFeature('id', 'table_sequence');
+        $featureSet = new FeatureSet([$feature]);
+
+        self::assertSame($feature, $featureSet->getFeatureByClassName(SequenceFeature::class));
+    }
+
+    public function testGetFeatureByClassNameReturnsNullWhenNotFound(): void
+    {
+        $featureSet = new FeatureSet();
+
+        $result = $featureSet->getFeatureByClassName(SequenceFeature::class);
+
+        self::assertNull($result);
+    }
+
+    public function testSetTableGateway(): void
+    {
+        $tableGatewayMock = $this->getMockBuilder(AbstractTableGateway::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $feature    = new SequenceFeature('id', 'table_sequence');
+        $featureSet = new FeatureSet([$feature]);
+
+        $result = $featureSet->setTableGateway($tableGatewayMock);
+
+        self::assertSame($featureSet, $result);
     }
 }

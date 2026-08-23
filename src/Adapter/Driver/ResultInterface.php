@@ -9,9 +9,7 @@ use Iterator;
 use PhpDb\Adapter\Exception;
 use PhpDb\ResultSet\ResultSetInterface;
 
-interface ResultInterface extends
-    Countable,
-    Iterator
+interface ResultInterface extends Countable, Iterator
 {
     /**
      * Force buffering
@@ -19,14 +17,19 @@ interface ResultInterface extends
     public function buffer(): void;
 
     /**
-     * Check if is buffered
+     * Get affected rows
      */
-    public function isBuffered(): ?bool;
+    public function getAffectedRows(): int;
 
     /**
-     * Is query result?
+     * Get field count
      */
-    public function isQueryResult(): bool;
+    public function getFieldCount(): int;
+
+    /**
+     * Get generated value
+     */
+    public function getGeneratedValue(): string|int|false|null;
 
     /**
      * Get the seeded query result set, cloned from $resultPrototype (or a
@@ -37,22 +40,17 @@ interface ResultInterface extends
     public function getQueryResult(?ResultSetInterface $resultPrototype = null): ResultSetInterface;
 
     /**
-     * Get affected rows
-     */
-    public function getAffectedRows(): int;
-
-    /**
-     * Get generated value
-     */
-    public function getGeneratedValue(): string|int|false|null;
-
-    /**
      * Get the resource
      */
     public function getResource(): mixed;
 
     /**
-     * Get field count
+     * Check if is buffered
      */
-    public function getFieldCount(): int;
+    public function isBuffered(): ?bool;
+
+    /**
+     * Is query result?
+     */
+    public function isQueryResult(): bool;
 }

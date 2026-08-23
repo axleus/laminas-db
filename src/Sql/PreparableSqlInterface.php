@@ -11,6 +11,6 @@ interface PreparableSqlInterface
 {
     public function prepareStatement(
         AdapterInterface $adapter,
-        StatementContainerInterface $statementContainer
+        StatementContainerInterface $statementContainer,
     ): StatementContainerInterface;
 }

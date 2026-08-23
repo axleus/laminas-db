@@ -14,8 +14,8 @@ final class UpdateDecorator extends Sql\Update implements Sql\Platform\PlatformD
      * @return $this Provides a fluent interface
      */
     public function setSubject(
-        Sql\SqlInterface|Sql\PreparableSqlInterface|null $subject
-    ): UpdateDecorator {
+        Sql\SqlInterface|Sql\PreparableSqlInterface|null $subject,
+    ): self {
         $this->subject = $subject;
         return $this;
     }

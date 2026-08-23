@@ -11,10 +11,10 @@ use PhpDb\Adapter\Driver\DriverInterface;
  */
 interface DriverFeatureProviderInterface
 {
-    /** @param DriverFeatureInterface[] $features */
-    public function addFeatures(array $features): DriverFeatureProviderInterface;
+    public function addFeature(DriverFeatureInterface $feature): self;
 
-    public function addFeature(DriverFeatureInterface $feature): DriverFeatureProviderInterface;
+    /** @param DriverFeatureInterface[] $features */
+    public function addFeatures(array $features): self;
 
     /** Get feature by class FQCN. */
     public function getFeature(string $name): DriverFeatureInterface|false;

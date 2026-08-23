@@ -29,54 +29,6 @@ abstract class AbstractPdoConnection extends AbstractConnection implements
     /** @var ?PDO $resource */
     protected $resource;
 
-    #[Override]
-    public function setDriver(PdoDriverInterface $driver): PdoDriverAwareInterface
-    {
-        $this->driver = $driver;
-
-        return $this;
-    }
-
-    #[Override]
-    public function setConnectionParameters(array $connectionParameters): ConnectionInterface
-    {
-        $this->connectionParameters = $connectionParameters;
-
-        return $this;
-    }
-
-    /**
-     * Get the dsn string for this connection
-     *
-     * @throws RuntimeException
-     */
-    #[Override]
-    final public function getDsn(): string
-    {
-        if (! $this->dsn) {
-            throw new Exception\RuntimeException(
-                'The DSN has not been set or constructed from parameters in connect() for this Connection'
-            );
-        }
-
-        return $this->dsn;
-    }
-
-    public function setResource(PDO $resource): PdoConnectionInterface
-    {
-        $this->resource   = $resource;
-        $this->driverName = strtolower($this->resource->getAttribute(PDO::ATTR_DRIVER_NAME));
-
-        return $this;
-    }
-
-    /** {@inheritDoc} */
-    #[Override]
-    public function isConnected(): bool
-    {
-        return $this->resource instanceof PDO;
-    }
-
     /** {@inheritDoc} */
     #[Override]
     public function beginTransaction(): ConnectionInterface
@@ -122,6 +74,67 @@ abstract class AbstractPdoConnection extends AbstractConnection implements
     /**
      * {@inheritDoc}
      *
+     * @throws Exception\InvalidQueryException
+     */
+    #[Override]
+    public function execute($sql): ?ResultInterface
+    {
+        if (! $this->isConnected()) {
+            $this->connect();
+        }
+
+        $this->profiler?->profilerStart($sql);
+
+        $resultResource = $this->resource->query($sql);
+
+        $this->profiler?->profilerFinish();
+
+        if (false === $resultResource) {
+            $errorInfo = $this->resource->errorInfo();
+            throw new Exception\InvalidQueryException($errorInfo[2]);
+        }
+
+        /** @phpstan-ignore arguments.count */
+        return $this->driver->createResult($resultResource, $sql);
+    }
+
+    /**
+     * Get the dsn string for this connection
+     *
+     * @throws RuntimeException
+     */
+    #[Override]
+    final public function getDsn(): string
+    {
+        if (! $this->dsn) {
+            throw new Exception\RuntimeException(
+                'The DSN has not been set or constructed from parameters in connect() for this Connection',
+            );
+        }
+
+        return $this->dsn;
+    }
+
+    /** {@inheritDoc} */
+    #[Override]
+    public function isConnected(): bool
+    {
+        return $this->resource instanceof PDO;
+    }
+
+    /** Prepare a statement */
+    public function prepare(?string $sql = null): StatementInterface
+    {
+        if (! $this->isConnected()) {
+            $this->connect();
+        }
+
+        return $this->driver->createStatement($sql);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @throws Exception\RuntimeException
      */
     #[Override]
@@ -143,40 +156,27 @@ abstract class AbstractPdoConnection extends AbstractConnection implements
         return $this;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws Exception\InvalidQueryException
-     */
     #[Override]
-    public function execute($sql): ?ResultInterface
+    public function setConnectionParameters(array $connectionParameters): ConnectionInterface
     {
-        if (! $this->isConnected()) {
-            $this->connect();
-        }
+        $this->connectionParameters = $connectionParameters;
 
-        $this->profiler?->profilerStart($sql);
-
-        $resultResource = $this->resource->query($sql);
-
-        $this->profiler?->profilerFinish();
-
-        if ($resultResource === false) {
-            $errorInfo = $this->resource->errorInfo();
-            throw new Exception\InvalidQueryException($errorInfo[2]);
-        }
-
-        /** @phpstan-ignore arguments.count */
-        return $this->driver->createResult($resultResource, $sql);
+        return $this;
     }
 
-    /** Prepare a statement */
-    public function prepare(?string $sql = null): StatementInterface
+    #[Override]
+    public function setDriver(PdoDriverInterface $driver): PdoDriverAwareInterface
     {
-        if (! $this->isConnected()) {
-            $this->connect();
-        }
+        $this->driver = $driver;
 
-        return $this->driver->createStatement($sql);
+        return $this;
+    }
+
+    public function setResource(PDO $resource): PdoConnectionInterface
+    {
+        $this->resource   = $resource;
+        $this->driverName = strtolower($this->resource->getAttribute(PDO::ATTR_DRIVER_NAME));
+
+        return $this;
     }
 }

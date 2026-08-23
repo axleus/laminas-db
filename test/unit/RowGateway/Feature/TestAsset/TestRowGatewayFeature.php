@@ -15,15 +15,15 @@ class TestRowGatewayFeature extends AbstractFeature
 
     public ?string $returnValue = null;
 
+    public function postInitialize(): void
+    {
+        $this->called = true;
+    }
+
     public function preInitialize(string ...$args): mixed
     {
         $this->called       = true;
         $this->receivedArgs = $args;
         return $this->returnValue;
-    }
-
-    public function postInitialize(): void
-    {
-        $this->called = true;
     }
 }

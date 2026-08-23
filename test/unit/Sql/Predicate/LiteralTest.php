@@ -9,6 +9,21 @@ use PHPUnit\Framework\TestCase;
 
 class LiteralTest extends TestCase
 {
+    public function testGetExpressionData(): void
+    {
+        $literal = new Literal('bar');
+
+        $expressionData = $literal->getExpressionData();
+
+        self::assertEquals('bar', $expressionData['spec']);
+    }
+
+    public function testGetLiteral(): void
+    {
+        $literal = new Literal('bar');
+        self::assertEquals('bar', $literal->getLiteral());
+    }
+
     public function testSetLiteral(): void
     {
         $literal = new Literal('bar');
@@ -27,20 +42,5 @@ class LiteralTest extends TestCase
 
         // Verify the instance was actually mutated
         self::assertEquals('baz', $literal->getLiteral());
-    }
-
-    public function testGetLiteral(): void
-    {
-        $literal = new Literal('bar');
-        self::assertEquals('bar', $literal->getLiteral());
-    }
-
-    public function testGetExpressionData(): void
-    {
-        $literal = new Literal('bar');
-
-        $expressionData = $literal->getExpressionData();
-
-        self::assertEquals('bar', $expressionData['spec']);
     }
 }

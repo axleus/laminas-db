@@ -12,11 +12,7 @@ use PhpDb\Metadata\Source\AbstractSource;
  */
 class IncompleteSource extends AbstractSource
 {
-    protected function loadSchemaData(): void
-    {
-    }
+    protected function loadColumnData(string $table, string $schema): void {}
 
-    protected function loadColumnData(string $table, string $schema): void
-    {
-    }
+    protected function loadSchemaData(): void {}
 }

@@ -21,8 +21,8 @@ class TableGateway extends AbstractTableGateway
         TableIdentifier|array|string $table,
         AdapterInterface $adapter,
         Feature\FeatureSet|Feature\FeatureInterface|array|null $features = new Feature\FeatureSet(),
-        ResultSetInterface|null $resultSetPrototype = new ResultSet(),
-        ?Sql $sql = null
+        ?ResultSetInterface $resultSetPrototype = new ResultSet(),
+        ?Sql $sql = null,
     ) {
         $this->table = $table;
 
@@ -31,7 +31,7 @@ class TableGateway extends AbstractTableGateway
         $this->featureSet = match (true) {
             $features instanceof Feature\FeatureInterface => new Feature\FeatureSet([$features]),
             is_array($features) => new Feature\FeatureSet($features),
-            default => $features,
+            default             => $features,
         };
 
         $this->resultSetPrototype = $resultSetPrototype;
@@ -40,7 +40,7 @@ class TableGateway extends AbstractTableGateway
 
         if ($this->sql->getTable() !== $this->table) {
             throw new Exception\InvalidArgumentException(
-                'The table inside the provided Sql object must match the table of this TableGateway'
+                'The table inside the provided Sql object must match the table of this TableGateway',
             );
         }
 

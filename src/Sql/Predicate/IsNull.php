@@ -19,31 +19,11 @@ class IsNull extends AbstractExpression implements PredicateInterface
     /**
      * Constructor
      */
-    public function __construct(null|string|ArgumentInterface $identifier = null)
+    public function __construct(string|ArgumentInterface|null $identifier = null)
     {
-        if ($identifier !== null) {
+        if (null !== $identifier) {
             $this->setIdentifier($identifier);
         }
-    }
-
-    /**
-     * Set identifier for comparison
-     */
-    public function setIdentifier(string|ArgumentInterface $identifier): static
-    {
-        $this->identifier = $identifier instanceof ArgumentInterface
-            ? $identifier
-            : new Identifier($identifier);
-
-        return $this;
-    }
-
-    /**
-     * Get identifier of comparison
-     */
-    public function getIdentifier(): ?ArgumentInterface
-    {
-        return $this->identifier;
     }
 
     /** @inheritDoc */
@@ -60,5 +40,25 @@ class IsNull extends AbstractExpression implements PredicateInterface
             'spec'   => $this->specification ?? "{$identifierSpec} {$this->operator}",
             'values' => [$this->identifier],
         ];
+    }
+
+    /**
+     * Get identifier of comparison
+     */
+    public function getIdentifier(): ?ArgumentInterface
+    {
+        return $this->identifier;
+    }
+
+    /**
+     * Set identifier for comparison
+     */
+    public function setIdentifier(string|ArgumentInterface $identifier): static
+    {
+        $this->identifier = $identifier instanceof ArgumentInterface
+            ? $identifier
+            : new Identifier($identifier);
+
+        return $this;
     }
 }

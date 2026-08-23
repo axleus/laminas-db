@@ -22,10 +22,26 @@ use TypeError;
 #[CoversMethod(Argument::class, 'select')]
 final class ArgumentTest extends TestCase
 {
-    public function testConstructorWithSimpleValue(): void
+    public function testConstructorThrowsExceptionForInvalidSelectType(): void
     {
-        $argument = new Value('test');
-        self::assertEquals('test', $argument->getValue());
+        $this->expectException(TypeError::class);
+        /** @noinspection PhpParamsInspection */
+        /** @noinspection PhpExpressionResultUnusedInspection */
+        new ArgumentSelect('simple_value'); /** @phpstan-ignore-line */
+    }
+
+    public function testConstructorWithArrayContainingArgumentType(): void
+    {
+        $argument = new Identifier('column');
+
+        self::assertEquals('column', $argument->getValue());
+        self::assertEquals(ArgumentType::Identifier, $argument->getType());
+    }
+
+    public function testConstructorWithBooleanValue(): void
+    {
+        $argument = new Value(true);
+        self::assertTrue($argument->getValue());
         self::assertEquals(ArgumentType::Value, $argument->getType());
     }
 
@@ -45,29 +61,18 @@ final class ArgumentTest extends TestCase
         self::assertEquals(ArgumentType::Select, $argument->getType());
     }
 
-    public function testConstructorWithSqlInterface(): void
+    public function testConstructorWithFloatValue(): void
     {
-        $select   = new Select();
-        $argument = new ArgumentSelect($select);
-
-        self::assertSame($select, $argument->getValue());
-        self::assertEquals(ArgumentType::Select, $argument->getType());
+        $argument = new Value(3.14);
+        self::assertEquals(3.14, $argument->getValue());
+        self::assertEquals(ArgumentType::Value, $argument->getType());
     }
 
-    public function testConstructorThrowsExceptionForInvalidSelectType(): void
+    public function testConstructorWithNullValue(): void
     {
-        $this->expectException(TypeError::class);
-        /** @noinspection PhpParamsInspection */
-        /** @noinspection PhpExpressionResultUnusedInspection */
-        new ArgumentSelect('simple_value'); /** @phpstan-ignore-line */
-    }
-
-    public function testConstructorWithArrayContainingArgumentType(): void
-    {
-        $argument = new Identifier('column');
-
-        self::assertEquals('column', $argument->getValue());
-        self::assertEquals(ArgumentType::Identifier, $argument->getType());
+        $argument = new Value(null);
+        self::assertNull($argument->getValue());
+        self::assertEquals(ArgumentType::Value, $argument->getType());
     }
 
     public function testConstructorWithSimpleArray(): void
@@ -78,12 +83,20 @@ final class ArgumentTest extends TestCase
         self::assertEquals(ArgumentType::Values, $argument->getType());
     }
 
-    public function testStaticValueMethod(): void
+    public function testConstructorWithSimpleValue(): void
     {
-        $argument = Argument::value('test_value');
-
-        self::assertEquals('test_value', $argument->getValue());
+        $argument = new Value('test');
+        self::assertEquals('test', $argument->getValue());
         self::assertEquals(ArgumentType::Value, $argument->getType());
+    }
+
+    public function testConstructorWithSqlInterface(): void
+    {
+        $select   = new Select();
+        $argument = new ArgumentSelect($select);
+
+        self::assertSame($select, $argument->getValue());
+        self::assertEquals(ArgumentType::Select, $argument->getType());
     }
 
     public function testStaticIdentifierMethod(): void
@@ -102,27 +115,6 @@ final class ArgumentTest extends TestCase
         self::assertEquals(ArgumentType::Literal, $argument->getType());
     }
 
-    public function testConstructorWithBooleanValue(): void
-    {
-        $argument = new Value(true);
-        self::assertTrue($argument->getValue());
-        self::assertEquals(ArgumentType::Value, $argument->getType());
-    }
-
-    public function testConstructorWithNullValue(): void
-    {
-        $argument = new Value(null);
-        self::assertNull($argument->getValue());
-        self::assertEquals(ArgumentType::Value, $argument->getType());
-    }
-
-    public function testConstructorWithFloatValue(): void
-    {
-        $argument = new Value(3.14);
-        self::assertEquals(3.14, $argument->getValue());
-        self::assertEquals(ArgumentType::Value, $argument->getType());
-    }
-
     public function testStaticSelectMethodCreatesSelectArgument(): void
     {
         $select   = new Select();
@@ -130,5 +122,13 @@ final class ArgumentTest extends TestCase
 
         self::assertSame($select, $argument->getValue());
         self::assertEquals(ArgumentType::Select, $argument->getType());
+    }
+
+    public function testStaticValueMethod(): void
+    {
+        $argument = Argument::value('test_value');
+
+        self::assertEquals('test_value', $argument->getValue());
+        self::assertEquals(ArgumentType::Value, $argument->getType());
     }
 }

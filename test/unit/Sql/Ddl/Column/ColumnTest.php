@@ -28,6 +28,15 @@ use PHPUnit\Framework\TestCase;
 #[Group('unit')]
 final class ColumnTest extends TestCase
 {
+    public function testAddConstraintAppendsConstraintToColumn(): void
+    {
+        $column = new Column('id');
+
+        $result = $column->addConstraint(new PrimaryKey());
+
+        self::assertSame($column, $result);
+    }
+
     public function testConstructor(): void
     {
         $column = new Column('test_col', true, 'default_val', ['option1' => 'value1']);
@@ -35,6 +44,212 @@ final class ColumnTest extends TestCase
         self::assertTrue($column->isNullable());
         self::assertEquals('default_val', $column->getDefault());
         self::assertEquals(['option1' => 'value1'], $column->getOptions());
+    }
+
+    public function testGetExpressionData(): void
+    {
+        $column = new Column();
+        $column->setName('foo');
+
+        $expressionData = $column->getExpressionData();
+
+        self::assertEquals('%s %s NOT NULL', $expressionData['spec']);
+        self::assertEquals(
+            [
+                Argument::identifier('foo'),
+                Argument::literal('INTEGER'),
+            ],
+            $expressionData['values'],
+        );
+
+        $column->setNullable(true);
+
+        $expressionData = $column->getExpressionData();
+
+        self::assertEquals('%s %s NULL DEFAULT NULL', $expressionData['spec']);
+        self::assertEquals(
+            [
+                Argument::identifier('foo'),
+                Argument::literal('INTEGER'),
+            ],
+            $expressionData['values'],
+        );
+
+        $column->setDefault('bar');
+
+        $expressionData = $column->getExpressionData();
+
+        self::assertEquals('%s %s NULL DEFAULT %s', $expressionData['spec']);
+        self::assertEquals(
+            [
+                Argument::identifier('foo'),
+                Argument::literal('INTEGER'),
+                Argument::value('bar'),
+            ],
+            $expressionData['values'],
+        );
+    }
+
+    public function testGetExpressionDataIncludesConstraints(): void
+    {
+        $column = new Column('id');
+        $column->addConstraint(new PrimaryKey());
+
+        $expressionData = $column->getExpressionData();
+
+        self::assertStringContainsString('PRIMARY KEY', $expressionData['spec']);
+    }
+
+    public function testGetExpressionDataIncludesConstraintValues(): void
+    {
+        $column = new Column('id');
+        $column->addConstraint(new PrimaryKey('id', 'pk_id'));
+
+        $expressionData = $column->getExpressionData();
+
+        self::assertNotEmpty($expressionData['values']);
+    }
+
+    public function testGetExpressionDataWithBoolDefault(): void
+    {
+        $column = new Column();
+        $column->setName('is_active');
+        $column->setDefault(false);
+
+        $expressionData = $column->getExpressionData();
+
+        self::assertEquals('%s %s NOT NULL DEFAULT %s', $expressionData['spec']);
+        self::assertEquals(
+            [
+                Argument::identifier('is_active'),
+                Argument::literal('INTEGER'),
+                Argument::value(false),
+            ],
+            $expressionData['values'],
+        );
+    }
+
+    public function testGetExpressionDataWithFloatDefault(): void
+    {
+        $column = new Column();
+        $column->setName('rate');
+        $column->setDefault(9.99);
+
+        $expressionData = $column->getExpressionData();
+
+        self::assertEquals('%s %s NOT NULL DEFAULT %s', $expressionData['spec']);
+        self::assertEquals(
+            [
+                Argument::identifier('rate'),
+                Argument::literal('INTEGER'),
+                Argument::value(9.99),
+            ],
+            $expressionData['values'],
+        );
+    }
+
+    public function testGetExpressionDataWithLiteralDefault(): void
+    {
+        $column = new Column();
+        $column->setName('created_at');
+        $column->setDefault(new Literal('CURRENT_TIMESTAMP'));
+
+        $expressionData = $column->getExpressionData();
+
+        self::assertEquals('%s %s NOT NULL DEFAULT %s', $expressionData['spec']);
+        self::assertEquals(
+            [
+                Argument::identifier('created_at'),
+                Argument::literal('INTEGER'),
+                Argument::literal('CURRENT_TIMESTAMP'),
+            ],
+            $expressionData['values'],
+        );
+    }
+
+    public function testGetExpressionDataWithValueDefault(): void
+    {
+        $column = new Column();
+        $column->setName('score');
+        $column->setDefault(new Value(42));
+
+        $expressionData = $column->getExpressionData();
+
+        self::assertEquals('%s %s NOT NULL DEFAULT %s', $expressionData['spec']);
+        self::assertEquals(
+            [
+                Argument::identifier('score'),
+                Argument::literal('INTEGER'),
+                Argument::value(42),
+            ],
+            $expressionData['values'],
+        );
+    }
+
+    public function testSetDefault(): void
+    {
+        $column = new Column();
+
+        // First mutation
+        $result = $column->setDefault('foo bar');
+
+        // Verify fluent interface
+        self::assertSame($column, $result);
+
+        // Verify the first mutation occurred
+        self::assertEquals('foo bar', $column->getDefault());
+
+        // Second mutation to verify mutability
+        $column->setDefault('baz qux');
+
+        // Verify the instance was actually mutated
+        self::assertEquals('baz qux', $column->getDefault());
+    }
+
+    public function testSetDefaultWithBool(): void
+    {
+        $column = new Column();
+        $column->setName('is_active');
+
+        $result = $column->setDefault(true);
+
+        self::assertSame($column, $result);
+        self::assertTrue($column->getDefault());
+    }
+
+    public function testSetDefaultWithFloat(): void
+    {
+        $column = new Column();
+        $column->setName('rate');
+
+        $result = $column->setDefault(3.14);
+
+        self::assertSame($column, $result);
+        self::assertSame(3.14, $column->getDefault());
+    }
+
+    public function testSetDefaultWithLiteral(): void
+    {
+        $column = new Column();
+        $column->setName('created_at');
+
+        $literal = new Literal('CURRENT_TIMESTAMP');
+        $result  = $column->setDefault($literal);
+
+        self::assertSame($column, $result);
+        self::assertSame($literal, $column->getDefault());
+    }
+
+    public function testSetDefaultWithValue(): void
+    {
+        $column = new Column();
+        $column->setName('score');
+
+        $value  = new Value(99);
+        $result = $column->setDefault($value);
+
+        self::assertSame($column, $result);
+        self::assertSame($value, $column->getDefault());
     }
 
     public function testSetName(): void
@@ -77,46 +292,6 @@ final class ColumnTest extends TestCase
         self::assertFalse($column->isNullable());
     }
 
-    public function testSetDefault(): void
-    {
-        $column = new Column();
-
-        // First mutation
-        $result = $column->setDefault('foo bar');
-
-        // Verify fluent interface
-        self::assertSame($column, $result);
-
-        // Verify the first mutation occurred
-        self::assertEquals('foo bar', $column->getDefault());
-
-        // Second mutation to verify mutability
-        $column->setDefault('baz qux');
-
-        // Verify the instance was actually mutated
-        self::assertEquals('baz qux', $column->getDefault());
-    }
-
-    public function testSetOptions(): void
-    {
-        $column = new Column();
-
-        // First mutation
-        $result = $column->setOptions(['autoincrement' => true]);
-
-        // Verify fluent interface
-        self::assertSame($column, $result);
-
-        // Verify the first mutation occurred
-        self::assertEquals(['autoincrement' => true], $column->getOptions());
-
-        // Second mutation to verify mutability
-        $column->setOptions(['primary' => true, 'unsigned' => true]);
-
-        // Verify the instance was actually mutated
-        self::assertEquals(['primary' => true, 'unsigned' => true], $column->getOptions());
-    }
-
     public function testSetOption(): void
     {
         $column = new Column();
@@ -137,177 +312,23 @@ final class ColumnTest extends TestCase
         self::assertEquals(['primary' => true, 'unsigned' => true], $column->getOptions());
     }
 
-    public function testGetExpressionData(): void
+    public function testSetOptions(): void
     {
         $column = new Column();
-        $column->setName('foo');
 
-        $expressionData = $column->getExpressionData();
+        // First mutation
+        $result = $column->setOptions(['autoincrement' => true]);
 
-        self::assertEquals('%s %s NOT NULL', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('foo'),
-            Argument::literal('INTEGER'),
-        ], $expressionData['values']);
-
-        $column->setNullable(true);
-
-        $expressionData = $column->getExpressionData();
-
-        self::assertEquals('%s %s NULL DEFAULT NULL', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('foo'),
-            Argument::literal('INTEGER'),
-        ], $expressionData['values']);
-
-        $column->setDefault('bar');
-
-        $expressionData = $column->getExpressionData();
-
-        self::assertEquals('%s %s NULL DEFAULT %s', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('foo'),
-            Argument::literal('INTEGER'),
-            Argument::value('bar'),
-        ], $expressionData['values']);
-    }
-
-    public function testSetDefaultWithLiteral(): void
-    {
-        $column = new Column();
-        $column->setName('created_at');
-
-        $literal = new Literal('CURRENT_TIMESTAMP');
-        $result  = $column->setDefault($literal);
-
+        // Verify fluent interface
         self::assertSame($column, $result);
-        self::assertSame($literal, $column->getDefault());
-    }
 
-    public function testGetExpressionDataWithLiteralDefault(): void
-    {
-        $column = new Column();
-        $column->setName('created_at');
-        $column->setDefault(new Literal('CURRENT_TIMESTAMP'));
+        // Verify the first mutation occurred
+        self::assertEquals(['autoincrement' => true], $column->getOptions());
 
-        $expressionData = $column->getExpressionData();
+        // Second mutation to verify mutability
+        $column->setOptions(['primary' => true, 'unsigned' => true]);
 
-        self::assertEquals('%s %s NOT NULL DEFAULT %s', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('created_at'),
-            Argument::literal('INTEGER'),
-            Argument::literal('CURRENT_TIMESTAMP'),
-        ], $expressionData['values']);
-    }
-
-    public function testSetDefaultWithValue(): void
-    {
-        $column = new Column();
-        $column->setName('score');
-
-        $value  = new Value(99);
-        $result = $column->setDefault($value);
-
-        self::assertSame($column, $result);
-        self::assertSame($value, $column->getDefault());
-    }
-
-    public function testGetExpressionDataWithValueDefault(): void
-    {
-        $column = new Column();
-        $column->setName('score');
-        $column->setDefault(new Value(42));
-
-        $expressionData = $column->getExpressionData();
-
-        self::assertEquals('%s %s NOT NULL DEFAULT %s', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('score'),
-            Argument::literal('INTEGER'),
-            Argument::value(42),
-        ], $expressionData['values']);
-    }
-
-    public function testSetDefaultWithFloat(): void
-    {
-        $column = new Column();
-        $column->setName('rate');
-
-        $result = $column->setDefault(3.14);
-
-        self::assertSame($column, $result);
-        self::assertSame(3.14, $column->getDefault());
-    }
-
-    public function testGetExpressionDataWithFloatDefault(): void
-    {
-        $column = new Column();
-        $column->setName('rate');
-        $column->setDefault(9.99);
-
-        $expressionData = $column->getExpressionData();
-
-        self::assertEquals('%s %s NOT NULL DEFAULT %s', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('rate'),
-            Argument::literal('INTEGER'),
-            Argument::value(9.99),
-        ], $expressionData['values']);
-    }
-
-    public function testSetDefaultWithBool(): void
-    {
-        $column = new Column();
-        $column->setName('is_active');
-
-        $result = $column->setDefault(true);
-
-        self::assertSame($column, $result);
-        self::assertTrue($column->getDefault());
-    }
-
-    public function testGetExpressionDataWithBoolDefault(): void
-    {
-        $column = new Column();
-        $column->setName('is_active');
-        $column->setDefault(false);
-
-        $expressionData = $column->getExpressionData();
-
-        self::assertEquals('%s %s NOT NULL DEFAULT %s', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('is_active'),
-            Argument::literal('INTEGER'),
-            Argument::value(false),
-        ], $expressionData['values']);
-    }
-
-    public function testAddConstraintAppendsConstraintToColumn(): void
-    {
-        $column = new Column('id');
-
-        $result = $column->addConstraint(new PrimaryKey());
-
-        self::assertSame($column, $result);
-    }
-
-    public function testGetExpressionDataIncludesConstraints(): void
-    {
-        $column = new Column('id');
-        $column->addConstraint(new PrimaryKey());
-
-        $expressionData = $column->getExpressionData();
-
-        self::assertStringContainsString('PRIMARY KEY', $expressionData['spec']);
-    }
-
-    public function testGetExpressionDataIncludesConstraintValues(): void
-    {
-        $column = new Column('id');
-        $column->addConstraint(new PrimaryKey('id', 'pk_id'));
-
-        $expressionData = $column->getExpressionData();
-
-        self::assertNotEmpty($expressionData['values']);
+        // Verify the instance was actually mutated
+        self::assertEquals(['primary' => true, 'unsigned' => true], $column->getOptions());
     }
 }

@@ -16,16 +16,6 @@ use PhpDb\Sql\Argument\Values;
  */
 final class Argument
 {
-    public static function value(null|string|int|float|bool $value): Value
-    {
-        return new Value($value);
-    }
-
-    public static function values(array $values): Values
-    {
-        return new Values($values);
-    }
-
     public static function identifier(string $identifier): Identifier
     {
         return new Identifier($identifier);
@@ -47,5 +37,15 @@ final class Argument
     public static function select(ExpressionInterface|SqlInterface $select): Select
     {
         return new Select($select);
+    }
+
+    public static function value(string|int|float|bool|null $value): Value
+    {
+        return new Value($value);
+    }
+
+    public static function values(array $values): Values
+    {
+        return new Values($values);
     }
 }
