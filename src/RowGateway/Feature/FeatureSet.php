@@ -24,30 +24,18 @@ class FeatureSet
 
     public function __construct(array $features = [])
     {
-        if ($features !== []) {
+        if ([] !== $features) {
             $this->addFeatures($features);
         }
     }
 
-    public function setRowGateway(AbstractRowGateway $rowGateway): static
+    public function addFeature(FeatureInterface $feature): static
     {
-        $this->rowGateway = $rowGateway;
-        foreach ($this->features as $feature) {
+        $this->features[] = $feature;
+        if (null !== $this->rowGateway) {
             $feature->setRowGateway($this->rowGateway);
         }
         return $this;
-    }
-
-    public function getFeatureByClassName(string $featureClassName): ?FeatureInterface
-    {
-        $feature = null;
-        foreach ($this->features as $potentialFeature) {
-            if ($potentialFeature instanceof $featureClassName) {
-                $feature = $potentialFeature;
-                break;
-            }
-        }
-        return $feature;
     }
 
     public function addFeatures(array $features): static
@@ -58,40 +46,28 @@ class FeatureSet
         return $this;
     }
 
-    public function addFeature(FeatureInterface $feature): static
-    {
-        $this->features[] = $feature;
-        if ($this->rowGateway !== null) {
-            $feature->setRowGateway($this->rowGateway);
-        }
-        return $this;
-    }
-
     public function apply(string $method, array $args): void
     {
         foreach ($this->features as $feature) {
-            if (method_exists($feature, $method)) {
-                $return = $feature->$method(...$args);
-                if ($return === self::APPLY_HALT) {
-                    break;
-                }
+            if (! method_exists($feature, $method)) {
+                continue;
+            }
+
+            $return = $feature->$method(...$args);
+            if (self::APPLY_HALT === $return) {
+                break;
             }
         }
     }
 
-    public function canCallMagicGet(string $property): false
+    public function callMagicCall(string $method, array $arguments): mixed
     {
-        return false;
+        return null;
     }
 
     public function callMagicGet(string $property): mixed
     {
         return null;
-    }
-
-    public function canCallMagicSet(string $property): false
-    {
-        return false;
     }
 
     public function callMagicSet(string $property, mixed $value): mixed
@@ -104,8 +80,36 @@ class FeatureSet
         return false;
     }
 
-    public function callMagicCall(string $method, array $arguments): mixed
+    public function canCallMagicGet(string $property): false
     {
-        return null;
+        return false;
+    }
+
+    public function canCallMagicSet(string $property): false
+    {
+        return false;
+    }
+
+    public function getFeatureByClassName(string $featureClassName): ?FeatureInterface
+    {
+        $feature = null;
+        foreach ($this->features as $potentialFeature) {
+            if (! $potentialFeature instanceof $featureClassName) {
+                continue;
+            }
+
+            $feature = $potentialFeature;
+            break;
+        }
+        return $feature;
+    }
+
+    public function setRowGateway(AbstractRowGateway $rowGateway): static
+    {
+        $this->rowGateway = $rowGateway;
+        foreach ($this->features as $feature) {
+            $feature->setRowGateway($this->rowGateway);
+        }
+        return $this;
     }
 }

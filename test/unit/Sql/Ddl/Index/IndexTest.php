@@ -23,48 +23,13 @@ final class IndexTest extends TestCase
         $expressionData = $uk->getExpressionData();
 
         self::assertEquals('INDEX %s(%s)', $expressionData['spec']);
-        self::assertEquals([
-            new Identifier('my_uk'),
-            new Identifier('foo'),
-        ], $expressionData['values']);
-    }
-
-    public function testGetExpressionDataWithLength(): void
-    {
-        $key = new Index(['foo', 'bar'], 'my_uk', [10, 5]);
-
-        $expressionData = $key->getExpressionData();
-
-        self::assertEquals('INDEX %s(%s(10), %s(5))', $expressionData['spec']);
-        self::assertEquals([
-            new Identifier('my_uk'),
-            new Identifier('foo'),
-            new Identifier('bar'),
-        ], $expressionData['values']);
-    }
-
-    public function testGetExpressionDataWithLengthUnmatched(): void
-    {
-        $key = new Index(['foo', 'bar'], 'my_uk', [10]);
-
-        $expressionData = $key->getExpressionData();
-
-        self::assertEquals('INDEX %s(%s(10), %s)', $expressionData['spec']);
-        self::assertEquals([
-            new Identifier('my_uk'),
-            new Identifier('foo'),
-            new Identifier('bar'),
-        ], $expressionData['values']);
-    }
-
-    public function testSetTypeAndGetType(): void
-    {
-        $index = new Index('foo', 'my_idx');
-        self::assertNull($index->getType());
-
-        $result = $index->setType('BTREE');
-        self::assertSame($index, $result);
-        self::assertEquals('BTREE', $index->getType());
+        self::assertEquals(
+            [
+                new Identifier('my_uk'),
+                new Identifier('foo'),
+            ],
+            $expressionData['values'],
+        );
     }
 
     public function testGetExpressionDataWithBtreeType(): void
@@ -75,11 +40,14 @@ final class IndexTest extends TestCase
         $expressionData = $index->getExpressionData();
 
         self::assertEquals('INDEX %s(%s) USING %s', $expressionData['spec']);
-        self::assertEquals([
-            new Identifier('my_idx'),
-            new Identifier('foo'),
-            new Literal('BTREE'),
-        ], $expressionData['values']);
+        self::assertEquals(
+            [
+                new Identifier('my_idx'),
+                new Identifier('foo'),
+                new Literal('BTREE'),
+            ],
+            $expressionData['values'],
+        );
     }
 
     public function testGetExpressionDataWithHashType(): void
@@ -90,11 +58,48 @@ final class IndexTest extends TestCase
         $expressionData = $index->getExpressionData();
 
         self::assertEquals('INDEX %s(%s) USING %s', $expressionData['spec']);
-        self::assertEquals([
-            new Identifier('my_idx'),
-            new Identifier('foo'),
-            new Literal('HASH'),
-        ], $expressionData['values']);
+        self::assertEquals(
+            [
+                new Identifier('my_idx'),
+                new Identifier('foo'),
+                new Literal('HASH'),
+            ],
+            $expressionData['values'],
+        );
+    }
+
+    public function testGetExpressionDataWithLength(): void
+    {
+        $key = new Index(['foo', 'bar'], 'my_uk', [10, 5]);
+
+        $expressionData = $key->getExpressionData();
+
+        self::assertEquals('INDEX %s(%s(10), %s(5))', $expressionData['spec']);
+        self::assertEquals(
+            [
+                new Identifier('my_uk'),
+                new Identifier('foo'),
+                new Identifier('bar'),
+            ],
+            $expressionData['values'],
+        );
+    }
+
+    public function testGetExpressionDataWithLengthUnmatched(): void
+    {
+        $key = new Index(['foo', 'bar'], 'my_uk', [10]);
+
+        $expressionData = $key->getExpressionData();
+
+        self::assertEquals('INDEX %s(%s(10), %s)', $expressionData['spec']);
+        self::assertEquals(
+            [
+                new Identifier('my_uk'),
+                new Identifier('foo'),
+                new Identifier('bar'),
+            ],
+            $expressionData['values'],
+        );
     }
 
     public function testGetExpressionDataWithTypeAndLengths(): void
@@ -105,11 +110,24 @@ final class IndexTest extends TestCase
         $expressionData = $index->getExpressionData();
 
         self::assertEquals('INDEX %s(%s(10), %s(5)) USING %s', $expressionData['spec']);
-        self::assertEquals([
-            new Identifier('my_idx'),
-            new Identifier('foo'),
-            new Identifier('bar'),
-            new Literal('BTREE'),
-        ], $expressionData['values']);
+        self::assertEquals(
+            [
+                new Identifier('my_idx'),
+                new Identifier('foo'),
+                new Identifier('bar'),
+                new Literal('BTREE'),
+            ],
+            $expressionData['values'],
+        );
+    }
+
+    public function testSetTypeAndGetType(): void
+    {
+        $index = new Index('foo', 'my_idx');
+        self::assertNull($index->getType());
+
+        $result = $index->setType('BTREE');
+        self::assertSame($index, $result);
+        self::assertEquals('BTREE', $index->getType());
     }
 }

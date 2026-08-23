@@ -21,7 +21,7 @@ trait DeprecatedAssertionsTrait
         mixed $expected,
         string $attribute,
         object $instance,
-        string $message = ''
+        string $message = '',
     ): void {
         $r = new ReflectionProperty($instance, $attribute);
         Assert::assertEquals($expected, $r->getValue($instance), $message);

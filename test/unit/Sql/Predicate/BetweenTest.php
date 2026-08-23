@@ -27,19 +27,6 @@ final class BetweenTest extends TestCase
 {
     protected Between $between;
 
-    #[Override]
-    protected function setUp(): void
-    {
-        $this->between = new Between();
-    }
-
-    public function testConstructorYieldsNullIdentifierMinimumAndMaximumValues(): void
-    {
-        self::assertNull($this->between->getIdentifier());
-        self::assertNull($this->between->getMinValue());
-        self::assertNull($this->between->getMaxValue());
-    }
-
     public function testConstructorCanPassIdentifierMinimumAndMaximumValues(): void
     {
         $between = new Between('foo.bar', 1, 300);
@@ -94,9 +81,41 @@ final class BetweenTest extends TestCase
         self::assertEquals(ArgumentType::Value, $maxValue->getType());
     }
 
-    public function testSpecificationIsNullByDefault(): void
+    public function testConstructorYieldsNullIdentifierMinimumAndMaximumValues(): void
     {
-        self::assertNull($this->between->getSpecification());
+        self::assertNull($this->between->getIdentifier());
+        self::assertNull($this->between->getMinValue());
+        self::assertNull($this->between->getMaxValue());
+    }
+
+    public function testGetExpressionDataThrowsExceptionWhenIdentifierNotSet(): void
+    {
+        $between = new Between();
+        $between->setMinValue(1)->setMaxValue(10);
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Identifier must be specified');
+        $between->getExpressionData();
+    }
+
+    public function testGetExpressionDataThrowsExceptionWhenMaxValueNotSet(): void
+    {
+        $between = new Between();
+        $between->setIdentifier('foo')->setMinValue(1);
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('maxValue must be specified');
+        $between->getExpressionData();
+    }
+
+    public function testGetExpressionDataThrowsExceptionWhenMinValueNotSet(): void
+    {
+        $between = new Between();
+        $between->setIdentifier('foo')->setMaxValue(10);
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('minValue must be specified');
+        $between->getExpressionData();
     }
 
     public function testIdentifierIsMutable(): void
@@ -123,30 +142,6 @@ final class BetweenTest extends TestCase
         self::assertEquals(ArgumentType::Identifier, $identifier2->getType());
     }
 
-    public function testMinValueIsMutable(): void
-    {
-        // First mutation
-        $result = $this->between->setMinValue(10);
-
-        // Verify fluent interface
-        self::assertSame($this->between, $result);
-
-        // Verify the first mutation occurred
-        $minValue1 = $this->between->getMinValue();
-        self::assertInstanceOf(ArgumentInterface::class, $minValue1);
-        self::assertEquals(10, $minValue1->getValue());
-        self::assertEquals(ArgumentType::Value, $minValue1->getType());
-
-        // Second mutation with different data to verify mutability
-        $this->between->setMinValue(20);
-
-        // Verify the instance was actually mutated
-        $minValue2 = $this->between->getMinValue();
-        self::assertInstanceOf(ArgumentInterface::class, $minValue2);
-        self::assertEquals(20, $minValue2->getValue());
-        self::assertEquals(ArgumentType::Value, $minValue2->getType());
-    }
-
     public function testMaxValueIsMutable(): void
     {
         // First mutation
@@ -171,17 +166,36 @@ final class BetweenTest extends TestCase
         self::assertEquals(ArgumentType::Value, $maxValue2->getType());
     }
 
-    public function testSpecificationIsMutable(): void
+    public function testMinValueIsMutable(): void
     {
-        $this->between->setSpecification('%1$s IS INBETWEEN %2$s AND %3$s');
-        self::assertEquals('%1$s IS INBETWEEN %2$s AND %3$s', $this->between->getSpecification());
+        // First mutation
+        $result = $this->between->setMinValue(10);
+
+        // Verify fluent interface
+        self::assertSame($this->between, $result);
+
+        // Verify the first mutation occurred
+        $minValue1 = $this->between->getMinValue();
+        self::assertInstanceOf(ArgumentInterface::class, $minValue1);
+        self::assertEquals(10, $minValue1->getValue());
+        self::assertEquals(ArgumentType::Value, $minValue1->getType());
+
+        // Second mutation with different data to verify mutability
+        $this->between->setMinValue(20);
+
+        // Verify the instance was actually mutated
+        $minValue2 = $this->between->getMinValue();
+        self::assertInstanceOf(ArgumentInterface::class, $minValue2);
+        self::assertEquals(20, $minValue2->getValue());
+        self::assertEquals(ArgumentType::Value, $minValue2->getType());
     }
 
     public function testRetrievingWherePartsReturnsSpecificationArrayOfIdentifierAndValuesAndArrayOfTypes(): void
     {
-        $this->between->setIdentifier('foo.bar')
-                      ->setMinValue(10)
-                      ->setMaxValue(19);
+        $this->between
+            ->setIdentifier('foo.bar')
+            ->setMinValue(10)
+            ->setMaxValue(19);
 
         $expressionData = $this->between->getExpressionData();
 
@@ -207,9 +221,10 @@ final class BetweenTest extends TestCase
         self::assertEquals(19, $values[2]->getValue());
         self::assertEquals(ArgumentType::Value, $values[2]->getType());
 
-        $this->between->setIdentifier(Argument::value(10))
-                      ->setMinValue(Argument::identifier('foo.bar'))
-                      ->setMaxValue(Argument::identifier('foo.baz'));
+        $this->between
+            ->setIdentifier(Argument::value(10))
+            ->setMinValue(Argument::identifier('foo.bar'))
+            ->setMaxValue(Argument::identifier('foo.baz'));
 
         $expressionData = $this->between->getExpressionData();
 
@@ -236,33 +251,20 @@ final class BetweenTest extends TestCase
         self::assertEquals(ArgumentType::Identifier, $values[2]->getType());
     }
 
-    public function testGetExpressionDataThrowsExceptionWhenIdentifierNotSet(): void
+    public function testSpecificationIsMutable(): void
     {
-        $between = new Between();
-        $between->setMinValue(1)->setMaxValue(10);
-
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Identifier must be specified');
-        $between->getExpressionData();
+        $this->between->setSpecification('%1$s IS INBETWEEN %2$s AND %3$s');
+        self::assertEquals('%1$s IS INBETWEEN %2$s AND %3$s', $this->between->getSpecification());
     }
 
-    public function testGetExpressionDataThrowsExceptionWhenMinValueNotSet(): void
+    public function testSpecificationIsNullByDefault(): void
     {
-        $between = new Between();
-        $between->setIdentifier('foo')->setMaxValue(10);
-
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('minValue must be specified');
-        $between->getExpressionData();
+        self::assertNull($this->between->getSpecification());
     }
 
-    public function testGetExpressionDataThrowsExceptionWhenMaxValueNotSet(): void
+    #[Override]
+    protected function setUp(): void
     {
-        $between = new Between();
-        $between->setIdentifier('foo')->setMinValue(1);
-
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('maxValue must be specified');
-        $between->getExpressionData();
+        $this->between = new Between();
     }
 }

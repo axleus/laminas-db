@@ -8,13 +8,13 @@ use PhpDb\Adapter\SchemaAwareInterface;
 
 interface ConnectionInterface extends SchemaAwareInterface
 {
-    public function beginTransaction(): ConnectionInterface;
+    public function beginTransaction(): self;
 
-    public function connect(): ConnectionInterface;
+    public function commit(): self;
 
-    public function commit(): ConnectionInterface;
+    public function connect(): self;
 
-    public function disconnect(): ConnectionInterface;
+    public function disconnect(): self;
 
     public function execute(string $sql): ?ResultInterface;
 
@@ -39,7 +39,7 @@ interface ConnectionInterface extends SchemaAwareInterface
 
     public function isConnected(): bool;
 
-    public function rollback(): ConnectionInterface;
+    public function rollback(): self;
 
-    public function setConnectionParameters(array $connectionParameters): ConnectionInterface;
+    public function setConnectionParameters(array $connectionParameters): self;
 }

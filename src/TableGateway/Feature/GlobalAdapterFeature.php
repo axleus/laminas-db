@@ -13,19 +13,6 @@ class GlobalAdapterFeature extends AbstractFeature
     protected static array $staticAdapters = [];
 
     /**
-     * Set static adapter
-     */
-    public static function setStaticAdapter(AdapterInterface $adapter): void
-    {
-        $class = static::class;
-
-        static::$staticAdapters[$class] = $adapter;
-        if ($class === self::class) {
-            static::$staticAdapters[self::class] = $adapter;
-        }
-    }
-
-    /**
      * Get static adapter
      *
      * @throws Exception\RuntimeException
@@ -45,6 +32,19 @@ class GlobalAdapterFeature extends AbstractFeature
         }
 
         throw new Exception\RuntimeException('No database adapter was found in the static registry.');
+    }
+
+    /**
+     * Set static adapter
+     */
+    public static function setStaticAdapter(AdapterInterface $adapter): void
+    {
+        $class = static::class;
+
+        static::$staticAdapters[$class] = $adapter;
+        if (self::class === $class) {
+            static::$staticAdapters[self::class] = $adapter;
+        }
     }
 
     /**

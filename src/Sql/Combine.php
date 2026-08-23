@@ -11,7 +11,6 @@ use PhpDb\Adapter\Platform\PlatformInterface;
 
 use function array_key_exists;
 use function array_keys;
-use function array_merge;
 use function is_array;
 use function str_replace;
 use function strtoupper;
@@ -43,11 +42,38 @@ class Combine extends AbstractPreparableSql
     public function __construct(
         Select|array|null $select = null,
         string $type = self::COMBINE_UNION,
-        string $modifier = ''
+        string $modifier = '',
     ) {
         if ($select) {
             $this->combine($select, $type, $modifier);
         }
+    }
+
+    public function alignColumns(): static
+    {
+        if (! $this->combine) {
+            return $this;
+        }
+
+        $allColumns = [];
+        foreach ($this->combine as $combine) {
+            $allColumns = [
+                ...$allColumns,
+                ...$combine['select']->getRawState(self::COLUMNS),
+            ];
+        }
+
+        foreach ($this->combine as $combine) {
+            $combineColumns = $combine['select']->getRawState(self::COLUMNS);
+            $aligned        = [];
+            foreach (array_keys($allColumns) as $alias) {
+                $aligned[$alias] = $combineColumns[$alias] ?? new Predicate\Expression('NULL');
+            }
+
+            $combine['select']->columns($aligned, false);
+        }
+
+        return $this;
     }
 
     /**
@@ -66,7 +92,7 @@ class Combine extends AbstractPreparableSql
                 $this->combine(
                     $combine[0],
                     $combine[1] ?? $type,
-                    $combine[2] ?? $modifier
+                    $combine[2] ?? $modifier,
                 );
             }
 
@@ -82,19 +108,25 @@ class Combine extends AbstractPreparableSql
     }
 
     /**
-     * Create union clause
-     */
-    public function union(Select|array $select, string $modifier = ''): static
-    {
-        return $this->combine($select, self::COMBINE_UNION, $modifier);
-    }
-
-    /**
      * Create except clause
      */
     public function except(Select|array $select, string $modifier = ''): static
     {
         return $this->combine($select, self::COMBINE_EXCEPT, $modifier);
+    }
+
+    /**
+     * Get raw state
+     */
+    public function getRawState(?string $key = null): mixed
+    {
+        $rawState = [
+            self::COMBINE => $this->combine,
+            self::COLUMNS => $this->combine
+                ? $this->combine[0]['select']->getRawState(self::COLUMNS)
+                : [],
+        ];
+        return isset($key) && array_key_exists($key, $rawState) ? $rawState[$key] : $rawState;
     }
 
     /**
@@ -106,13 +138,21 @@ class Combine extends AbstractPreparableSql
     }
 
     /**
+     * Create union clause
+     */
+    public function union(Select|array $select, string $modifier = ''): static
+    {
+        return $this->combine($select, self::COMBINE_UNION, $modifier);
+    }
+
+    /**
      * Build sql string
      */
     #[Override]
     protected function buildSqlString(
         PlatformInterface $platform,
         ?DriverInterface $driver = null,
-        ?ParameterContainer $parameterContainer = null
+        ?ParameterContainer $parameterContainer = null,
     ): string {
         if (! $this->combine) {
             return '';
@@ -120,62 +160,21 @@ class Combine extends AbstractPreparableSql
 
         $sql = '';
         foreach ($this->combine as $i => $combine) {
-            $type   = $i === 0
+            $type = 0 === $i
                 ? ''
                 : strtoupper(
                     $combine['modifier']
                         ? "{$combine['type']} {$combine['modifier']}"
-                        : $combine['type']
+                        : $combine['type'],
                 );
             $select = $this->processSubSelect($combine['select'], $platform, $driver, $parameterContainer);
-            $sql   .= str_replace(
+            $sql    .= str_replace(
                 ['%1$s', '%2$s'],
                 [$type, $select],
-                $this->specifications[self::COMBINE]
+                $this->specifications[self::COMBINE],
             );
         }
 
         return trim($sql, ' ');
-    }
-
-    public function alignColumns(): static
-    {
-        if (! $this->combine) {
-            return $this;
-        }
-
-        $allColumns = [];
-        foreach ($this->combine as $combine) {
-            $allColumns = array_merge(
-                $allColumns,
-                $combine['select']->getRawState(self::COLUMNS)
-            );
-        }
-
-        foreach ($this->combine as $combine) {
-            $combineColumns = $combine['select']->getRawState(self::COLUMNS);
-            $aligned        = [];
-            foreach (array_keys($allColumns) as $alias) {
-                $aligned[$alias] = $combineColumns[$alias] ?? new Predicate\Expression('NULL');
-            }
-
-            $combine['select']->columns($aligned, false);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Get raw state
-     */
-    public function getRawState(?string $key = null): mixed
-    {
-        $rawState = [
-            self::COMBINE => $this->combine,
-            self::COLUMNS => $this->combine
-                                ? $this->combine[0]['select']->getRawState(self::COLUMNS)
-                                : [],
-        ];
-        return isset($key) && array_key_exists($key, $rawState) ? $rawState[$key] : $rawState;
     }
 }

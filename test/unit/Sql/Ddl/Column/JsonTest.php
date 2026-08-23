@@ -19,9 +19,12 @@ final class JsonTest extends TestCase
         $expressionData = $column->getExpressionData();
 
         self::assertEquals('%s %s NOT NULL', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('foo'),
-            Argument::literal('JSON'),
-        ], $expressionData['values']);
+        self::assertEquals(
+            [
+                Argument::identifier('foo'),
+                Argument::literal('JSON'),
+            ],
+            $expressionData['values'],
+        );
     }
 }

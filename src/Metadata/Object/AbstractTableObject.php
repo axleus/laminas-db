@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace PhpDb\Metadata\Object;
 
+/**
+ * @api
+ */
 abstract class AbstractTableObject
 {
     protected ?string $name = null;
 
     protected ?string $type = null;
 
-    /** @var array<int|string, mixed>|null */
+    /** @var list<ColumnObject>|null */
     protected ?array $columns = null;
 
-    /** @var array<int|string, mixed>|null */
+    /** @var list<ConstraintObject>|null */
     protected ?array $constraints = null;
 
     /**
@@ -27,17 +30,9 @@ abstract class AbstractTableObject
     }
 
     /**
-     * Set columns
-     */
-    public function setColumns(array $columns): void
-    {
-        $this->columns = $columns;
-    }
-
-    /**
      * Get columns
      *
-     * @return array<int|string, mixed>|null
+     * @return list<ColumnObject>|null
      */
     public function getColumns(): ?array
     {
@@ -45,29 +40,13 @@ abstract class AbstractTableObject
     }
 
     /**
-     * Set constraints
-     */
-    public function setConstraints(array $constraints): void
-    {
-        $this->constraints = $constraints;
-    }
-
-    /**
      * Get constraints
      *
-     * @return array<int|string, mixed>|null
+     * @return list<ConstraintObject>|null
      */
     public function getConstraints(): ?array
     {
         return $this->constraints;
-    }
-
-    /**
-     * Set name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
     }
 
     /**
@@ -76,5 +55,33 @@ abstract class AbstractTableObject
     public function getName(): ?string
     {
         return $this->name;
+    }
+
+    /**
+     * Set columns
+     *
+     * @param list<ColumnObject> $columns
+     */
+    public function setColumns(array $columns): void
+    {
+        $this->columns = $columns;
+    }
+
+    /**
+     * Set constraints
+     *
+     * @param list<ConstraintObject> $constraints
+     */
+    public function setConstraints(array $constraints): void
+    {
+        $this->constraints = $constraints;
+    }
+
+    /**
+     * Set name
+     */
+    public function setName(string $name): void
+    {
+        $this->name = $name;
     }
 }

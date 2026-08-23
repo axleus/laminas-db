@@ -8,71 +8,23 @@ use PhpDb\Metadata\Object\AbstractTableObject;
 use PhpDb\Metadata\Object\ColumnObject;
 use PhpDb\Metadata\Object\ConstraintObject;
 use PhpDb\Metadata\Object\TableObject;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class TableObjectTest extends TestCase
 {
-    public function testExtendsAbstractTableObject(): void
+    #[Test]
+    public function canBeInstantiated(): void
     {
-        $table = new TableObject('table_name');
+        $table = new TableObject('test_table');
 
-        // Verify table extends AbstractTableObject
-        self::assertInstanceOf(AbstractTableObject::class, $table);
+        // Verify object can be instantiated directly
+        static::assertInstanceOf(TableObject::class, $table);
+        static::assertSame('test_table', $table->getName());
     }
 
-    public function testConstructorWithName(): void
-    {
-        $table = new TableObject('users');
-
-        // Verify name is set by constructor
-        self::assertSame('users', $table->getName());
-    }
-
-    public function testConstructorWithNullName(): void
-    {
-        $table = new TableObject();
-
-        // Verify name defaults to null when not provided
-        self::assertNull($table->getName());
-    }
-
-    public function testInheritedSetNameWorks(): void
-    {
-        $table = new TableObject('initial');
-
-        // Verify inherited setName method updates the name
-        $table->setName('updated');
-        self::assertSame('updated', $table->getName());
-    }
-
-    public function testInheritedSetColumnsWorks(): void
-    {
-        $table   = new TableObject('users');
-        $columns = [
-            new ColumnObject('id', 'users', 'public'),
-            new ColumnObject('name', 'users', 'public'),
-        ];
-
-        // Verify inherited setColumns method stores columns
-        $table->setColumns($columns);
-        self::assertSame($columns, $table->getColumns());
-        self::assertCount(2, $table->getColumns());
-    }
-
-    public function testInheritedSetConstraintsWorks(): void
-    {
-        $table       = new TableObject('users');
-        $constraints = [
-            new ConstraintObject('pk_users', 'users', 'public'),
-        ];
-
-        // Verify inherited setConstraints method stores constraints
-        $table->setConstraints($constraints);
-        self::assertSame($constraints, $table->getConstraints());
-        self::assertCount(1, $table->getConstraints());
-    }
-
-    public function testCompleteTableObjectWithAllInheritedFunctionality(): void
+    #[Test]
+    public function completeTableObjectWithAllInheritedFunctionality(): void
     {
         $table = new TableObject('orders');
 
@@ -92,18 +44,75 @@ final class TableObjectTest extends TestCase
         $table->setConstraints($constraints);
 
         // Verify all inherited functionality works correctly
-        self::assertSame('orders', $table->getName());
-        self::assertCount(4, $table->getColumns());
-        self::assertCount(2, $table->getConstraints());
-        self::assertInstanceOf(AbstractTableObject::class, $table);
+        static::assertSame('orders', $table->getName());
+        static::assertCount(4, $table->getColumns());
+        static::assertCount(2, $table->getConstraints());
+        static::assertInstanceOf(AbstractTableObject::class, $table);
     }
 
-    public function testCanBeInstantiated(): void
+    #[Test]
+    public function constructorWithName(): void
     {
-        $table = new TableObject('test_table');
+        $table = new TableObject('users');
 
-        // Verify object can be instantiated directly
-        self::assertInstanceOf(TableObject::class, $table);
-        self::assertSame('test_table', $table->getName());
+        // Verify name is set by constructor
+        static::assertSame('users', $table->getName());
+    }
+
+    #[Test]
+    public function constructorWithNullName(): void
+    {
+        $table = new TableObject();
+
+        // Verify name defaults to null when not provided
+        static::assertNull($table->getName());
+    }
+
+    #[Test]
+    public function extendsAbstractTableObject(): void
+    {
+        $table = new TableObject('table_name');
+
+        // Verify table extends AbstractTableObject
+        static::assertInstanceOf(AbstractTableObject::class, $table);
+    }
+
+    #[Test]
+    public function inheritedSetColumnsWorks(): void
+    {
+        $table   = new TableObject('users');
+        $columns = [
+            new ColumnObject('id', 'users', 'public'),
+            new ColumnObject('name', 'users', 'public'),
+        ];
+
+        // Verify inherited setColumns method stores columns
+        $table->setColumns($columns);
+        static::assertSame($columns, $table->getColumns());
+        static::assertCount(2, $table->getColumns());
+    }
+
+    #[Test]
+    public function inheritedSetConstraintsWorks(): void
+    {
+        $table       = new TableObject('users');
+        $constraints = [
+            new ConstraintObject('pk_users', 'users', 'public'),
+        ];
+
+        // Verify inherited setConstraints method stores constraints
+        $table->setConstraints($constraints);
+        static::assertSame($constraints, $table->getConstraints());
+        static::assertCount(1, $table->getConstraints());
+    }
+
+    #[Test]
+    public function inheritedSetNameWorks(): void
+    {
+        $table = new TableObject('initial');
+
+        // Verify inherited setName method updates the name
+        $table->setName('updated');
+        static::assertSame('updated', $table->getName());
     }
 }

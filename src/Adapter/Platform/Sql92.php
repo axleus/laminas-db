@@ -13,7 +13,7 @@ use function addcslashes;
 
 class Sql92 extends AbstractPlatform
 {
-    public final const PLATFORM_NAME = 'SQL92';
+    final public const PLATFORM_NAME = 'SQL92';
 
     /**
      * {@inheritDoc}
@@ -28,23 +28,23 @@ class Sql92 extends AbstractPlatform
      * {@inheritDoc}
      */
     #[Override]
-    public function quoteValue(string $value): string
+    public function getSqlPlatformDecorator(): PlatformDecoratorInterface
     {
-        if (! isset($this->driver)) {
-            throw VunerablePlatformQuoteException::forPlatformAndMethod(
-                static::class,
-                __METHOD__
-            );
-        }
-        return '\'' . addcslashes($value, "\x00\n\r\\'\"\x1a") . '\'';
+        return new Platform($this);
     }
 
     /**
      * {@inheritDoc}
      */
     #[Override]
-    public function getSqlPlatformDecorator(): PlatformDecoratorInterface
+    public function quoteValue(string $value): string
     {
-        return new Platform($this);
+        if (! isset($this->driver)) {
+            throw VunerablePlatformQuoteException::forPlatformAndMethod(
+                static::class,
+                __METHOD__,
+            );
+        }
+        return '\'' . addcslashes($value, "\x00\n\r\\'\"\x1a") . '\'';
     }
 }

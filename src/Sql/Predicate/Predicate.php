@@ -20,54 +20,27 @@ use PhpDb\Sql\ExpressionInterface;
  */
 class Predicate extends PredicateSet
 {
-    private Predicate|null $unnest = null;
+    private ?Predicate $unnest = null;
 
-    protected string|null $nextPredicateCombineOperator = null;
-
-    protected function getNextPredicateCombineOperator(): string
-    {
-        $operator                           = $this->nextPredicateCombineOperator ?? $this->defaultCombination;
-        $this->nextPredicateCombineOperator = null;
-
-        return $operator;
-    }
+    protected ?string $nextPredicateCombineOperator = null;
 
     /**
-     * Begin nesting predicates
+     * Create "between" predicate
+     * Utilizes Between predicate
+     *
+     * @return $this Provides a fluent interface
      */
-    public function nest(): Predicate
-    {
-        $predicateSet = new Predicate();
-        $predicateSet->setUnnest($this);
-        $this->addPredicate($predicateSet, $this->getNextPredicateCombineOperator());
-        $this->nextPredicateCombineOperator = null;
+    public function between(
+        float|int|string|array|ArgumentInterface|null $identifier,
+        float|int|string|array|ArgumentInterface|null $minValue,
+        float|int|string|array|ArgumentInterface|null $maxValue,
+    ): static {
+        $this->addPredicate(
+            new Between($identifier, $minValue, $maxValue),
+            $this->getNextPredicateCombineOperator(),
+        );
 
-        return $predicateSet;
-    }
-
-    /**
-     * Indicate what predicate will be unnested
-     */
-    public function setUnnest(?Predicate $predicate = null): void
-    {
-        /** @psalm-suppress PossiblyNullPropertyAssignmentValue */
-        $this->unnest = $predicate;
-    }
-
-    /**
-     * Indicate end of nested predicate
-     */
-    public function unnest(): Predicate
-    {
-        if (! $this->unnest instanceof Predicate) {
-            throw new RuntimeException('Not nested');
-        }
-
-        $unnest = $this->unnest;
-        /** @psalm-suppress PossiblyNullPropertyAssignmentValue */
-        $this->unnest = null;
-
-        return $unnest;
+        return $this;
     }
 
     /**
@@ -75,134 +48,12 @@ class Predicate extends PredicateSet
      * Utilizes Operator predicate
      */
     public function equalTo(
-        null|float|int|string|ArgumentInterface $left,
-        null|float|int|string|ArgumentInterface $right,
+        float|int|string|ArgumentInterface|null $left,
+        float|int|string|ArgumentInterface|null $right,
     ): static {
         $this->addPredicate(
             new Operator($left, Operator::OPERATOR_EQUAL_TO, $right),
-            $this->getNextPredicateCombineOperator()
-        );
-
-        return $this;
-    }
-
-    /**
-     * Create "Not Equal To" predicate
-     * Utilizes Operator predicate
-     */
-    public function notEqualTo(
-        null|float|int|string|ArgumentInterface $left,
-        null|float|int|string|ArgumentInterface $right
-    ): static {
-        $this->addPredicate(
-            new Operator($left, Operator::OPERATOR_NOT_EQUAL_TO, $right),
-            $this->getNextPredicateCombineOperator()
-        );
-
-        return $this;
-    }
-
-    /**
-     * Create "Less Than" predicate
-     * Utilizes Operator predicate
-     */
-    public function lessThan(
-        null|float|int|string|ArgumentInterface $left,
-        null|float|int|string|ArgumentInterface $right
-    ): static {
-        $this->addPredicate(
-            new Operator($left, Operator::OPERATOR_LESS_THAN, $right),
-            $this->getNextPredicateCombineOperator()
-        );
-
-        return $this;
-    }
-
-    /**
-     * Create "Greater Than" predicate
-     * Utilizes Operator predicate
-     *
-     * @return $this Provides a fluent interface
-     */
-    public function greaterThan(
-        null|float|int|string|ArgumentInterface $left,
-        null|float|int|string|ArgumentInterface $right
-    ): static {
-        $this->addPredicate(
-            new Operator($left, Operator::OPERATOR_GREATER_THAN, $right),
-            $this->getNextPredicateCombineOperator()
-        );
-
-        return $this;
-    }
-
-    /**
-     * Create "Less Than Or Equal To" predicate
-     * Utilizes Operator predicate
-     *
-     * @return $this Provides a fluent interface
-     */
-    public function lessThanOrEqualTo(
-        null|float|int|string|ArgumentInterface $left,
-        null|float|int|string|ArgumentInterface $right
-    ): static {
-        $this->addPredicate(
-            new Operator($left, Operator::OPERATOR_LESS_THAN_OR_EQUAL_TO, $right),
-            $this->getNextPredicateCombineOperator()
-        );
-
-        return $this;
-    }
-
-    /**
-     * Create "Greater Than Or Equal To" predicate
-     * Utilizes Operator predicate
-     *
-     * @return $this Provides a fluent interface
-     */
-    public function greaterThanOrEqualTo(
-        null|float|int|string|ArgumentInterface $left,
-        null|float|int|string|ArgumentInterface $right
-    ): static {
-        $this->addPredicate(
-            new Operator($left, Operator::OPERATOR_GREATER_THAN_OR_EQUAL_TO, $right),
-            $this->getNextPredicateCombineOperator()
-        );
-
-        return $this;
-    }
-
-    /**
-     * Create "Like" predicate
-     * Utilizes Like predicate
-     *
-     * @return $this Provides a fluent interface
-     */
-    public function like(
-        null|float|int|string|ArgumentInterface $identifier,
-        null|float|int|string|ArgumentInterface $like
-    ): static {
-        $this->addPredicate(
-            new Like($identifier, $like),
-            $this->getNextPredicateCombineOperator()
-        );
-
-        return $this;
-    }
-
-    /**
-     * Create "notLike" predicate
-     * Utilizes In predicate
-     *
-     * @return $this Provides a fluent interface
-     */
-    public function notLike(
-        null|float|int|string|ArgumentInterface $identifier,
-        null|float|int|string|ArgumentInterface $notLike
-    ): static {
-        $this->addPredicate(
-            new NotLike($identifier, $notLike),
-            $this->getNextPredicateCombineOperator()
+            $this->getNextPredicateCombineOperator(),
         );
 
         return $this;
@@ -215,17 +66,17 @@ class Predicate extends PredicateSet
      */
     public function expression(
         string $expression,
-        null|string|float|int|array|ArgumentInterface|ExpressionInterface $parameters = []
+        string|float|int|array|ArgumentInterface|ExpressionInterface|null $parameters = [],
     ): static {
-        if ($parameters !== []) {
+        if ([] !== $parameters) {
             $this->addPredicate(
                 new Expression($expression, $parameters),
-                $this->getNextPredicateCombineOperator()
+                $this->getNextPredicateCombineOperator(),
             );
         } else {
             $this->addPredicate(
                 new Expression($expression),
-                $this->getNextPredicateCombineOperator()
+                $this->getNextPredicateCombineOperator(),
             );
         }
 
@@ -233,48 +84,36 @@ class Predicate extends PredicateSet
     }
 
     /**
-     * Create "Literal" predicate
-     * Literal predicate, for parameters, use expression()
+     * Create "Greater Than" predicate
+     * Utilizes Operator predicate
      *
      * @return $this Provides a fluent interface
      */
-    public function literal(string $literal): static
-    {
+    public function greaterThan(
+        float|int|string|ArgumentInterface|null $left,
+        float|int|string|ArgumentInterface|null $right,
+    ): static {
         $this->addPredicate(
-            new Literal($literal),
-            $this->getNextPredicateCombineOperator()
+            new Operator($left, Operator::OPERATOR_GREATER_THAN, $right),
+            $this->getNextPredicateCombineOperator(),
         );
 
         return $this;
     }
 
     /**
-     * Create "IS NULL" predicate
-     * Utilizes IsNull predicate
+     * Create "Greater Than Or Equal To" predicate
+     * Utilizes Operator predicate
      *
      * @return $this Provides a fluent interface
      */
-    public function isNull(float|int|string|ArgumentInterface $identifier): static
-    {
+    public function greaterThanOrEqualTo(
+        float|int|string|ArgumentInterface|null $left,
+        float|int|string|ArgumentInterface|null $right,
+    ): static {
         $this->addPredicate(
-            new IsNull($identifier),
-            $this->getNextPredicateCombineOperator()
-        );
-
-        return $this;
-    }
-
-    /**
-     * Create "IS NOT NULL" predicate
-     * Utilizes IsNotNull predicate
-     *
-     * @return $this Provides a fluent interface
-     */
-    public function isNotNull(float|int|string|ArgumentInterface $identifier): static
-    {
-        $this->addPredicate(
-            new IsNotNull($identifier),
-            $this->getNextPredicateCombineOperator()
+            new Operator($left, Operator::OPERATOR_GREATER_THAN_OR_EQUAL_TO, $right),
+            $this->getNextPredicateCombineOperator(),
         );
 
         return $this;
@@ -290,7 +129,155 @@ class Predicate extends PredicateSet
     {
         $this->addPredicate(
             new In($identifier, $valueSet),
-            $this->getNextPredicateCombineOperator()
+            $this->getNextPredicateCombineOperator(),
+        );
+
+        return $this;
+    }
+
+    /**
+     * Create "IS NOT NULL" predicate
+     * Utilizes IsNotNull predicate
+     *
+     * @return $this Provides a fluent interface
+     */
+    public function isNotNull(float|int|string|ArgumentInterface $identifier): static
+    {
+        $this->addPredicate(
+            new IsNotNull($identifier),
+            $this->getNextPredicateCombineOperator(),
+        );
+
+        return $this;
+    }
+
+    /**
+     * Create "IS NULL" predicate
+     * Utilizes IsNull predicate
+     *
+     * @return $this Provides a fluent interface
+     */
+    public function isNull(float|int|string|ArgumentInterface $identifier): static
+    {
+        $this->addPredicate(
+            new IsNull($identifier),
+            $this->getNextPredicateCombineOperator(),
+        );
+
+        return $this;
+    }
+
+    /**
+     * Create "Less Than" predicate
+     * Utilizes Operator predicate
+     */
+    public function lessThan(
+        float|int|string|ArgumentInterface|null $left,
+        float|int|string|ArgumentInterface|null $right,
+    ): static {
+        $this->addPredicate(
+            new Operator($left, Operator::OPERATOR_LESS_THAN, $right),
+            $this->getNextPredicateCombineOperator(),
+        );
+
+        return $this;
+    }
+
+    /**
+     * Create "Less Than Or Equal To" predicate
+     * Utilizes Operator predicate
+     *
+     * @return $this Provides a fluent interface
+     */
+    public function lessThanOrEqualTo(
+        float|int|string|ArgumentInterface|null $left,
+        float|int|string|ArgumentInterface|null $right,
+    ): static {
+        $this->addPredicate(
+            new Operator($left, Operator::OPERATOR_LESS_THAN_OR_EQUAL_TO, $right),
+            $this->getNextPredicateCombineOperator(),
+        );
+
+        return $this;
+    }
+
+    /**
+     * Create "Like" predicate
+     * Utilizes Like predicate
+     *
+     * @return $this Provides a fluent interface
+     */
+    public function like(
+        float|int|string|ArgumentInterface|null $identifier,
+        float|int|string|ArgumentInterface|null $like,
+    ): static {
+        $this->addPredicate(
+            new Like($identifier, $like),
+            $this->getNextPredicateCombineOperator(),
+        );
+
+        return $this;
+    }
+
+    /**
+     * Create "Literal" predicate
+     * Literal predicate, for parameters, use expression()
+     *
+     * @return $this Provides a fluent interface
+     */
+    public function literal(string $literal): static
+    {
+        $this->addPredicate(
+            new Literal($literal),
+            $this->getNextPredicateCombineOperator(),
+        );
+
+        return $this;
+    }
+
+    /**
+     * Begin nesting predicates
+     */
+    public function nest(): self
+    {
+        $predicateSet = new Predicate();
+        $predicateSet->setUnnest($this);
+        $this->addPredicate($predicateSet, $this->getNextPredicateCombineOperator());
+        $this->nextPredicateCombineOperator = null;
+
+        return $predicateSet;
+    }
+
+    /**
+     * Create "NOT BETWEEN" predicate
+     * Utilizes NotBetween predicate
+     *
+     * @return $this Provides a fluent interface
+     */
+    public function notBetween(
+        float|int|string|array|ArgumentInterface|null $identifier,
+        float|int|string|array|ArgumentInterface|null $minValue,
+        float|int|string|array|ArgumentInterface|null $maxValue,
+    ): static {
+        $this->addPredicate(
+            new NotBetween($identifier, $minValue, $maxValue),
+            $this->getNextPredicateCombineOperator(),
+        );
+
+        return $this;
+    }
+
+    /**
+     * Create "Not Equal To" predicate
+     * Utilizes Operator predicate
+     */
+    public function notEqualTo(
+        float|int|string|ArgumentInterface|null $left,
+        float|int|string|ArgumentInterface|null $right,
+    ): static {
+        $this->addPredicate(
+            new Operator($left, Operator::OPERATOR_NOT_EQUAL_TO, $right),
+            $this->getNextPredicateCombineOperator(),
         );
 
         return $this;
@@ -306,45 +293,25 @@ class Predicate extends PredicateSet
     {
         $this->addPredicate(
             new NotIn($identifier, $valueSet),
-            $this->getNextPredicateCombineOperator()
+            $this->getNextPredicateCombineOperator(),
         );
 
         return $this;
     }
 
     /**
-     * Create "between" predicate
-     * Utilizes Between predicate
+     * Create "notLike" predicate
+     * Utilizes In predicate
      *
      * @return $this Provides a fluent interface
      */
-    public function between(
-        null|float|int|string|array|ArgumentInterface $identifier,
-        null|float|int|string|array|ArgumentInterface $minValue,
-        null|float|int|string|array|ArgumentInterface $maxValue
+    public function notLike(
+        float|int|string|ArgumentInterface|null $identifier,
+        float|int|string|ArgumentInterface|null $notLike,
     ): static {
         $this->addPredicate(
-            new Between($identifier, $minValue, $maxValue),
-            $this->getNextPredicateCombineOperator()
-        );
-
-        return $this;
-    }
-
-    /**
-     * Create "NOT BETWEEN" predicate
-     * Utilizes NotBetween predicate
-     *
-     * @return $this Provides a fluent interface
-     */
-    public function notBetween(
-        null|float|int|string|array|ArgumentInterface $identifier,
-        null|float|int|string|array|ArgumentInterface $minValue,
-        null|float|int|string|array|ArgumentInterface $maxValue
-    ): static {
-        $this->addPredicate(
-            new NotBetween($identifier, $minValue, $maxValue),
-            $this->getNextPredicateCombineOperator()
+            new NotLike($identifier, $notLike),
+            $this->getNextPredicateCombineOperator(),
         );
 
         return $this;
@@ -363,17 +330,50 @@ class Predicate extends PredicateSet
     {
         $this->addPredicate(
             $predicate,
-            $this->getNextPredicateCombineOperator()
+            $this->getNextPredicateCombineOperator(),
         );
 
         return $this;
     }
 
     /**
+     * Indicate what predicate will be unnested
+     */
+    public function setUnnest(?Predicate $predicate = null): void
+    {
+        /** @psalm-suppress PossiblyNullPropertyAssignmentValue */
+        $this->unnest = $predicate;
+    }
+
+    /**
+     * Indicate end of nested predicate
+     */
+    public function unnest(): self
+    {
+        if (! $this->unnest instanceof Predicate) {
+            throw new RuntimeException('Not nested');
+        }
+
+        $unnest = $this->unnest;
+        /** @psalm-suppress PossiblyNullPropertyAssignmentValue */
+        $this->unnest = null;
+
+        return $unnest;
+    }
+
+    protected function getNextPredicateCombineOperator(): string
+    {
+        $operator                           = $this->nextPredicateCombineOperator ?? $this->defaultCombination;
+        $this->nextPredicateCombineOperator = null;
+
+        return $operator;
+    }
+
+    /**
      * Overloading
      * Overloads "or", "and", "nest", and "unnest"
      */
-    public function __get(string $name): Predicate
+    public function __get(string $name): self
     {
         switch ($name) {
             case 'or':

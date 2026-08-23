@@ -20,36 +20,12 @@ class ResultSet extends AbstractResultSet
         private ResultSetReturnType|string $returnType = ResultSetReturnType::ArrayObject,
         private ArrayObject|RowPrototypeInterface|null $rowPrototype = new ArrayObject(
             [],
-            ArrayObject::ARRAY_AS_PROPS
-        )
+            ArrayObject::ARRAY_AS_PROPS,
+        ),
     ) {
         if (is_string($this->returnType)) {
             $this->returnType = ResultSetReturnType::from($this->returnType);
         }
-    }
-
-    /** {@inheritDoc} */
-    #[Override]
-    public function setRowPrototype(ArrayObject|RowPrototypeInterface $rowPrototype): ResultSetInterface
-    {
-        $this->rowPrototype = $rowPrototype;
-
-        return $this;
-    }
-
-    /** {@inheritDoc} */
-    #[Override]
-    public function getRowPrototype(): ArrayObject|RowPrototypeInterface
-    {
-        return $this->rowPrototype;
-    }
-
-    /**
-     * Get the return type to use when returning objects from the set
-     */
-    public function getReturnType(): ResultSetReturnType
-    {
-        return $this->returnType;
     }
 
     /**
@@ -60,7 +36,7 @@ class ResultSet extends AbstractResultSet
     {
         $data = parent::current();
 
-        if ($this->returnType === ResultSetReturnType::ArrayObject && is_array($data)) {
+        if (ResultSetReturnType::ArrayObject === $this->returnType && is_array($data)) {
             $ao = clone $this->getRowPrototype();
             $ao->exchangeArray($data);
 
@@ -68,6 +44,29 @@ class ResultSet extends AbstractResultSet
         }
 
         return $data;
+    }
+
+    /**
+     * @deprecated use getRowPrototype()
+     */
+    public function getArrayObjectPrototype(): ArrayObject|RowPrototypeInterface
+    {
+        return $this->getRowPrototype();
+    }
+
+    /**
+     * Get the return type to use when returning objects from the set
+     */
+    public function getReturnType(): ResultSetReturnType
+    {
+        return $this->returnType;
+    }
+
+    /** {@inheritDoc} */
+    #[Override]
+    public function getRowPrototype(): ArrayObject|RowPrototypeInterface
+    {
+        return $this->rowPrototype;
     }
 
     /**
@@ -80,11 +79,12 @@ class ResultSet extends AbstractResultSet
         return $this->setRowPrototype($arrayObjectPrototype);
     }
 
-    /**
-     * @deprecated use getRowPrototype()
-     */
-    public function getArrayObjectPrototype(): ArrayObject|RowPrototypeInterface
+    /** {@inheritDoc} */
+    #[Override]
+    public function setRowPrototype(ArrayObject|RowPrototypeInterface $rowPrototype): ResultSetInterface
     {
-        return $this->getRowPrototype();
+        $this->rowPrototype = $rowPrototype;
+
+        return $this;
     }
 }

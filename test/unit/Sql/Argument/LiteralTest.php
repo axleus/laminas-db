@@ -17,6 +17,13 @@ use PHPUnit\Framework\TestCase;
 #[CoversMethod(Literal::class, 'getSpecification')]
 final class LiteralTest extends TestCase
 {
+    public function testGetSpecificationReturnsPlaceholder(): void
+    {
+        $literal = new Literal('test');
+
+        self::assertSame('%s', $literal->getSpecification());
+    }
+
     public function testGetTypeReturnsLiteral(): void
     {
         $literal = new Literal('test');
@@ -29,12 +36,5 @@ final class LiteralTest extends TestCase
         $literal = new Literal('NOW()');
 
         self::assertSame('NOW()', $literal->getValue());
-    }
-
-    public function testGetSpecificationReturnsPlaceholder(): void
-    {
-        $literal = new Literal('test');
-
-        self::assertSame('%s', $literal->getSpecification());
     }
 }

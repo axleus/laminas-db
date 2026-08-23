@@ -55,56 +55,24 @@ final class AbstractRowGatewayTest extends TestCase
     /** @var ResultInterface&MockObject */
     protected ResultInterface|MockObject $mockResult;
 
-    /**
-     * @throws ReflectionException
-     * @throws Exception
-     */
-    #[Override]
-    protected function setUp(): void
-    {
-        $mockResult = $this->getMockBuilder(ResultInterface::class)->getMock();
-        $mockResult->expects($this->any())->method('getAffectedRows')->willReturn(1);
-        $this->mockResult = $mockResult;
-        $mockStatement    = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $mockStatement->expects($this->any())->method('execute')->willReturn($mockResult);
-        $mockConnection = $this->getMockBuilder(ConnectionInterface::class)->getMock();
-        $mockDriver     = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('createStatement')->willReturn($mockStatement);
-        $mockDriver->expects($this->any())->method('getConnection')->willReturn($mockConnection);
-
-        $this->mockAdapter = $this->getMockBuilder(Adapter::class)
-            ->onlyMethods([])
-            ->setConstructorArgs(
-                [
-                    $mockDriver,
-                    new TrustingSql92Platform(),
-                ]
-            )->getMock();
-
-        $this->rowGateway = $this->getMockBuilder(AbstractRowGateway::class)->onlyMethods([])->getMock();
-
-        $rgPropertyValues = [
-            'primaryKeyColumn' => ['id'],
-            'table'            => 'foo',
-            'sql'              => new Sql($this->mockAdapter),
-        ];
-        $this->setRowGatewayState($rgPropertyValues);
-    }
-
-    public function testOffsetSet(): void
-    {
-        $this->rowGateway['testColumn'] = 'test';
-        self::assertEquals('test', $this->rowGateway->testColumn);
-        self::assertEquals('test', $this->rowGateway['testColumn']);
-    }
-
     // @codingStandardsIgnoreStart
-    public function test__set(): void
+    public function test__get(): void
     {
         // @codingStandardsIgnoreEnd
         $this->rowGateway->testColumn = 'test';
         self::assertEquals('test', $this->rowGateway->testColumn);
         self::assertEquals('test', $this->rowGateway['testColumn']);
+    }
+
+    // @codingStandardsIgnoreStart
+    public function test__getThrowsExceptionForInvalidColumn(): void
+    {
+        // @codingStandardsIgnoreEnd
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Not a valid column in this row');
+
+        /** @phpstan-ignore property.notFound, expr.resultUnused */
+        $this->rowGateway->nonExistentColumn;
     }
 
     // @codingStandardsIgnoreStart
@@ -116,11 +84,13 @@ final class AbstractRowGatewayTest extends TestCase
         self::assertTrue(isset($this->rowGateway->foo));
     }
 
-    public function testOffsetExists(): void
+    // @codingStandardsIgnoreStart
+    public function test__set(): void
     {
-        self::assertFalse(isset($this->rowGateway['foo']));
-        $this->rowGateway['foo'] = 'bar';
-        self::assertTrue(isset($this->rowGateway['foo']));
+        // @codingStandardsIgnoreEnd
+        $this->rowGateway->testColumn = 'test';
+        self::assertEquals('test', $this->rowGateway->testColumn);
+        self::assertEquals('test', $this->rowGateway['testColumn']);
     }
 
     // @codingStandardsIgnoreStart
@@ -134,117 +104,10 @@ final class AbstractRowGatewayTest extends TestCase
         self::assertEmpty($this->rowGateway['foo']);
     }
 
-    public function testOffsetUnset(): void
+    public function testCount(): void
     {
-        $this->rowGateway['foo'] = 'bar';
-        self::assertEquals('bar', $this->rowGateway['foo']);
-        unset($this->rowGateway['foo']);
-        self::assertEmpty($this->rowGateway->foo);
-        self::assertEmpty($this->rowGateway['foo']);
-    }
-
-    public function testOffsetGet(): void
-    {
-        $this->rowGateway['testColumn'] = 'test';
-        self::assertEquals('test', $this->rowGateway->testColumn);
-        self::assertEquals('test', $this->rowGateway['testColumn']);
-    }
-
-    // @codingStandardsIgnoreStart
-    public function test__get(): void
-    {
-        // @codingStandardsIgnoreEnd
-        $this->rowGateway->testColumn = 'test';
-        self::assertEquals('test', $this->rowGateway->testColumn);
-        self::assertEquals('test', $this->rowGateway['testColumn']);
-    }
-
-    public function testSaveInsert(): void
-    {
-        $this->mockResult->expects($this->any())->method('current')
-            ->willReturn(['id' => 5, 'name' => 'foo']);
-        $this->mockResult->expects($this->any())->method('getGeneratedValue')->willReturn(5);
-        $this->rowGateway->populate(['name' => 'foo']);
-        $this->rowGateway->save();
-        self::assertEquals(5, $this->rowGateway->id);
-        self::assertEquals(5, $this->rowGateway['id']);
-    }
-
-    /**
-     * @throws ReflectionException
-     * @throws Exception
-     */
-    #[RequiresPhp('<= 8.6')]
-    public function testSaveInsertMultiKey(): void
-    {
-        $this->rowGateway = $this->getMockBuilder(AbstractRowGateway::class)->onlyMethods([])->getMock();
-
-        $mockSql = $this->getMockBuilder(Sql::class)
-                    ->setConstructorArgs([$this->mockAdapter])
-                    ->onlyMethods([])
-                    ->getMock();
-
-        $rgPropertyValues = [
-            'primaryKeyColumn' => ['one', 'two'],
-            'table'            => 'foo',
-            'sql'              => $mockSql,
-        ];
-        $this->setRowGatewayState($rgPropertyValues);
-
-        $this->mockResult->expects($this->any())->method('current')
-            ->willReturn(['one' => 'foo', 'two' => 'bar']);
-
-        // @todo Need to assert that $where was filled in
-
-        $refRowGateway     = new ReflectionObject($this->rowGateway);
-        $refRowGatewayProp = $refRowGateway->getProperty('primaryKeyData');
-
-        $this->rowGateway->populate(['one' => 'foo', 'two' => 'bar']);
-
-        self::assertNull($refRowGatewayProp->getValue($this->rowGateway));
-
-        $this->rowGateway->save();
-
-        self::assertEquals(['one' => 'foo', 'two' => 'bar'], $refRowGatewayProp->getValue($this->rowGateway));
-    }
-
-    public function testSaveUpdate(): void
-    {
-        $this->mockResult->expects($this->any())->method('current')
-            ->willReturn(['id' => 6, 'name' => 'foo']);
-        $this->rowGateway->populate(['id' => 6, 'name' => 'foo'], true);
-        $this->rowGateway->save();
-        self::assertEquals(6, $this->rowGateway['id']);
-    }
-
-    public function testSaveUpdateChangingPrimaryKey(): void
-    {
-        $selectMock = $this->getMockBuilder(Select::class)
-            ->onlyMethods(['where'])
-            ->getMock();
-        $selectMock->expects($this->once())
-            ->method('where')
-            ->with($this->equalTo(['id' => 7]))
-            ->willReturn($selectMock);
-
-        $sqlMock = $this->getMockBuilder(Sql::class)
-            ->onlyMethods(['select'])
-            ->setConstructorArgs([$this->mockAdapter])
-            ->getMock();
-        $sqlMock->expects($this->any())
-            ->method('select')
-            ->willReturn($selectMock);
-
-        $this->setRowGatewayState(['sql' => $sqlMock]);
-
-        $this->mockResult->expects($this->any())
-            ->method('current')
-            ->willReturn(['id' => 7, 'name' => 'fooUpdated']);
-
-        $this->rowGateway->populate(['id' => 6, 'name' => 'foo'], true);
-        $this->rowGateway->id = 7;
-        $this->rowGateway->save();
-        self::assertEquals(['id' => 7, 'name' => 'fooUpdated'], $this->rowGateway->toArray());
+        $this->rowGateway->populate(['id' => 5, 'name' => 'foo'], true);
+        self::assertEquals(2, $this->rowGateway->count());
     }
 
     public function testDelete(): void
@@ -253,38 +116,6 @@ final class AbstractRowGatewayTest extends TestCase
         $affectedRows          = $this->rowGateway->delete();
         self::assertFalse($this->rowGateway->rowExistsInDatabase());
         self::assertEquals(1, $affectedRows);
-    }
-
-    public function testPopulate(): void
-    {
-        $this->rowGateway->populate(['id' => 5, 'name' => 'foo']);
-        self::assertEquals(5, $this->rowGateway['id']);
-        self::assertEquals('foo', $this->rowGateway['name']);
-        self::assertFalse($this->rowGateway->rowExistsInDatabase());
-
-        $this->rowGateway->populate(['id' => 5, 'name' => 'foo'], true);
-        self::assertTrue($this->rowGateway->rowExistsInDatabase());
-    }
-
-    public function testProcessPrimaryKeyData(): void
-    {
-        $this->rowGateway->populate(['id' => 5, 'name' => 'foo'], true);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('a known key id was not found');
-        $this->rowGateway->populate(['boo' => 5, 'name' => 'foo'], true);
-    }
-
-    public function testCount(): void
-    {
-        $this->rowGateway->populate(['id' => 5, 'name' => 'foo'], true);
-        self::assertEquals(2, $this->rowGateway->count());
-    }
-
-    public function testToArray(): void
-    {
-        $this->rowGateway->populate(['id' => 5, 'name' => 'foo'], true);
-        self::assertEquals(['id' => 5, 'name' => 'foo'], $this->rowGateway->toArray());
     }
 
     public function testExchangeArray(): void
@@ -303,44 +134,57 @@ final class AbstractRowGatewayTest extends TestCase
         self::assertTrue($this->rowGateway->rowExistsInDatabase());
     }
 
-    public function testRowExistsInDatabaseReturnsFalseWhenNew(): void
+    public function testInitializeCreatesFeatureSetIfNotSet(): void
     {
-        $this->rowGateway->populate(['name' => 'foo']);
-        self::assertFalse($this->rowGateway->rowExistsInDatabase());
-    }
-
-    public function testRowExistsInDatabaseReturnsTrueAfterPopulateWithTrue(): void
-    {
-        $this->rowGateway->populate(['id' => 5, 'name' => 'foo'], true);
-        self::assertTrue($this->rowGateway->rowExistsInDatabase());
-    }
-
-    // @codingStandardsIgnoreStart
-    public function test__getThrowsExceptionForInvalidColumn(): void
-    {
-        // @codingStandardsIgnoreEnd
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Not a valid column in this row');
-
-        /** @phpstan-ignore property.notFound, expr.resultUnused */
-        $this->rowGateway->nonExistentColumn;
-    }
-
-    public function testInitializeThrowsExceptionWhenTableIsNull(): void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('This row object does not have a valid table set.');
-
-        $rowGateway = new RowGateway('id', 'temp_table', $this->mockAdapter);
+        $rowGateway = $this->getMockBuilder(AbstractRowGateway::class)->onlyMethods([])->getMock();
 
         $refRowGateway = new ReflectionObject($rowGateway);
-        $tableProp     = $refRowGateway->getProperty('table');
-        $tableProp->setValue($rowGateway, null);
+
+        $tableProp = $refRowGateway->getProperty('table');
+        $tableProp->setValue($rowGateway, 'foo');
+
+        $pkProp = $refRowGateway->getProperty('primaryKeyColumn');
+        $pkProp->setValue($rowGateway, ['id']);
+
+        $sqlProp = $refRowGateway->getProperty('sql');
+        $sqlProp->setValue($rowGateway, new Sql($this->mockAdapter));
+
+        $featureSetProp = $refRowGateway->getProperty('featureSet');
+        self::assertNull($featureSetProp->getValue($rowGateway));
+
+        $rowGateway->populate(['id' => 1, 'name' => 'test'], true);
+
+        self::assertInstanceOf(FeatureSet::class, $featureSetProp->getValue($rowGateway));
+    }
+
+    public function testInitializeEarlyReturnWhenAlreadyInitialized(): void
+    {
+        $rowGateway = new RowGateway('id', 'test_table', $this->mockAdapter);
+
+        $refRowGateway      = new ReflectionObject($rowGateway);
+        $featureSetProp     = $refRowGateway->getProperty('featureSet');
+        $originalFeatureSet = $featureSetProp->getValue($rowGateway);
 
         $isInitializedProp = $refRowGateway->getProperty('isInitialized');
-        $isInitializedProp->setValue($rowGateway, false);
+        self::assertTrue($isInitializedProp->getValue($rowGateway));
 
-        $rowGateway->populate(['name' => 'test']);
+        $rowGateway->populate(['id' => 2, 'name' => 'bar'], true);
+
+        self::assertSame($originalFeatureSet, $featureSetProp->getValue($rowGateway));
+    }
+
+    public function testInitializeOnlyRunsOnce(): void
+    {
+        $this->rowGateway->populate(['id' => 1, 'name' => 'foo'], true);
+
+        $refRowGateway     = new ReflectionObject($this->rowGateway);
+        $isInitializedProp = $refRowGateway->getProperty('isInitialized');
+        self::assertTrue($isInitializedProp->getValue($this->rowGateway));
+
+        $this->rowGateway->populate(['id' => 2, 'name' => 'bar'], true);
+
+        self::assertEquals(2, $this->rowGateway['id']);
+        self::assertEquals('bar', $this->rowGateway['name']);
     }
 
     public function testInitializeThrowsExceptionWhenPrimaryKeyColumnIsNull(): void
@@ -379,57 +223,175 @@ final class AbstractRowGatewayTest extends TestCase
         $rowGateway->populate(['name' => 'test']);
     }
 
-    public function testInitializeOnlyRunsOnce(): void
+    public function testInitializeThrowsExceptionWhenTableIsNull(): void
     {
-        $this->rowGateway->populate(['id' => 1, 'name' => 'foo'], true);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('This row object does not have a valid table set.');
 
-        $refRowGateway     = new ReflectionObject($this->rowGateway);
-        $isInitializedProp = $refRowGateway->getProperty('isInitialized');
-        self::assertTrue($isInitializedProp->getValue($this->rowGateway));
-
-        $this->rowGateway->populate(['id' => 2, 'name' => 'bar'], true);
-
-        self::assertEquals(2, $this->rowGateway['id']);
-        self::assertEquals('bar', $this->rowGateway['name']);
-    }
-
-    public function testInitializeEarlyReturnWhenAlreadyInitialized(): void
-    {
-        $rowGateway = new RowGateway('id', 'test_table', $this->mockAdapter);
-
-        $refRowGateway      = new ReflectionObject($rowGateway);
-        $featureSetProp     = $refRowGateway->getProperty('featureSet');
-        $originalFeatureSet = $featureSetProp->getValue($rowGateway);
-
-        $isInitializedProp = $refRowGateway->getProperty('isInitialized');
-        self::assertTrue($isInitializedProp->getValue($rowGateway));
-
-        $rowGateway->populate(['id' => 2, 'name' => 'bar'], true);
-
-        self::assertSame($originalFeatureSet, $featureSetProp->getValue($rowGateway));
-    }
-
-    public function testInitializeCreatesFeatureSetIfNotSet(): void
-    {
-        $rowGateway = $this->getMockBuilder(AbstractRowGateway::class)->onlyMethods([])->getMock();
+        $rowGateway = new RowGateway('id', 'temp_table', $this->mockAdapter);
 
         $refRowGateway = new ReflectionObject($rowGateway);
+        $tableProp     = $refRowGateway->getProperty('table');
+        $tableProp->setValue($rowGateway, null);
 
-        $tableProp = $refRowGateway->getProperty('table');
-        $tableProp->setValue($rowGateway, 'foo');
+        $isInitializedProp = $refRowGateway->getProperty('isInitialized');
+        $isInitializedProp->setValue($rowGateway, false);
 
-        $pkProp = $refRowGateway->getProperty('primaryKeyColumn');
-        $pkProp->setValue($rowGateway, ['id']);
+        $rowGateway->populate(['name' => 'test']);
+    }
 
-        $sqlProp = $refRowGateway->getProperty('sql');
-        $sqlProp->setValue($rowGateway, new Sql($this->mockAdapter));
+    public function testOffsetExists(): void
+    {
+        self::assertFalse(isset($this->rowGateway['foo']));
+        $this->rowGateway['foo'] = 'bar';
+        self::assertTrue(isset($this->rowGateway['foo']));
+    }
 
-        $featureSetProp = $refRowGateway->getProperty('featureSet');
-        self::assertNull($featureSetProp->getValue($rowGateway));
+    public function testOffsetGet(): void
+    {
+        $this->rowGateway['testColumn'] = 'test';
+        self::assertEquals('test', $this->rowGateway->testColumn);
+        self::assertEquals('test', $this->rowGateway['testColumn']);
+    }
 
-        $rowGateway->populate(['id' => 1, 'name' => 'test'], true);
+    public function testOffsetSet(): void
+    {
+        $this->rowGateway['testColumn'] = 'test';
+        self::assertEquals('test', $this->rowGateway->testColumn);
+        self::assertEquals('test', $this->rowGateway['testColumn']);
+    }
 
-        self::assertInstanceOf(FeatureSet::class, $featureSetProp->getValue($rowGateway));
+    public function testOffsetUnset(): void
+    {
+        $this->rowGateway['foo'] = 'bar';
+        self::assertEquals('bar', $this->rowGateway['foo']);
+        unset($this->rowGateway['foo']);
+        self::assertEmpty($this->rowGateway->foo);
+        self::assertEmpty($this->rowGateway['foo']);
+    }
+
+    public function testPopulate(): void
+    {
+        $this->rowGateway->populate(['id' => 5, 'name' => 'foo']);
+        self::assertEquals(5, $this->rowGateway['id']);
+        self::assertEquals('foo', $this->rowGateway['name']);
+        self::assertFalse($this->rowGateway->rowExistsInDatabase());
+
+        $this->rowGateway->populate(['id' => 5, 'name' => 'foo'], true);
+        self::assertTrue($this->rowGateway->rowExistsInDatabase());
+    }
+
+    public function testProcessPrimaryKeyData(): void
+    {
+        $this->rowGateway->populate(['id' => 5, 'name' => 'foo'], true);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('a known key id was not found');
+        $this->rowGateway->populate(['boo' => 5, 'name' => 'foo'], true);
+    }
+
+    public function testRowExistsInDatabaseReturnsFalseWhenNew(): void
+    {
+        $this->rowGateway->populate(['name' => 'foo']);
+        self::assertFalse($this->rowGateway->rowExistsInDatabase());
+    }
+
+    public function testRowExistsInDatabaseReturnsTrueAfterPopulateWithTrue(): void
+    {
+        $this->rowGateway->populate(['id' => 5, 'name' => 'foo'], true);
+        self::assertTrue($this->rowGateway->rowExistsInDatabase());
+    }
+
+    public function testSaveInsert(): void
+    {
+        $this->mockResult->expects($this->any())->method('current')->willReturn(['id' => 5, 'name' => 'foo']);
+        $this->mockResult->expects($this->any())->method('getGeneratedValue')->willReturn(5);
+        $this->rowGateway->populate(['name' => 'foo']);
+        $this->rowGateway->save();
+        self::assertEquals(5, $this->rowGateway->id);
+        self::assertEquals(5, $this->rowGateway['id']);
+    }
+
+    /**
+     * @throws ReflectionException
+     * @throws Exception
+     */
+    #[RequiresPhp('<= 8.6')]
+    public function testSaveInsertMultiKey(): void
+    {
+        $this->rowGateway = $this->getMockBuilder(AbstractRowGateway::class)->onlyMethods([])->getMock();
+
+        $mockSql = $this->getMockBuilder(Sql::class)
+            ->setConstructorArgs([$this->mockAdapter])
+            ->onlyMethods([])
+            ->getMock();
+
+        $rgPropertyValues = [
+            'primaryKeyColumn' => ['one', 'two'],
+            'table'            => 'foo',
+            'sql'              => $mockSql,
+        ];
+        $this->setRowGatewayState($rgPropertyValues);
+
+        $this->mockResult->expects($this->any())->method('current')->willReturn(['one' => 'foo', 'two' => 'bar']);
+
+        // @todo Need to assert that $where was filled in
+
+        $refRowGateway     = new ReflectionObject($this->rowGateway);
+        $refRowGatewayProp = $refRowGateway->getProperty('primaryKeyData');
+
+        $this->rowGateway->populate(['one' => 'foo', 'two' => 'bar']);
+
+        self::assertNull($refRowGatewayProp->getValue($this->rowGateway));
+
+        $this->rowGateway->save();
+
+        self::assertEquals(['one' => 'foo', 'two' => 'bar'], $refRowGatewayProp->getValue($this->rowGateway));
+    }
+
+    public function testSaveUpdate(): void
+    {
+        $this->mockResult->expects($this->any())->method('current')->willReturn(['id' => 6, 'name' => 'foo']);
+        $this->rowGateway->populate(['id' => 6, 'name' => 'foo'], true);
+        $this->rowGateway->save();
+        self::assertEquals(6, $this->rowGateway['id']);
+    }
+
+    public function testSaveUpdateChangingPrimaryKey(): void
+    {
+        $selectMock = $this->getMockBuilder(Select::class)
+            ->onlyMethods(['where'])
+            ->getMock();
+        $selectMock->expects($this->once())
+            ->method('where')
+            ->with($this->equalTo(['id' => 7]))
+            ->willReturn($selectMock);
+
+        $sqlMock = $this->getMockBuilder(Sql::class)
+            ->onlyMethods(['select'])
+            ->setConstructorArgs([$this->mockAdapter])
+            ->getMock();
+        $sqlMock->expects($this->any())
+            ->method('select')
+            ->willReturn($selectMock);
+
+        $this->setRowGatewayState(['sql' => $sqlMock]);
+
+        $this->mockResult
+            ->expects($this->any())
+            ->method('current')
+            ->willReturn(['id' => 7, 'name' => 'fooUpdated']);
+
+        $this->rowGateway->populate(['id' => 6, 'name' => 'foo'], true);
+        $this->rowGateway->id = 7;
+        $this->rowGateway->save();
+        self::assertEquals(['id' => 7, 'name' => 'fooUpdated'], $this->rowGateway->toArray());
+    }
+
+    public function testToArray(): void
+    {
+        $this->rowGateway->populate(['id' => 5, 'name' => 'foo'], true);
+        self::assertEquals(['id' => 5, 'name' => 'foo'], $this->rowGateway->toArray());
     }
 
     /**
@@ -443,5 +405,42 @@ final class AbstractRowGatewayTest extends TestCase
             $refRowGatewayProp = $refRowGateway->getProperty($rgPropertyName);
             $refRowGatewayProp->setValue($this->rowGateway, $rgPropertyValue);
         }
+    }
+
+    /**
+     * @throws ReflectionException
+     * @throws Exception
+     */
+    #[Override]
+    protected function setUp(): void
+    {
+        $mockResult = $this->getMockBuilder(ResultInterface::class)->getMock();
+        $mockResult->expects($this->any())->method('getAffectedRows')->willReturn(1);
+        $this->mockResult = $mockResult;
+        $mockStatement    = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $mockStatement->expects($this->any())->method('execute')->willReturn($mockResult);
+        $mockConnection = $this->getMockBuilder(ConnectionInterface::class)->getMock();
+        $mockDriver     = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('createStatement')->willReturn($mockStatement);
+        $mockDriver->expects($this->any())->method('getConnection')->willReturn($mockConnection);
+
+        $this->mockAdapter = $this->getMockBuilder(Adapter::class)
+            ->onlyMethods([])
+            ->setConstructorArgs(
+                [
+                    $mockDriver,
+                    new TrustingSql92Platform(),
+                ],
+            )
+            ->getMock();
+
+        $this->rowGateway = $this->getMockBuilder(AbstractRowGateway::class)->onlyMethods([])->getMock();
+
+        $rgPropertyValues = [
+            'primaryKeyColumn' => ['id'],
+            'table'            => 'foo',
+            'sql'              => new Sql($this->mockAdapter),
+        ];
+        $this->setRowGatewayState($rgPropertyValues);
     }
 }

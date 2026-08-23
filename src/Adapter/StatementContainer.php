@@ -2,6 +2,8 @@
 
 namespace PhpDb\Adapter;
 
+use Override;
+
 class StatementContainer implements StatementContainerInterface
 {
     protected string $sql = '';
@@ -16,28 +18,32 @@ class StatementContainer implements StatementContainerInterface
         $this->parameterContainer = $parameterContainer;
     }
 
-    /**
-     * @param string $sql
-     */
-    public function setSql($sql): StatementContainerInterface
+    #[Override]
+    public function getParameterContainer(): ?ParameterContainer
     {
-        $this->sql = $sql;
-        return $this;
+        return $this->parameterContainer;
     }
 
+    #[Override]
     public function getSql(): ?string
     {
         return $this->sql;
     }
 
+    #[Override]
     public function setParameterContainer(ParameterContainer $parameterContainer): StatementContainerInterface
     {
         $this->parameterContainer = $parameterContainer;
         return $this;
     }
 
-    public function getParameterContainer(): ?ParameterContainer
+    /**
+     * @param string $sql
+     */
+    #[Override]
+    public function setSql($sql): StatementContainerInterface
     {
-        return $this->parameterContainer;
+        $this->sql = $sql;
+        return $this;
     }
 }

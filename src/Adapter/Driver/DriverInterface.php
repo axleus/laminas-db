@@ -18,8 +18,12 @@ interface DriverInterface
      */
     public function checkEnvironment(): bool;
 
-    /** Get connection */
-    public function getConnection(): ConnectionInterface;
+    /**
+     * Create result
+     *
+     * @param resource $resource
+     */
+    public function createResult($resource): ResultInterface;
 
     /**
      * Create statement
@@ -28,19 +32,15 @@ interface DriverInterface
      */
     public function createStatement($sqlOrResource = null): StatementInterface;
 
-    /**
-     * Create result
-     *
-     * @param resource $resource
-     */
-    public function createResult($resource): ResultInterface;
-
-    /** Get prepare type */
-    public function getPrepareType(): string;
-
     /** Format parameter name */
     public function formatParameterName(string $name, ?string $type = null): string;
 
+    /** Get connection */
+    public function getConnection(): ConnectionInterface;
+
     /** Get last generated value */
     public function getLastGeneratedValue(): string|int|false|null;
+
+    /** Get prepare type */
+    public function getPrepareType(): string;
 }

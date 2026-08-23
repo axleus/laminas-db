@@ -19,10 +19,13 @@ final class DoubleTest extends TestCase
         $expressionData = $column->getExpressionData();
 
         self::assertEquals('%s %s(%s) NOT NULL', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('foo'),
-            Argument::literal('DOUBLE'),
-            Argument::literal('10,5'),
-        ], $expressionData['values']);
+        self::assertEquals(
+            [
+                Argument::identifier('foo'),
+                Argument::literal('DOUBLE'),
+                Argument::literal('10,5'),
+            ],
+            $expressionData['values'],
+        );
     }
 }

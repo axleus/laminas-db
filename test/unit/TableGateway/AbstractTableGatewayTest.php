@@ -72,252 +72,196 @@ final class AbstractTableGatewayTest extends TestCase
     protected MockObject&Update $mockUpdate;
     protected MockObject&Delete $mockDelete;
 
-    #[Override]
-    protected function setUp(): void
+    // @codingStandardsIgnoreStart
+    public function test__callThrowsExceptionForInvalidMethod(): void
     {
-        $mockResult = $this->getMockBuilder(ResultInterface::class)->getMock();
-        $mockResult->expects($this->any())->method('getAffectedRows')->willReturn(5);
+        // @codingStandardsIgnoreEnd
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid method (invalidMethod) called');
 
-        $mockPlatform = $this->getMockBuilder(PlatformInterface::class)->getMock();
-        $mockPlatform->expects($this->any())->method('getName')->willReturn('sql92');
-        $mockPlatform->expects($this->any())
-            ->method('getSqlPlatformDecorator')
-            ->willReturn(new Sql\Platform\Platform($mockPlatform));
+        /** @phpstan-ignore method.notFound */
+        $this->table->invalidMethod();
+    }
 
-        $mockResultSet = $this->getMockBuilder(ResultSetInterface::class)->getMock();
-
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $mockStatement->expects($this->any())->method('execute')->willReturn($mockResult);
-
-        $mockConnection = $this->getMockBuilder(ConnectionInterface::class)->getMock();
-        $mockConnection->expects($this->any())->method('getLastGeneratedValue')->willReturn(10);
-
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('createStatement')->willReturn($mockStatement);
-        $mockDriver->expects($this->any())->method('getConnection')->willReturn($mockConnection);
-
-        $this->mockSelect = $this
-            ->getMockBuilder(Select::class)
-            ->onlyMethods(['where', 'getRawState'])
-            ->setConstructorArgs(['foo'])
+    // @codingStandardsIgnoreStart
+    public function test__callWithFeatureSetMagicCall(): void
+    {
+        // @codingStandardsIgnoreEnd
+        // Create a FeatureSet mock that returns true for canCallMagicCall
+        $featureSet = $this->getMockBuilder(FeatureSet::class)
+            ->onlyMethods(['canCallMagicCall', 'callMagicCall'])
             ->getMock();
+        $featureSet->expects($this->once())
+            ->method('canCallMagicCall')
+            ->with('customMethod')
+            ->willReturn(true);
+        $featureSet->expects($this->once())
+            ->method('callMagicCall')
+            ->with('customMethod', ['arg1', 'arg2'])
+            ->willReturn('customResult');
 
-        $this->mockInsert = $this
-            ->getMockBuilder(Insert::class)
-            ->onlyMethods(['prepareStatement', 'values'])
-            ->setConstructorArgs(['foo'])
-            ->getMock();
+        $tgReflection   = new ReflectionClass(AbstractTableGateway::class);
+        $featureSetProp = $tgReflection->getProperty('featureSet');
+        $featureSetProp->setValue($this->table, $featureSet);
 
-        $this->mockUpdate = $this
-            ->getMockBuilder(Update::class)
-            ->onlyMethods(['where', 'join'])
-            ->setConstructorArgs(['foo'])
-            ->getMock();
+        /** @phpstan-ignore method.notFound */
+        $result = $this->table->customMethod('arg1', 'arg2');
 
-        $this->mockDelete = $this->getMockBuilder(Delete::class)
-            ->onlyMethods(['where'])
-            ->setConstructorArgs(['foo'])
-            ->getMock();
+        self::assertEquals('customResult', $result);
+    }
 
-        $this->mockAdapter = $this->getMockBuilder(Adapter::class)
-            ->onlyMethods([])
-            ->setConstructorArgs([$mockDriver, $mockPlatform, $mockResultSet])
-            ->getMock();
-        $this->mockSql     = $this->getMockBuilder(Sql\Sql::class)
-            ->onlyMethods(['select', 'insert', 'update', 'delete'])
-            ->setConstructorArgs([$this->mockAdapter, 'foo'])
-            ->getMock();
-        $this->mockSql->expects($this->any())->method('select')->willReturn($this->mockSelect);
-        $this->mockSql->expects($this->any())->method('insert')->willReturn($this->mockInsert);
-        $this->mockSql->expects($this->any())->method('update')->willReturn($this->mockUpdate);
-        $this->mockSql->expects($this->any())->method('delete')->willReturn($this->mockDelete);
+    // @codingStandardsIgnoreStart
+    public function test__clone(): void
+    {
+        // @codingStandardsIgnoreEnd
+        $cTable = clone $this->table;
+        self::assertSame($this->mockAdapter, $cTable->getAdapter());
+    }
 
-        $this->mockFeatureSet = $this->getMockBuilder(FeatureSet::class)->getMock();
-
-        $this->table = $this
-            ->getMockBuilder(AbstractTableGateway::class)
-            ->onlyMethods([])
-            ->getMock();
+    // @codingStandardsIgnoreStart
+    public function test__cloneWithAliasedTableIdentifier(): void
+    {
+        // @codingStandardsIgnoreEnd
+        $tableIdentifier = new Sql\TableIdentifier('bar', 'schema');
+        $aliasedTable    = ['alias' => $tableIdentifier];
 
         $tgReflection = new ReflectionClass(AbstractTableGateway::class);
-        foreach ($tgReflection->getProperties() as $tgPropReflection) {
-            switch ($tgPropReflection->getName()) {
-                case 'table':
-                    $tgPropReflection->setValue($this->table, 'foo');
-                    break;
-                case 'adapter':
-                    $tgPropReflection->setValue($this->table, $this->mockAdapter);
-                    break;
-                case 'resultSetPrototype':
-                    $tgPropReflection->setValue($this->table, new ResultSet());
-                    break;
-                case 'sql':
-                    $tgPropReflection->setValue($this->table, $this->mockSql);
-                    break;
-                case 'featureSet':
-                    $tgPropReflection->setValue($this->table, $this->mockFeatureSet);
-                    break;
-            }
-        }
+        $tableProp    = $tgReflection->getProperty('table');
+        $tableProp->setValue($this->table, $aliasedTable);
+
+        $cloned = clone $this->table;
+
+        $clonedTable = $cloned->getTable();
+        self::assertIsArray($clonedTable);
+        // The TableIdentifier inside the array should be cloned
+        self::assertNotSame($tableIdentifier, $clonedTable['alias']);
     }
 
-    public function testGetTable(): void
+    // @codingStandardsIgnoreStart
+    public function test__cloneWithTableIdentifier(): void
     {
-        self::assertEquals('foo', $this->table->getTable());
+        // @codingStandardsIgnoreEnd
+        $tableIdentifier = new Sql\TableIdentifier('bar', 'schema');
+
+        $tgReflection = new ReflectionClass(AbstractTableGateway::class);
+        $tableProp    = $tgReflection->getProperty('table');
+        $tableProp->setValue($this->table, $tableIdentifier);
+
+        $cloned = clone $this->table;
+
+        // The table should be cloned, not the same instance
+        self::assertNotSame($tableIdentifier, $cloned->getTable());
+        self::assertEquals($tableIdentifier->getTable(), $cloned->getTable()->getTable());
     }
 
-    public function testGetAdapter(): void
+    // @codingStandardsIgnoreStart
+    public function test__get(): void
     {
-        self::assertSame($this->mockAdapter, $this->table->getAdapter());
+        // @codingStandardsIgnoreEnd
+        $this->table->insert(['foo']); // trigger last insert id update
+
+        self::assertEquals(10, $this->table->lastInsertValue);
+        self::assertSame($this->mockAdapter, $this->table->adapter);
+
+        //self::assertEquals('foo', $this->table->table);
     }
 
-    public function testGetSql(): void
+    // @codingStandardsIgnoreStart
+    public function test__getAdapter(): void
     {
-        self::assertInstanceOf(Sql\Sql::class, $this->table->getSql());
+        // @codingStandardsIgnoreEnd
+        self::assertSame($this->mockAdapter, $this->table->adapter);
     }
 
-    public function testGetSelectResultPrototype(): void
+    // @codingStandardsIgnoreStart
+    public function test__getLastInsertValue(): void
     {
-        self::assertInstanceOf(ResultSet::class, $this->table->getResultSetPrototype());
+        // @codingStandardsIgnoreEnd
+        self::assertNull($this->table->lastInsertValue);
     }
 
-    public function testSelectWithNoWhere(): void
+    // @codingStandardsIgnoreStart
+    public function test__getTable(): void
     {
-        $resultSet = $this->table->select();
-
-        // check return types
-        self::assertInstanceOf(ResultSet::class, $resultSet);
-        self::assertNotSame($this->table->getResultSetPrototype(), $resultSet);
+        // @codingStandardsIgnoreEnd
+        self::assertEquals('foo', $this->table->table);
     }
 
-    public function testSelectWithWhereString(): void
+    // @codingStandardsIgnoreStart
+    public function test__getThrowsExceptionForInvalidProperty(): void
     {
-        $mockSelect = $this->mockSelect;
-        $mockSelect->expects($this->any())
-            ->method('getRawState')
-            ->willReturn([
-                'table'   => $this->table->getTable(),
-                'columns' => [],
-            ]);
+        // @codingStandardsIgnoreEnd
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid magic property access');
 
-        // assert select::from() is called
-        $mockSelect->expects($this->once())
-            ->method('where')
-            ->with($this->equalTo('foo'));
-
-        $this->table->select('foo');
+        /** @phpstan-ignore expr.resultUnused, property.notFound */
+        $this->table->invalidProperty;
     }
 
-    public function testSelectWithArrayTable(): void
+    // @codingStandardsIgnoreStart
+    public function test__getWithFeatureSetMagicGet(): void
     {
-        // Case 1
-        $select1 = $this->getMockBuilder(Select::class)->onlyMethods(['getRawState'])->getMock();
-        $select1->expects($this->once())
-            ->method('getRawState')
-            ->willReturn([
-                'table'   => 'foo', // Standard table name format, valid according to Select::from()
-                'columns' => null,
-            ]);
-        $return = $this->table->selectWith($select1);
-        $this->assertInstanceOf(ResultSet::class, $return);
+        // @codingStandardsIgnoreEnd
+        // Create a custom feature that can handle magic get
+        $feature                   = new TestTableGatewayFeature();
+        $feature->magicMethodSpecs = ['get' => ['customProperty']];
 
-        // Case 2
-        $select1 = $this->getMockBuilder(Select::class)->onlyMethods(['getRawState'])->getMock();
-        $select1->expects($this->once())
-            ->method('getRawState')
-            ->willReturn([
-                'table'   => ['f' => 'foo'], // Alias table name format, valid according to Select::from()
-                'columns' => null,
-            ]);
-        $return = $this->table->selectWith($select1);
-        $this->assertInstanceOf(ResultSet::class, $return);
+        // Create a FeatureSet mock that returns true for canCallMagicGet
+        $featureSet = $this->getMockBuilder(FeatureSet::class)
+            ->onlyMethods(['canCallMagicGet', 'callMagicGet'])
+            ->getMock();
+        $featureSet->expects($this->once())
+            ->method('canCallMagicGet')
+            ->with('customProperty')
+            ->willReturn(true);
+        $featureSet->expects($this->once())
+            ->method('callMagicGet')
+            ->with('customProperty')
+            ->willReturn('customValue');
+
+        $tgReflection   = new ReflectionClass(AbstractTableGateway::class);
+        $featureSetProp = $tgReflection->getProperty('featureSet');
+        $featureSetProp->setValue($this->table, $featureSet);
+
+        /** @phpstan-ignore property.notFound */
+        $result = $this->table->customProperty;
+
+        self::assertEquals('customValue', $result);
     }
 
-    public function testInsert(): void
+    // @codingStandardsIgnoreStart
+    public function test__setThrowsExceptionForInvalidProperty(): void
     {
-        $mockInsert = $this->mockInsert;
+        // @codingStandardsIgnoreEnd
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid magic property access');
 
-        $mockInsert->expects($this->once())
-            ->method('prepareStatement')
-            ->with($this->mockAdapter);
-
-        $mockInsert->expects($this->once())
-            ->method('values')
-            ->with($this->equalTo(['foo' => 'bar']));
-
-        $affectedRows = $this->table->insert(['foo' => 'bar']);
-        self::assertEquals(5, $affectedRows);
+        /** @phpstan-ignore property.notFound */
+        $this->table->invalidProperty = 'value';
     }
 
-    public function testUpdate(): void
+    // @codingStandardsIgnoreStart
+    public function test__setWithFeatureSetMagicSet(): void
     {
-        $mockUpdate = $this->mockUpdate;
+        // @codingStandardsIgnoreEnd
+        // Create a FeatureSet mock that returns true for canCallMagicSet
+        $featureSet = $this->getMockBuilder(FeatureSet::class)
+            ->onlyMethods(['canCallMagicSet', 'callMagicSet'])
+            ->getMock();
+        $featureSet->expects($this->once())
+            ->method('canCallMagicSet')
+            ->with('customProperty')
+            ->willReturn(true);
+        $featureSet->expects($this->once())
+            ->method('callMagicSet')
+            ->with('customProperty', 'customValue');
 
-        // assert select::from() is called
-        $mockUpdate->expects($this->once())
-            ->method('where')
-            ->with($this->equalTo('id = 2'));
+        $tgReflection   = new ReflectionClass(AbstractTableGateway::class);
+        $featureSetProp = $tgReflection->getProperty('featureSet');
+        $featureSetProp->setValue($this->table, $featureSet);
 
-        $affectedRows = $this->table->update(['foo' => 'bar'], 'id = 2');
-        self::assertEquals(5, $affectedRows);
-    }
-
-    public function testUpdateWithJoin(): void
-    {
-        $mockUpdate = $this->mockUpdate;
-
-        $joins = [
-            [
-                'name' => 'baz',
-                'on'   => 'foo.fooId = baz.fooId',
-                'type' => Sql\Join::JOIN_LEFT,
-            ],
-        ];
-
-        // assert select::from() is called
-        $mockUpdate->expects($this->once())
-            ->method('where')
-            ->with($this->equalTo('id = 2'));
-
-        $mockUpdate->expects($this->once())
-            ->method('join')
-            ->with($joins[0]['name'], $joins[0]['on'], $joins[0]['type']);
-
-        $affectedRows = $this->table->update(['foo.field' => 'bar'], 'id = 2', $joins);
-        self::assertEquals(5, $affectedRows);
-    }
-
-    public function testUpdateWithJoinDefaultType(): void
-    {
-        $mockUpdate = $this->mockUpdate;
-
-        $joins = [
-            [
-                'name' => 'baz',
-                'on'   => 'foo.fooId = baz.fooId',
-            ],
-        ];
-
-        // assert select::from() is called
-        $mockUpdate->expects($this->once())
-            ->method('where')
-            ->with($this->equalTo('id = 2'));
-
-        $mockUpdate->expects($this->once())
-            ->method('join')
-            ->with($joins[0]['name'], $joins[0]['on'], Sql\Join::JOIN_INNER);
-
-        $affectedRows = $this->table->update(['foo.field' => 'bar'], 'id = 2', $joins);
-        self::assertEquals(5, $affectedRows);
-    }
-
-    public function testUpdateWithNoCriteria(): void
-    {
-        /** @phpstan-ignore expr.resultUnused */
-        $this->mockUpdate;
-
-        $affectedRows = $this->table->update(['foo' => 'bar']);
-        self::assertEquals(5, $affectedRows);
+        /** @phpstan-ignore property.notFound */
+        $this->table->customProperty = 'customValue';
     }
 
     public function testDelete(): void
@@ -333,16 +277,132 @@ final class AbstractTableGatewayTest extends TestCase
         self::assertEquals(5, $affectedRows);
     }
 
+    public function testDeleteWith(): void
+    {
+        $delete = $this->getMockBuilder(Delete::class)
+            ->onlyMethods(['getRawState'])
+            ->setConstructorArgs(['foo'])
+            ->getMock();
+
+        $delete->expects($this->any())
+            ->method('getRawState')
+            ->willReturn(['table' => 'foo']);
+
+        $affectedRows = $this->table->deleteWith($delete);
+        self::assertEquals(5, $affectedRows);
+    }
+
+    public function testDeleteWithClosure(): void
+    {
+        // The closure receives the Delete object created by $this->sql->delete()
+        // We verify that the closure is called with a Delete instance
+        $closureCalled = false;
+        $affectedRows  = $this->table->delete(static function ($delete) use (&$closureCalled) {
+            $closureCalled = true;
+            self::assertInstanceOf(Delete::class, $delete);
+        });
+
+        self::assertTrue($closureCalled);
+        self::assertEquals(5, $affectedRows);
+    }
+
+    public function testExecuteDeleteThrowsExceptionWhenTableDoesNotMatch(): void
+    {
+        $delete = new Delete('bar');
+        $delete->where(['id' => 1]);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('The table name of the provided Delete object must match that of the table');
+
+        $this->table->deleteWith($delete);
+    }
+
+    public function testExecuteInsertThrowsExceptionWhenTableDoesNotMatch(): void
+    {
+        $insert = new Insert('bar');
+        $insert->values(['name' => 'test']);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('The table name of the provided Insert object must match that of the table');
+
+        $this->table->insertWith($insert);
+    }
+
+    public function testExecuteSelectThrowsExceptionWhenArrayTableDoesNotMatch(): void
+    {
+        $select = $this->getMockBuilder(Select::class)
+            ->onlyMethods(['getRawState'])
+            ->setConstructorArgs(['bar'])
+            ->getMock();
+
+        // With an array table that doesn't end with 'foo', exception should be thrown
+        $select->expects($this->any())
+            ->method('getRawState')
+            ->willReturn([
+                'table'   => ['alias' => 'bar'],
+                'columns' => [Select::SQL_STAR],
+            ]);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('The table name of the provided Select object must match that of the table');
+
+        $this->table->selectWith($select);
+    }
+
+    public function testExecuteUpdateThrowsExceptionWhenTableDoesNotMatch(): void
+    {
+        $update = new Update('bar');
+        $update->set(['name' => 'test']);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('The table name of the provided Update object must match that of the table');
+
+        $this->table->updateWith($update);
+    }
+
+    public function testGetAdapter(): void
+    {
+        self::assertSame($this->mockAdapter, $this->table->getAdapter());
+    }
+
+    public function testGetColumns(): void
+    {
+        $tgReflection = new ReflectionClass(AbstractTableGateway::class);
+        $columnsProp  = $tgReflection->getProperty('columns');
+        $columnsProp->setValue($this->table, ['id', 'name', 'email']);
+
+        self::assertEquals(['id', 'name', 'email'], $this->table->getColumns());
+    }
+
+    public function testGetFeatureSet(): void
+    {
+        self::assertSame($this->mockFeatureSet, $this->table->getFeatureSet());
+    }
+
     public function testGetLastInsertValue(): void
     {
         $this->table->insert(['foo' => 'bar']);
         self::assertEquals(10, $this->table->getLastInsertValue());
     }
 
+    public function testGetSelectResultPrototype(): void
+    {
+        self::assertInstanceOf(ResultSet::class, $this->table->getResultSetPrototype());
+    }
+
+    public function testGetSql(): void
+    {
+        self::assertInstanceOf(Sql\Sql::class, $this->table->getSql());
+    }
+
+    public function testGetTable(): void
+    {
+        self::assertEquals('foo', $this->table->getTable());
+    }
+
     public function testInitializeBuildsAResultSet(): void
     {
-        $stub = $this
-            ->getMockBuilder(AbstractTableGateway::class)
+        $stub = $this->getMockBuilder(AbstractTableGateway::class)
             ->onlyMethods([])
             ->getMock();
 
@@ -363,48 +423,6 @@ final class AbstractTableGatewayTest extends TestCase
 
         $stub->initialize();
         $this->assertInstanceOf(ResultSet::class, $stub->getResultSetPrototype());
-    }
-
-    // @codingStandardsIgnoreStart
-    public function test__get(): void
-    {
-        // @codingStandardsIgnoreEnd
-        $this->table->insert(['foo']); // trigger last insert id update
-
-        self::assertEquals(10, $this->table->lastInsertValue);
-        self::assertSame($this->mockAdapter, $this->table->adapter);
-        //self::assertEquals('foo', $this->table->table);
-    }
-
-    // @codingStandardsIgnoreStart
-    public function test__clone(): void
-    {
-        // @codingStandardsIgnoreEnd
-        $cTable = clone $this->table;
-        self::assertSame($this->mockAdapter, $cTable->getAdapter());
-    }
-
-    public function testIsInitialized(): void
-    {
-        // Create a fresh mock without initialization
-        $stub = $this->getMockBuilder(AbstractTableGateway::class)
-            ->onlyMethods([])
-            ->getMock();
-
-        self::assertFalse($stub->isInitialized());
-
-        // Set required properties for initialization
-        $tgReflection = new ReflectionClass(AbstractTableGateway::class);
-
-        $tableProp = $tgReflection->getProperty('table');
-        $tableProp->setValue($stub, 'foo');
-
-        $adapterProp = $tgReflection->getProperty('adapter');
-        $adapterProp->setValue($stub, $this->mockAdapter);
-
-        $stub->initialize();
-
-        self::assertTrue($stub->isInitialized());
     }
 
     public function testInitializeEarlyReturnWhenAlreadyInitialized(): void
@@ -470,38 +488,20 @@ final class AbstractTableGatewayTest extends TestCase
         $stub->initialize();
     }
 
-    public function testGetColumns(): void
+    public function testInsert(): void
     {
-        $tgReflection = new ReflectionClass(AbstractTableGateway::class);
-        $columnsProp  = $tgReflection->getProperty('columns');
-        $columnsProp->setValue($this->table, ['id', 'name', 'email']);
+        $mockInsert = $this->mockInsert;
 
-        self::assertEquals(['id', 'name', 'email'], $this->table->getColumns());
-    }
+        $mockInsert->expects($this->once())
+            ->method('prepareStatement')
+            ->with($this->mockAdapter);
 
-    public function testGetFeatureSet(): void
-    {
-        self::assertSame($this->mockFeatureSet, $this->table->getFeatureSet());
-    }
+        $mockInsert->expects($this->once())
+            ->method('values')
+            ->with($this->equalTo(['foo' => 'bar']));
 
-    public function testSelectWithClosure(): void
-    {
-        $mockSelect = $this->mockSelect;
-        $mockSelect->expects($this->any())
-            ->method('getRawState')
-            ->willReturn([
-                'table'   => $this->table->getTable(),
-                'columns' => [],
-            ]);
-
-        $closureCalled = false;
-        $result        = $this->table->select(function ($select) use (&$closureCalled) {
-            $closureCalled = true;
-            self::assertInstanceOf(Select::class, $select);
-        });
-
-        self::assertTrue($closureCalled);
-        self::assertInstanceOf(ResultSet::class, $result);
+        $affectedRows = $this->table->insert(['foo' => 'bar']);
+        self::assertEquals(5, $affectedRows);
     }
 
     public function testInsertWith(): void
@@ -513,178 +513,27 @@ final class AbstractTableGatewayTest extends TestCase
         self::assertEquals(5, $affectedRows);
     }
 
-    public function testUpdateWith(): void
+    public function testIsInitialized(): void
     {
-        $update = $this->getMockBuilder(Update::class)
-            ->onlyMethods(['getRawState'])
-            ->setConstructorArgs(['foo'])
+        // Create a fresh mock without initialization
+        $stub = $this->getMockBuilder(AbstractTableGateway::class)
+            ->onlyMethods([])
             ->getMock();
 
-        $update->expects($this->any())
-            ->method('getRawState')
-            ->willReturn(['table' => 'foo']);
+        self::assertFalse($stub->isInitialized());
 
-        $affectedRows = $this->table->updateWith($update);
-        self::assertEquals(5, $affectedRows);
-    }
-
-    public function testDeleteWith(): void
-    {
-        $delete = $this->getMockBuilder(Delete::class)
-            ->onlyMethods(['getRawState'])
-            ->setConstructorArgs(['foo'])
-            ->getMock();
-
-        $delete->expects($this->any())
-            ->method('getRawState')
-            ->willReturn(['table' => 'foo']);
-
-        $affectedRows = $this->table->deleteWith($delete);
-        self::assertEquals(5, $affectedRows);
-    }
-
-    public function testDeleteWithClosure(): void
-    {
-        // The closure receives the Delete object created by $this->sql->delete()
-        // We verify that the closure is called with a Delete instance
-        $closureCalled = false;
-        $affectedRows  = $this->table->delete(function ($delete) use (&$closureCalled) {
-            $closureCalled = true;
-            self::assertInstanceOf(Delete::class, $delete);
-        });
-
-        self::assertTrue($closureCalled);
-        self::assertEquals(5, $affectedRows);
-    }
-
-    // @codingStandardsIgnoreStart
-    public function test__getTable(): void
-    {
-        // @codingStandardsIgnoreEnd
-        self::assertEquals('foo', $this->table->table);
-    }
-
-    // @codingStandardsIgnoreStart
-    public function test__getThrowsExceptionForInvalidProperty(): void
-    {
-        // @codingStandardsIgnoreEnd
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid magic property access');
-
-        /** @phpstan-ignore expr.resultUnused, property.notFound */
-        $this->table->invalidProperty;
-    }
-
-    // @codingStandardsIgnoreStart
-    public function test__setThrowsExceptionForInvalidProperty(): void
-    {
-        // @codingStandardsIgnoreEnd
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid magic property access');
-
-        /** @phpstan-ignore property.notFound */
-        $this->table->invalidProperty = 'value';
-    }
-
-    // @codingStandardsIgnoreStart
-    public function test__callThrowsExceptionForInvalidMethod(): void
-    {
-        // @codingStandardsIgnoreEnd
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid method (invalidMethod) called');
-
-        /** @phpstan-ignore method.notFound */
-        $this->table->invalidMethod();
-    }
-
-    // @codingStandardsIgnoreStart
-    public function test__cloneWithTableIdentifier(): void
-    {
-        // @codingStandardsIgnoreEnd
-        $tableIdentifier = new Sql\TableIdentifier('bar', 'schema');
-
+        // Set required properties for initialization
         $tgReflection = new ReflectionClass(AbstractTableGateway::class);
-        $tableProp    = $tgReflection->getProperty('table');
-        $tableProp->setValue($this->table, $tableIdentifier);
 
-        $cloned = clone $this->table;
+        $tableProp = $tgReflection->getProperty('table');
+        $tableProp->setValue($stub, 'foo');
 
-        // The table should be cloned, not the same instance
-        self::assertNotSame($tableIdentifier, $cloned->getTable());
-        self::assertEquals($tableIdentifier->getTable(), $cloned->getTable()->getTable());
-    }
+        $adapterProp = $tgReflection->getProperty('adapter');
+        $adapterProp->setValue($stub, $this->mockAdapter);
 
-    // @codingStandardsIgnoreStart
-    public function test__cloneWithAliasedTableIdentifier(): void
-    {
-        // @codingStandardsIgnoreEnd
-        $tableIdentifier = new Sql\TableIdentifier('bar', 'schema');
-        $aliasedTable    = ['alias' => $tableIdentifier];
+        $stub->initialize();
 
-        $tgReflection = new ReflectionClass(AbstractTableGateway::class);
-        $tableProp    = $tgReflection->getProperty('table');
-        $tableProp->setValue($this->table, $aliasedTable);
-
-        $cloned = clone $this->table;
-
-        $clonedTable = $cloned->getTable();
-        self::assertIsArray($clonedTable);
-        // The TableIdentifier inside the array should be cloned
-        self::assertNotSame($tableIdentifier, $clonedTable['alias']);
-    }
-
-    public function testExecuteSelectThrowsExceptionWhenArrayTableDoesNotMatch(): void
-    {
-        $select = $this->getMockBuilder(Select::class)
-            ->onlyMethods(['getRawState'])
-            ->setConstructorArgs(['bar'])
-            ->getMock();
-
-        // With an array table that doesn't end with 'foo', exception should be thrown
-        $select->expects($this->any())
-            ->method('getRawState')
-            ->willReturn([
-                'table'   => ['alias' => 'bar'],
-                'columns' => [Select::SQL_STAR],
-            ]);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('The table name of the provided Select object must match that of the table');
-
-        $this->table->selectWith($select);
-    }
-
-    public function testExecuteInsertThrowsExceptionWhenTableDoesNotMatch(): void
-    {
-        $insert = new Insert('bar');
-        $insert->values(['name' => 'test']);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('The table name of the provided Insert object must match that of the table');
-
-        $this->table->insertWith($insert);
-    }
-
-    public function testExecuteUpdateThrowsExceptionWhenTableDoesNotMatch(): void
-    {
-        $update = new Update('bar');
-        $update->set(['name' => 'test']);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('The table name of the provided Update object must match that of the table');
-
-        $this->table->updateWith($update);
-    }
-
-    public function testExecuteDeleteThrowsExceptionWhenTableDoesNotMatch(): void
-    {
-        $delete = new Delete('bar');
-        $delete->where(['id' => 1]);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('The table name of the provided Delete object must match that of the table');
-
-        $this->table->deleteWith($delete);
+        self::assertTrue($stub->isInitialized());
     }
 
     public function testSelectAppliesColumnsWhenStarSelected(): void
@@ -713,99 +562,246 @@ final class AbstractTableGatewayTest extends TestCase
         $this->table->selectWith($select);
     }
 
-    // @codingStandardsIgnoreStart
-    public function test__getLastInsertValue(): void
+    public function testSelectWithArrayTable(): void
     {
-        // @codingStandardsIgnoreEnd
-        self::assertNull($this->table->lastInsertValue);
+        // Case 1
+        $select1 = $this->getMockBuilder(Select::class)->onlyMethods(['getRawState'])->getMock();
+        $select1->expects($this->once())
+            ->method('getRawState')
+            ->willReturn([
+                'table' => 'foo', // Standard table name format, valid according to Select::from()
+                'columns' => null,
+            ]);
+        $return = $this->table->selectWith($select1);
+        $this->assertInstanceOf(ResultSet::class, $return);
+
+        // Case 2
+        $select1 = $this->getMockBuilder(Select::class)->onlyMethods(['getRawState'])->getMock();
+        $select1->expects($this->once())
+            ->method('getRawState')
+            ->willReturn([
+                'table' => ['f' => 'foo'], // Alias table name format, valid according to Select::from()
+                'columns' => null,
+            ]);
+        $return = $this->table->selectWith($select1);
+        $this->assertInstanceOf(ResultSet::class, $return);
     }
 
-    // @codingStandardsIgnoreStart
-    public function test__getAdapter(): void
+    public function testSelectWithClosure(): void
     {
-        // @codingStandardsIgnoreEnd
-        self::assertSame($this->mockAdapter, $this->table->adapter);
+        $mockSelect = $this->mockSelect;
+        $mockSelect->expects($this->any())
+            ->method('getRawState')
+            ->willReturn([
+                'table'   => $this->table->getTable(),
+                'columns' => [],
+            ]);
+
+        $closureCalled = false;
+        $result        = $this->table->select(static function ($select) use (&$closureCalled) {
+            $closureCalled = true;
+            self::assertInstanceOf(Select::class, $select);
+        });
+
+        self::assertTrue($closureCalled);
+        self::assertInstanceOf(ResultSet::class, $result);
     }
 
-    // @codingStandardsIgnoreStart
-    public function test__getWithFeatureSetMagicGet(): void
+    public function testSelectWithNoWhere(): void
     {
-        // @codingStandardsIgnoreEnd
-        // Create a custom feature that can handle magic get
-        $feature                   = new TestTableGatewayFeature();
-        $feature->magicMethodSpecs = ['get' => ['customProperty']];
+        $resultSet = $this->table->select();
 
-        // Create a FeatureSet mock that returns true for canCallMagicGet
-        $featureSet = $this->getMockBuilder(FeatureSet::class)
-            ->onlyMethods(['canCallMagicGet', 'callMagicGet'])
+        // check return types
+        self::assertInstanceOf(ResultSet::class, $resultSet);
+        self::assertNotSame($this->table->getResultSetPrototype(), $resultSet);
+    }
+
+    public function testSelectWithWhereString(): void
+    {
+        $mockSelect = $this->mockSelect;
+        $mockSelect->expects($this->any())
+            ->method('getRawState')
+            ->willReturn([
+                'table'   => $this->table->getTable(),
+                'columns' => [],
+            ]);
+
+        // assert select::from() is called
+        $mockSelect->expects($this->once())
+            ->method('where')
+            ->with($this->equalTo('foo'));
+
+        $this->table->select('foo');
+    }
+
+    public function testUpdate(): void
+    {
+        $mockUpdate = $this->mockUpdate;
+
+        // assert select::from() is called
+        $mockUpdate->expects($this->once())
+            ->method('where')
+            ->with($this->equalTo('id = 2'));
+
+        $affectedRows = $this->table->update(['foo' => 'bar'], 'id = 2');
+        self::assertEquals(5, $affectedRows);
+    }
+
+    public function testUpdateWith(): void
+    {
+        $update = $this->getMockBuilder(Update::class)
+            ->onlyMethods(['getRawState'])
+            ->setConstructorArgs(['foo'])
             ->getMock();
-        $featureSet->expects($this->once())
-            ->method('canCallMagicGet')
-            ->with('customProperty')
-            ->willReturn(true);
-        $featureSet->expects($this->once())
-            ->method('callMagicGet')
-            ->with('customProperty')
-            ->willReturn('customValue');
 
-        $tgReflection   = new ReflectionClass(AbstractTableGateway::class);
-        $featureSetProp = $tgReflection->getProperty('featureSet');
-        $featureSetProp->setValue($this->table, $featureSet);
+        $update->expects($this->any())
+            ->method('getRawState')
+            ->willReturn(['table' => 'foo']);
 
-        /** @phpstan-ignore property.notFound */
-        $result = $this->table->customProperty;
-
-        self::assertEquals('customValue', $result);
+        $affectedRows = $this->table->updateWith($update);
+        self::assertEquals(5, $affectedRows);
     }
 
-    // @codingStandardsIgnoreStart
-    public function test__setWithFeatureSetMagicSet(): void
+    public function testUpdateWithJoin(): void
     {
-        // @codingStandardsIgnoreEnd
-        // Create a FeatureSet mock that returns true for canCallMagicSet
-        $featureSet = $this->getMockBuilder(FeatureSet::class)
-            ->onlyMethods(['canCallMagicSet', 'callMagicSet'])
-            ->getMock();
-        $featureSet->expects($this->once())
-            ->method('canCallMagicSet')
-            ->with('customProperty')
-            ->willReturn(true);
-        $featureSet->expects($this->once())
-            ->method('callMagicSet')
-            ->with('customProperty', 'customValue');
+        $mockUpdate = $this->mockUpdate;
 
-        $tgReflection   = new ReflectionClass(AbstractTableGateway::class);
-        $featureSetProp = $tgReflection->getProperty('featureSet');
-        $featureSetProp->setValue($this->table, $featureSet);
+        $joins = [
+            [
+                'name' => 'baz',
+                'on'   => 'foo.fooId = baz.fooId',
+                'type' => Sql\Join::JOIN_LEFT,
+            ],
+        ];
 
-        /** @phpstan-ignore property.notFound */
-        $this->table->customProperty = 'customValue';
+        // assert select::from() is called
+        $mockUpdate->expects($this->once())
+            ->method('where')
+            ->with($this->equalTo('id = 2'));
+
+        $mockUpdate->expects($this->once())
+            ->method('join')
+            ->with($joins[0]['name'], $joins[0]['on'], $joins[0]['type']);
+
+        $affectedRows = $this->table->update(['foo.field' => 'bar'], 'id = 2', $joins);
+        self::assertEquals(5, $affectedRows);
     }
 
-    // @codingStandardsIgnoreStart
-    public function test__callWithFeatureSetMagicCall(): void
+    public function testUpdateWithJoinDefaultType(): void
     {
-        // @codingStandardsIgnoreEnd
-        // Create a FeatureSet mock that returns true for canCallMagicCall
-        $featureSet = $this->getMockBuilder(FeatureSet::class)
-            ->onlyMethods(['canCallMagicCall', 'callMagicCall'])
+        $mockUpdate = $this->mockUpdate;
+
+        $joins = [
+            [
+                'name' => 'baz',
+                'on'   => 'foo.fooId = baz.fooId',
+            ],
+        ];
+
+        // assert select::from() is called
+        $mockUpdate->expects($this->once())
+            ->method('where')
+            ->with($this->equalTo('id = 2'));
+
+        $mockUpdate->expects($this->once())
+            ->method('join')
+            ->with($joins[0]['name'], $joins[0]['on'], Sql\Join::JOIN_INNER);
+
+        $affectedRows = $this->table->update(['foo.field' => 'bar'], 'id = 2', $joins);
+        self::assertEquals(5, $affectedRows);
+    }
+
+    public function testUpdateWithNoCriteria(): void
+    {
+        /** @phpstan-ignore expr.resultUnused */
+        $this->mockUpdate;
+
+        $affectedRows = $this->table->update(['foo' => 'bar']);
+        self::assertEquals(5, $affectedRows);
+    }
+
+    #[Override]
+    protected function setUp(): void
+    {
+        $mockResult = $this->getMockBuilder(ResultInterface::class)->getMock();
+        $mockResult->expects($this->any())->method('getAffectedRows')->willReturn(5);
+
+        $mockPlatform = $this->getMockBuilder(PlatformInterface::class)->getMock();
+        $mockPlatform->expects($this->any())->method('getName')->willReturn('sql92');
+        $mockPlatform->expects($this->any())
+            ->method('getSqlPlatformDecorator')
+            ->willReturn(new Sql\Platform\Platform($mockPlatform));
+
+        $mockResultSet = $this->getMockBuilder(ResultSetInterface::class)->getMock();
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $mockStatement->expects($this->any())->method('execute')->willReturn($mockResult);
+
+        $mockConnection = $this->getMockBuilder(ConnectionInterface::class)->getMock();
+        $mockConnection->expects($this->any())->method('getLastGeneratedValue')->willReturn(10);
+
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('createStatement')->willReturn($mockStatement);
+        $mockDriver->expects($this->any())->method('getConnection')->willReturn($mockConnection);
+
+        $this->mockSelect = $this->getMockBuilder(Select::class)
+            ->onlyMethods(['where', 'getRawState'])
+            ->setConstructorArgs(['foo'])
             ->getMock();
-        $featureSet->expects($this->once())
-            ->method('canCallMagicCall')
-            ->with('customMethod')
-            ->willReturn(true);
-        $featureSet->expects($this->once())
-            ->method('callMagicCall')
-            ->with('customMethod', ['arg1', 'arg2'])
-            ->willReturn('customResult');
 
-        $tgReflection   = new ReflectionClass(AbstractTableGateway::class);
-        $featureSetProp = $tgReflection->getProperty('featureSet');
-        $featureSetProp->setValue($this->table, $featureSet);
+        $this->mockInsert = $this->getMockBuilder(Insert::class)
+            ->onlyMethods(['prepareStatement', 'values'])
+            ->setConstructorArgs(['foo'])
+            ->getMock();
 
-        /** @phpstan-ignore method.notFound */
-        $result = $this->table->customMethod('arg1', 'arg2');
+        $this->mockUpdate = $this->getMockBuilder(Update::class)
+            ->onlyMethods(['where', 'join'])
+            ->setConstructorArgs(['foo'])
+            ->getMock();
 
-        self::assertEquals('customResult', $result);
+        $this->mockDelete = $this->getMockBuilder(Delete::class)
+            ->onlyMethods(['where'])
+            ->setConstructorArgs(['foo'])
+            ->getMock();
+
+        $this->mockAdapter = $this->getMockBuilder(Adapter::class)
+            ->onlyMethods([])
+            ->setConstructorArgs([$mockDriver, $mockPlatform, $mockResultSet])
+            ->getMock();
+        $this->mockSql = $this->getMockBuilder(Sql\Sql::class)
+            ->onlyMethods(['select', 'insert', 'update', 'delete'])
+            ->setConstructorArgs([$this->mockAdapter, 'foo'])
+            ->getMock();
+        $this->mockSql->expects($this->any())->method('select')->willReturn($this->mockSelect);
+        $this->mockSql->expects($this->any())->method('insert')->willReturn($this->mockInsert);
+        $this->mockSql->expects($this->any())->method('update')->willReturn($this->mockUpdate);
+        $this->mockSql->expects($this->any())->method('delete')->willReturn($this->mockDelete);
+
+        $this->mockFeatureSet = $this->getMockBuilder(FeatureSet::class)->getMock();
+
+        $this->table = $this->getMockBuilder(AbstractTableGateway::class)
+            ->onlyMethods([])
+            ->getMock();
+
+        $tgReflection = new ReflectionClass(AbstractTableGateway::class);
+        foreach ($tgReflection->getProperties() as $tgPropReflection) {
+            switch ($tgPropReflection->getName()) {
+                case 'table':
+                    $tgPropReflection->setValue($this->table, 'foo');
+                    break;
+                case 'adapter':
+                    $tgPropReflection->setValue($this->table, $this->mockAdapter);
+                    break;
+                case 'resultSetPrototype':
+                    $tgPropReflection->setValue($this->table, new ResultSet());
+                    break;
+                case 'sql':
+                    $tgPropReflection->setValue($this->table, $this->mockSql);
+                    break;
+                case 'featureSet':
+                    $tgPropReflection->setValue($this->table, $this->mockFeatureSet);
+                    break;
+            }
+        }
     }
 }

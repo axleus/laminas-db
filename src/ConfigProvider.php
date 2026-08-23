@@ -8,13 +8,6 @@ final readonly class ConfigProvider
 {
     public const NAMED_ADAPTER_KEY = 'adapters';
 
-    public function __invoke(): array
-    {
-        return [
-            'dependencies' => $this->getDependencies(),
-        ];
-    }
-
     public function getDependencies(): array
     {
         return [
@@ -28,6 +21,13 @@ final readonly class ConfigProvider
                 Adapter\Adapter::class            => Container\AdapterInterfaceFactory::class,
                 Sql\TableIdentifierFactory::class => Container\TableIdentifierFactoryFactory::class,
             ],
+        ];
+    }
+
+    public function __invoke(): array
+    {
+        return [
+            'dependencies' => $this->getDependencies(),
         ];
     }
 }

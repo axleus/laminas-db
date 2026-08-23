@@ -19,15 +19,24 @@ final class AbstractLengthColumnTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testSetLength(): void
+    public function testGetExpressionData(): void
     {
         $column = $this->getMockBuilder(AbstractLengthColumn::class)
-            ->setConstructorArgs(['foo', 55])
+            ->setConstructorArgs(['foo', 4])
             ->onlyMethods([])
             ->getMock();
-        self::assertEquals(55, $column->getLength());
-        self::assertSame($column, $column->setLength(20));
-        self::assertEquals(20, $column->getLength());
+
+        $expressionData = $column->getExpressionData();
+
+        self::assertEquals('%s %s(%s) NOT NULL', $expressionData['spec']);
+        self::assertEquals(
+            [
+                new Identifier('foo'),
+                new Literal('INTEGER'),
+                new Literal('4'),
+            ],
+            $expressionData['values'],
+        );
     }
 
     /**
@@ -45,20 +54,14 @@ final class AbstractLengthColumnTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testGetExpressionData(): void
+    public function testSetLength(): void
     {
         $column = $this->getMockBuilder(AbstractLengthColumn::class)
-            ->setConstructorArgs(['foo', 4])
+            ->setConstructorArgs(['foo', 55])
             ->onlyMethods([])
             ->getMock();
-
-        $expressionData = $column->getExpressionData();
-
-        self::assertEquals('%s %s(%s) NOT NULL', $expressionData['spec']);
-        self::assertEquals([
-            new Identifier('foo'),
-            new Literal('INTEGER'),
-            new Literal('4'),
-        ], $expressionData['values']);
+        self::assertEquals(55, $column->getLength());
+        self::assertSame($column, $column->setLength(20));
+        self::assertEquals(20, $column->getLength());
     }
 }

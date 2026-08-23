@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\Metadata\Source;
 
+use DateTime;
 use Exception;
 use Override;
 use PhpDb\Adapter\AdapterInterface;
@@ -17,37 +18,83 @@ use PhpDb\Metadata\Object\TriggerObject;
 use PhpDb\Metadata\Object\ViewObject;
 
 use function array_keys;
-use function func_get_args;
 
 /**
  * AbstractSource
  *
- * @psalm-type MetadataTableNames = array<string, array{
+ * @psalm-type MetadataTableNameInfo = array{
  *     table_type: string,
- *     view_definition?: string,
- *     check_option?: string,
- *     is_updatable?: bool,
- * }>
- * @psalm-type MetadataColumn = array<string, array{
- *   ordinal_position: int,
- *   column_default: mixed,
- *   is_nullable: bool,
- *   data_type: string,
- *   character_maximum_length?: int,
- *   character_octet_length?: int,
- *   numeric_precision?: int,
- *   numeric_scale?: int,
- *   numeric_unsigned?: bool,
- *   erratas?: array<string, mixed>,
- * }>
- * @psalm-type MetadataColumns = array<string, ...array<string, MetadataColumn>>
- * @psalm-type MetadataData = array{
- *      schemas?: ,
- *      table_names?: MetadataTableNames,
- *      columns?: MetadataColumns,
- *      triggers?: ,
- *      ...
+ *     view_definition?: string|null,
+ *     check_option?: string|null,
+ *     is_updatable?: bool|null,
  * }
+ * @psalm-type MetadataColumnInfo = array{
+ *     ordinal_position: int|string|null,
+ *     column_default: string|int|bool|null,
+ *     is_nullable: bool|null,
+ *     data_type: string,
+ *     character_maximum_length: int|string|null,
+ *     character_octet_length: int|string|null,
+ *     numeric_precision: int|string|null,
+ *     numeric_scale: int|string|null,
+ *     numeric_unsigned: bool|null,
+ *     erratas: array<string, mixed>,
+ * }
+ * @psalm-type MetadataConstraintInfo = array{
+ *     constraint_type?: string,
+ *     match_option?: string,
+ *     update_rule?: string,
+ *     delete_rule?: string,
+ *     columns?: list<string>,
+ *     referenced_table_schema?: string,
+ *     referenced_table_name?: string,
+ *     referenced_columns?: list<string>,
+ *     check_clause?: string,
+ * }
+ * @psalm-type MetadataConstraintKeyInfo = array{
+ *     table_name: string,
+ *     constraint_name: string,
+ *     column_name: string,
+ *     ordinal_position: int,
+ * }
+ * @psalm-type MetadataConstraintReferenceInfo = array{
+ *     constraint_name: string,
+ *     update_rule: string,
+ *     delete_rule: string,
+ *     referenced_table_name: string,
+ *     referenced_column_name: string,
+ * }
+ * @psalm-type MetadataTriggerInfo = array{
+ *     event_manipulation: string,
+ *     event_object_catalog: string,
+ *     event_object_schema: string,
+ *     event_object_table: string,
+ *     action_order: string,
+ *     action_condition: string|null,
+ *     action_statement: string,
+ *     action_orientation: string,
+ *     action_timing: string,
+ *     action_reference_old_table: string|null,
+ *     action_reference_new_table: string|null,
+ *     action_reference_old_row: string,
+ *     action_reference_new_row: string,
+ *     created: DateTime|null,
+ * }
+ * @psalm-type MetadataData = array{
+ *     schemas?: list<string>,
+ *     table_names?: array<string, array<string, MetadataTableNameInfo>>,
+ *     columns?: array<string, array<string, array<string, MetadataColumnInfo>>>,
+ *     constraints?: array<string, array<string, array<string, MetadataConstraintInfo>>>,
+ *     constraint_keys?: array<string, list<MetadataConstraintKeyInfo>>,
+ *     constraint_references?: array<string, list<MetadataConstraintReferenceInfo>>,
+ *     triggers?: array<string, array<string, MetadataTriggerInfo>>,
+ * }
+ *
+ * @api
+ *
+ * @mago-expect lint:too-many-methods
+ * @mago-expect lint:kan-defect
+ * @mago-expect lint:cyclomatic-complexity
  */
 abstract class AbstractSource implements MetadataInterface
 {
@@ -55,184 +102,91 @@ abstract class AbstractSource implements MetadataInterface
 
     protected string $defaultSchema;
 
+    /** @var MetadataData */
     protected array $data = [];
 
     public function __construct(
-        protected AdapterInterface&SchemaAwareInterface $adapter
+        protected AdapterInterface&SchemaAwareInterface $adapter,
     ) {
-        $this->defaultSchema = $this->adapter->getCurrentSchema() ?: self::DEFAULT_SCHEMA;
+        $currentSchema       = $this->adapter->getCurrentSchema();
+        $this->defaultSchema = false !== $currentSchema && '' !== $currentSchema
+            ? $currentSchema
+            : self::DEFAULT_SCHEMA;
     }
 
     /**
-     * {@inheritdoc}
+     * @throws Exception If the column does not exist.
      */
     #[Override]
-    public function getSchemas(): array
+    public function getColumn(string $columnName, string $table, ?string $schema = null): ColumnObject
     {
-        $this->loadSchemaData();
-
-        return $this->data['schemas'];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    #[Override]
-    public function getTableNames(?string $schema = null, bool $includeViews = false): array
-    {
-        if ($schema === null) {
-            $schema = $this->defaultSchema;
-        }
-
-        $this->loadTableNameData($schema);
-
-        if ($includeViews) {
-            return array_keys($this->data['table_names'][$schema]);
-        }
-
-        $tableNames = [];
-        foreach ($this->data['table_names'][$schema] as $tableName => $data) {
-            if ('BASE TABLE' === $data['table_type']) {
-                $tableNames[] = $tableName;
-            }
-        }
-
-        return $tableNames;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    #[Override]
-    public function getTables(?string $schema = null, bool $includeViews = false): array
-    {
-        if ($schema === null) {
-            $schema = $this->defaultSchema;
-        }
-
-        $tables = [];
-        foreach ($this->getTableNames($schema, $includeViews) as $tableName) {
-            $tables[] = $this->getTable($tableName, $schema);
-        }
-
-        return $tables;
-    }
-
-    #[Override]
-    public function getTable(string $tableName, ?string $schema = null): TableObject|ViewObject
-    {
-        if ($schema === null) {
-            $schema = $this->defaultSchema;
-        }
-
-        $this->loadTableNameData($schema);
-
-        if (! isset($this->data['table_names'][$schema][$tableName])) {
-            throw new Exception('Table "' . $tableName . '" does not exist');
-        }
-
-        $data = $this->data['table_names'][$schema][$tableName];
-        switch ($data['table_type']) {
-            case 'BASE TABLE':
-                $table = new TableObject($tableName);
-                break;
-            case 'VIEW':
-                $table = new ViewObject($tableName);
-                $table->setViewDefinition($data['view_definition']);
-                $table->setCheckOption($data['check_option']);
-                $table->setIsUpdatable($data['is_updatable']);
-                break;
-            default:
-                throw new Exception(
-                    'Table "' . $tableName . '" is of an unsupported type "' . $data['table_type'] . '"'
-                );
-        }
-
-        $table->setColumns($this->getColumns($tableName, $schema));
-        $table->setConstraints($this->getConstraints($tableName, $schema));
-        return $table;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    #[Override]
-    public function getViewNames(?string $schema = null): array
-    {
-        if ($schema === null) {
-            $schema = $this->defaultSchema;
-        }
-
-        $this->loadTableNameData($schema);
-
-        $viewNames = [];
-        foreach ($this->data['table_names'][$schema] as $tableName => $data) {
-            if ('VIEW' === $data['table_type']) {
-                $viewNames[] = $tableName;
-            }
-        }
-
-        return $viewNames;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    #[Override]
-    public function getViews(?string $schema = null): array
-    {
-        if ($schema === null) {
-            $schema = $this->defaultSchema;
-        }
-
-        $views = [];
-        foreach ($this->getViewNames($schema) as $tableName) {
-            $views[] = $this->getTable($tableName, $schema);
-        }
-
-        return $views;
-    }
-
-    #[Override]
-    public function getView(string $viewName, ?string $schema = null): ViewObject|TableObject
-    {
-        if ($schema === null) {
-            $schema = $this->defaultSchema;
-        }
-
-        $this->loadTableNameData($schema);
-
-        $tableNames = $this->data['table_names'][$schema];
-        if (isset($tableNames[$viewName]) && 'VIEW' === $tableNames[$viewName]['table_type']) {
-            return $this->getTable($viewName, $schema);
-        }
-
-        throw new Exception('View "' . $viewName . '" does not exist');
-    }
-
-    #[Override]
-    public function getColumnNames(string $table, ?string $schema = null): array
-    {
-        if ($schema === null) {
+        if (null === $schema) {
             $schema = $this->defaultSchema;
         }
 
         $this->loadColumnData($table, $schema);
 
-        if (! isset($this->data['columns'][$schema][$table])) {
-            throw new Exception('"' . $table . '" does not exist');
+        $info = $this->data['columns'][$schema][$table][$columnName] ?? null;
+        if (null === $info) {
+            throw new Exception('A column by that name was not found.');
         }
 
-        return array_keys($this->data['columns'][$schema][$table]);
+        $column = new ColumnObject($columnName, $table, $schema);
+        $column->setOrdinalPosition($info['ordinal_position'] ? (int) $info['ordinal_position'] : null);
+        $column->setColumnDefault($info['column_default']);
+        $column->setIsNullable($info['is_nullable']);
+        $column->setDataType($info['data_type']);
+        $column->setCharacterMaximumLength(
+            $info['character_maximum_length'] ? (int) $info['character_maximum_length'] : null,
+        );
+        $column->setCharacterOctetLength(
+            $info['character_octet_length'] ? (int) $info['character_octet_length'] : null,
+        );
+        $column->setNumericPrecision(
+            $info['numeric_precision'] ? (int) $info['numeric_precision'] : null,
+        );
+        $column->setNumericScale(
+            $info['numeric_scale'] ? (int) $info['numeric_scale'] : null,
+        );
+        $column->setNumericUnsigned($info['numeric_unsigned']);
+        $column->setErratas($info['erratas']);
+
+        return $column;
+    }
+
+    /**
+     * @return list<string>
+     *
+     * @throws Exception If the table does not exist.
+     */
+    #[Override]
+    public function getColumnNames(string $table, ?string $schema = null): array
+    {
+        if (null === $schema) {
+            $schema = $this->defaultSchema;
+        }
+
+        $this->loadColumnData($table, $schema);
+
+        $columns = $this->data['columns'][$schema][$table] ?? null;
+        if (null === $columns) {
+            throw new Exception("\"{$table}\" does not exist");
+        }
+
+        return array_keys($columns);
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @return list<ColumnObject>
+     *
+     * @throws Exception If the table does not exist.
      */
     #[Override]
     public function getColumns(string $table, ?string $schema = null): array
     {
-        if ($schema === null) {
+        if (null === $schema) {
             $schema = $this->defaultSchema;
         }
 
@@ -246,100 +200,71 @@ abstract class AbstractSource implements MetadataInterface
         return $columns;
     }
 
-    #[Override]
-    public function getColumn(string $columnName, string $table, ?string $schema = null): ColumnObject
-    {
-        if ($schema === null) {
-            $schema = $this->defaultSchema;
-        }
-
-        $this->loadColumnData($table, $schema);
-
-        if (! isset($this->data['columns'][$schema][$table][$columnName])) {
-            throw new Exception('A column by that name was not found.');
-        }
-
-        $info = $this->data['columns'][$schema][$table][$columnName];
-
-        $column = new ColumnObject($columnName, $table, $schema);
-
-        $column->setOrdinalPosition($info['ordinal_position'] ? (int) $info['ordinal_position'] : null);
-        $column->setColumnDefault($info['column_default']);
-        $column->setIsNullable($info['is_nullable']);
-        $column->setDataType($info['data_type']);
-        $column->setCharacterMaximumLength(
-            $info['character_maximum_length'] ? (int) $info['character_maximum_length'] : null
-        );
-        $column->setCharacterOctetLength(
-            $info['character_octet_length'] ? (int) $info['character_octet_length'] : null
-        );
-        $column->setNumericPrecision(
-            $info['numeric_precision'] ? (int) $info['numeric_precision'] : null
-        );
-        $column->setNumericScale(
-            $info['numeric_scale'] ? (int) $info['numeric_scale'] : null
-        );
-        $column->setNumericUnsigned($info['numeric_unsigned']);
-        $column->setErratas($info['erratas']);
-
-        return $column;
-    }
-
     /**
-     * {@inheritdoc}
+     * @throws Exception If the constraint does not exist.
      */
-    #[Override]
-    public function getConstraints(string $table, ?string $schema = null): array
-    {
-        if ($schema === null) {
-            $schema = $this->defaultSchema;
-        }
-
-        $this->loadConstraintData($table, $schema);
-
-        $constraints = [];
-        foreach (array_keys($this->data['constraints'][$schema][$table]) as $constraintName) {
-            $constraints[] = $this->getConstraint($constraintName, $table, $schema);
-        }
-
-        return $constraints;
-    }
-
     #[Override]
     public function getConstraint(
         string $constraintName,
         string $table,
-        ?string $schema = null
+        ?string $schema = null,
     ): ConstraintObject {
-        if ($schema === null) {
+        if (null === $schema) {
             $schema = $this->defaultSchema;
         }
 
         $this->loadConstraintData($table, $schema);
 
-        if (! isset($this->data['constraints'][$schema][$table][$constraintName])) {
+        $info = $this->data['constraints'][$schema][$table][$constraintName] ?? null;
+        if (null === $info) {
             throw new Exception('Cannot find a constraint by that name in this table');
         }
 
-        $info       = $this->data['constraints'][$schema][$table][$constraintName];
         $constraint = new ConstraintObject($constraintName, $table, $schema);
 
-        foreach (
-            [
-                'constraint_type'         => 'setType',
-                'match_option'            => 'setMatchOption',
-                'update_rule'             => 'setUpdateRule',
-                'delete_rule'             => 'setDeleteRule',
-                'columns'                 => 'setColumns',
-                'referenced_table_schema' => 'setReferencedTableSchema',
-                'referenced_table_name'   => 'setReferencedTableName',
-                'referenced_columns'      => 'setReferencedColumns',
-                'check_clause'            => 'setCheckClause',
-            ] as $key => $setMethod
-        ) {
-            if (isset($info[$key])) {
-                $constraint->{$setMethod}($info[$key]);
-            }
+        $constraintType = $info['constraint_type'] ?? null;
+        if (null !== $constraintType) {
+            $constraint->setType($constraintType);
+        }
+
+        $matchOption = $info['match_option'] ?? null;
+        if (null !== $matchOption) {
+            $constraint->setMatchOption($matchOption);
+        }
+
+        $updateRule = $info['update_rule'] ?? null;
+        if (null !== $updateRule) {
+            $constraint->setUpdateRule($updateRule);
+        }
+
+        $deleteRule = $info['delete_rule'] ?? null;
+        if (null !== $deleteRule) {
+            $constraint->setDeleteRule($deleteRule);
+        }
+
+        $columns = $info['columns'] ?? null;
+        if (null !== $columns) {
+            $constraint->setColumns($columns);
+        }
+
+        $referencedTableSchema = $info['referenced_table_schema'] ?? null;
+        if (null !== $referencedTableSchema) {
+            $constraint->setReferencedTableSchema($referencedTableSchema);
+        }
+
+        $referencedTableName = $info['referenced_table_name'] ?? null;
+        if (null !== $referencedTableName) {
+            $constraint->setReferencedTableName($referencedTableName);
+        }
+
+        $referencedColumns = $info['referenced_columns'] ?? null;
+        if (null !== $referencedColumns) {
+            $constraint->setReferencedColumns($referencedColumns);
+        }
+
+        $checkClause = $info['check_clause'] ?? null;
+        if (null !== $checkClause) {
+            $constraint->setCheckClause($checkClause);
         }
 
         return $constraint;
@@ -347,11 +272,13 @@ abstract class AbstractSource implements MetadataInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @return list<ConstraintKeyObject>
      */
     #[Override]
     public function getConstraintKeys(string $constraint, string $table, ?string $schema = null): array
     {
-        if ($schema === null) {
+        if (null === $schema) {
             $schema = $this->defaultSchema;
         }
 
@@ -359,28 +286,41 @@ abstract class AbstractSource implements MetadataInterface
 
         // organize references first
         $references = [];
-        foreach ($this->data['constraint_references'][$schema] as $refKeyInfo) {
-            if ($refKeyInfo['constraint_name'] === $constraint) {
-                $references[$refKeyInfo['constraint_name']] = $refKeyInfo;
+        foreach ($this->data['constraint_references'][$schema] ?? [] as $refKeyInfo) {
+            if ($refKeyInfo['constraint_name'] !== $constraint) {
+                continue;
             }
+
+            $references[$refKeyInfo['constraint_name']] = $refKeyInfo;
         }
 
         $this->loadConstraintDataKeys($schema);
 
         $keys = [];
-        foreach ($this->data['constraint_keys'][$schema] as $constraintKeyInfo) {
-            if ($constraintKeyInfo['table_name'] === $table && $constraintKeyInfo['constraint_name'] === $constraint) {
-                $keys[] = $key = new ConstraintKeyObject($constraintKeyInfo['column_name']);
-                $key->setOrdinalPosition($constraintKeyInfo['ordinal_position']);
-                if (isset($references[$constraint])) {
-                    //$key->setReferencedTableSchema($constraintKeyInfo['referenced_table_schema']);
-                    $key->setForeignKeyUpdateRule($references[$constraint]['update_rule']);
-                    $key->setForeignKeyDeleteRule($references[$constraint]['delete_rule']);
-                    //$key->setReferencedTableSchema($references[$constraint]['referenced_table_schema']);
-                    $key->setReferencedTableName($references[$constraint]['referenced_table_name']);
-                    $key->setReferencedColumnName($references[$constraint]['referenced_column_name']);
-                }
+        foreach ($this->data['constraint_keys'][$schema] ?? [] as $constraintKeyInfo) {
+            if (
+                ! (
+
+                        $constraintKeyInfo['table_name'] === $table
+                        && $constraintKeyInfo['constraint_name'] === $constraint
+
+                )
+            ) {
+                continue;
             }
+
+            $key = new ConstraintKeyObject($constraintKeyInfo['column_name']);
+            $key->setOrdinalPosition($constraintKeyInfo['ordinal_position']);
+
+            $reference = $references[$constraint] ?? null;
+            if (null !== $reference) {
+                $key->setForeignKeyUpdateRule($reference['update_rule']);
+                $key->setForeignKeyDeleteRule($reference['delete_rule']);
+                $key->setReferencedTableName($reference['referenced_table_name']);
+                $key->setReferencedColumnName($reference['referenced_column_name']);
+            }
+
+            $keys[] = $key;
         }
 
         return $keys;
@@ -388,51 +328,151 @@ abstract class AbstractSource implements MetadataInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @return list<ConstraintObject>
+     *
+     * @throws Exception If a constraint cannot be loaded.
      */
     #[Override]
-    public function getTriggerNames(?string $schema = null): array
+    public function getConstraints(string $table, ?string $schema = null): array
     {
-        if ($schema === null) {
+        if (null === $schema) {
             $schema = $this->defaultSchema;
         }
 
-        $this->loadTriggerData($schema);
+        $this->loadConstraintData($table, $schema);
 
-        return array_keys($this->data['triggers'][$schema]);
+        $constraints = [];
+        foreach (array_keys($this->data['constraints'][$schema][$table] ?? []) as $constraintName) {
+            $constraints[] = $this->getConstraint($constraintName, $table, $schema);
+        }
+
+        return $constraints;
     }
 
     /**
      * {@inheritdoc}
+     *
+     * @return list<string>
      */
     #[Override]
-    public function getTriggers(?string $schema = null): array
+    public function getSchemas(): array
     {
-        if ($schema === null) {
+        $this->loadSchemaData();
+
+        return $this->data['schemas'] ?? [];
+    }
+
+    /**
+     * @throws Exception If the table does not exist or is of an unsupported type.
+     */
+    #[Override]
+    public function getTable(string $tableName, ?string $schema = null): TableObject|ViewObject
+    {
+        if (null === $schema) {
             $schema = $this->defaultSchema;
         }
 
-        $triggers = [];
-        foreach ($this->getTriggerNames($schema) as $triggerName) {
-            $triggers[] = $this->getTrigger($triggerName, $schema);
+        $this->loadTableNameData($schema);
+
+        $data = $this->data['table_names'][$schema][$tableName] ?? null;
+        if (null === $data) {
+            throw new Exception("Table \"{$tableName}\" does not exist");
         }
 
-        return $triggers;
+        switch ($data['table_type']) {
+            case 'BASE TABLE':
+                $table = new TableObject($tableName);
+                break;
+            case 'VIEW':
+                $table = new ViewObject($tableName);
+                $table->setViewDefinition($data['view_definition'] ?? null);
+                $table->setCheckOption($data['check_option'] ?? null);
+                $table->setIsUpdatable($data['is_updatable'] ?? null);
+                break;
+            default:
+                throw new Exception(
+                    "Table \"{$tableName}\" is of an unsupported type \"{$data['table_type']}\"",
+                );
+        }
+
+        $table->setColumns($this->getColumns($tableName, $schema));
+        $table->setConstraints($this->getConstraints($tableName, $schema));
+        return $table;
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * @return list<string>
+     *
+     * @mago-expect lint:no-boolean-flag-parameter
+     */
+    #[Override]
+    public function getTableNames(?string $schema = null, bool $includeViews = false): array
+    {
+        if (null === $schema) {
+            $schema = $this->defaultSchema;
+        }
+
+        $this->loadTableNameData($schema);
+
+        $tableNamesData = $this->data['table_names'][$schema] ?? [];
+
+        if ($includeViews) {
+            return array_keys($tableNamesData);
+        }
+
+        $tableNames = [];
+        foreach ($tableNamesData as $tableName => $data) {
+            if ('BASE TABLE' !== $data['table_type']) {
+                continue;
+            }
+
+            $tableNames[] = $tableName;
+        }
+
+        return $tableNames;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return list<TableObject|ViewObject>
+     *
+     * @throws Exception If a table cannot be loaded.
+     */
+    #[Override]
+    public function getTables(?string $schema = null, bool $includeViews = false): array
+    {
+        if (null === $schema) {
+            $schema = $this->defaultSchema;
+        }
+
+        $tables = [];
+        foreach ($this->getTableNames($schema, $includeViews) as $tableName) {
+            $tables[] = $this->getTable($tableName, $schema);
+        }
+
+        return $tables;
+    }
+
+    /**
+     * @throws Exception If the trigger does not exist.
+     */
     #[Override]
     public function getTrigger(string $triggerName, ?string $schema = null): TriggerObject
     {
-        if ($schema === null) {
+        if (null === $schema) {
             $schema = $this->defaultSchema;
         }
 
         $this->loadTriggerData($schema);
 
-        if (! isset($this->data['triggers'][$schema][$triggerName])) {
-            throw new Exception('Trigger "' . $triggerName . '" does not exist');
+        $info = $this->data['triggers'][$schema][$triggerName] ?? null;
+        if (null === $info) {
+            throw new Exception("Trigger \"{$triggerName}\" does not exist");
         }
-
-        $info = $this->data['triggers'][$schema][$triggerName];
 
         $trigger = new TriggerObject();
 
@@ -456,18 +496,110 @@ abstract class AbstractSource implements MetadataInterface
     }
 
     /**
-     * Prepare data hierarchy
+     * {@inheritdoc}
+     *
+     * @return list<string>
      */
-    protected function prepareDataHierarchy(string $type): void
+    #[Override]
+    public function getTriggerNames(?string $schema = null): array
     {
-        $data = &$this->data;
-        foreach (func_get_args() as $key) {
-            if (! isset($data[$key])) {
-                $data[$key] = [];
+        if (null === $schema) {
+            $schema = $this->defaultSchema;
+        }
+
+        $this->loadTriggerData($schema);
+
+        return array_keys($this->data['triggers'][$schema] ?? []);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return list<TriggerObject>
+     *
+     * @throws Exception If a trigger cannot be loaded.
+     */
+    #[Override]
+    public function getTriggers(?string $schema = null): array
+    {
+        if (null === $schema) {
+            $schema = $this->defaultSchema;
+        }
+
+        $triggers = [];
+        foreach ($this->getTriggerNames($schema) as $triggerName) {
+            $triggers[] = $this->getTrigger($triggerName, $schema);
+        }
+
+        return $triggers;
+    }
+
+    /**
+     * @throws Exception If the view does not exist.
+     */
+    #[Override]
+    public function getView(string $viewName, ?string $schema = null): ViewObject|TableObject
+    {
+        if (null === $schema) {
+            $schema = $this->defaultSchema;
+        }
+
+        $this->loadTableNameData($schema);
+
+        $viewInfo = $this->data['table_names'][$schema][$viewName] ?? null;
+        if (null !== $viewInfo && 'VIEW' === $viewInfo['table_type']) {
+            return $this->getTable($viewName, $schema);
+        }
+
+        throw new Exception("View \"{$viewName}\" does not exist");
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return list<string>
+     */
+    #[Override]
+    public function getViewNames(?string $schema = null): array
+    {
+        if (null === $schema) {
+            $schema = $this->defaultSchema;
+        }
+
+        $this->loadTableNameData($schema);
+
+        $viewNames = [];
+        foreach ($this->data['table_names'][$schema] ?? [] as $tableName => $data) {
+            if ('VIEW' !== $data['table_type']) {
+                continue;
             }
 
-            $data = &$data[$key];
+            $viewNames[] = $tableName;
         }
+
+        return $viewNames;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return list<TableObject|ViewObject>
+     *
+     * @throws Exception If a view cannot be loaded.
+     */
+    #[Override]
+    public function getViews(?string $schema = null): array
+    {
+        if (null === $schema) {
+            $schema = $this->defaultSchema;
+        }
+
+        $views = [];
+        foreach ($this->getViewNames($schema) as $tableName) {
+            $views[] = $this->getTable($tableName, $schema);
+        }
+
+        return $views;
     }
 
     /**
@@ -476,23 +608,11 @@ abstract class AbstractSource implements MetadataInterface
     abstract protected function loadSchemaData(): void;
 
     /**
-     * Load table name data
-     */
-    protected function loadTableNameData(string $schema): void
-    {
-        if (isset($this->data['table_names'][$schema])) {
-            return;
-        }
-
-        $this->prepareDataHierarchy('table_names', $schema);
-    }
-
-    /**
      * Load column data
      */
     protected function loadColumnData(string $table, string $schema): void
     {
-        if (isset($this->data['columns'][$schema][$table])) {
+        if (null !== ($this->data['columns'][$schema][$table] ?? null)) {
             return;
         }
 
@@ -501,10 +621,15 @@ abstract class AbstractSource implements MetadataInterface
 
     /**
      * Load constraint data
+     *
+     * $table is unused here but forms part of the signature that concrete
+     * sources override to load per-table constraint data.
+     *
+     * @mago-expect analysis:unused-parameter
      */
     protected function loadConstraintData(string $table, string $schema): void
     {
-        if (isset($this->data['constraints'][$schema])) {
+        if (null !== ($this->data['constraints'][$schema] ?? null)) {
             return;
         }
 
@@ -516,7 +641,7 @@ abstract class AbstractSource implements MetadataInterface
      */
     protected function loadConstraintDataKeys(string $schema): void
     {
-        if (isset($this->data['constraint_keys'][$schema])) {
+        if (null !== ($this->data['constraint_keys'][$schema] ?? null)) {
             return;
         }
 
@@ -525,10 +650,15 @@ abstract class AbstractSource implements MetadataInterface
 
     /**
      * Load constraint references
+     *
+     * $table is unused here but forms part of the signature that concrete
+     * sources override to load per-table constraint references.
+     *
+     * @mago-expect analysis:unused-parameter
      */
     protected function loadConstraintReferences(string $table, string $schema): void
     {
-        if (isset($this->data['constraint_references'][$schema])) {
+        if (null !== ($this->data['constraint_references'][$schema] ?? null)) {
             return;
         }
 
@@ -536,14 +666,49 @@ abstract class AbstractSource implements MetadataInterface
     }
 
     /**
+     * Load table name data
+     */
+    protected function loadTableNameData(string $schema): void
+    {
+        if (null !== ($this->data['table_names'][$schema] ?? null)) {
+            return;
+        }
+
+        $this->prepareDataHierarchy('table_names', $schema);
+    }
+
+    /**
      * Load trigger data
      */
     protected function loadTriggerData(string $schema): void
     {
-        if (isset($this->data['triggers'][$schema])) {
+        if (null !== ($this->data['triggers'][$schema] ?? null)) {
             return;
         }
 
         $this->prepareDataHierarchy('triggers', $schema);
+    }
+
+    /**
+     * Prepare data hierarchy
+     *
+     * The by-reference walk builds arbitrary depths of the hierarchy, which
+     * cannot be expressed against the MetadataData shape.
+     *
+     * @mago-expect analysis:possibly-undefined-string-array-index
+     * @mago-expect analysis:possibly-undefined-int-array-index
+     * @mago-expect analysis:possibly-null-array-access
+     * @mago-expect lint:no-isset
+     */
+    protected function prepareDataHierarchy(string $type, string ...$keys): void
+    {
+        $data = &$this->data;
+        foreach ([$type, ...$keys] as $key) {
+            if (! isset($data[$key])) {
+                $data[$key] = [];
+            }
+
+            $data = &$data[$key];
+        }
     }
 }

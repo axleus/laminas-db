@@ -30,7 +30,25 @@ interface AdapterInterface
 
     public const VALUE_QUOTE_SEPARATOR = 'quoteSeparator';
 
+    public function createStatement(
+        ?string $initialSql = null,
+        ParameterContainer|array $initialParameters = [],
+    ): Driver\StatementInterface;
+
+    /**
+     * Executes raw SQL or a prepared statement.
+     *
+     * @throws Exception\RuntimeException When execution did not produce a result.
+     */
+    public function executeQuery(Driver\StatementInterface|string $sql): Driver\ResultInterface;
+
     public function getDriver(): Driver\DriverInterface;
+
+    /**
+     * @todo 0.3.x track down this usage!!!
+     * @return array
+     */
+    public function getHelpers();
 
     public function getPlatform(): Platform\PlatformInterface;
 
@@ -38,20 +56,17 @@ interface AdapterInterface
 
     public function getQueryResultSetPrototype(): ResultSet\ResultSetInterface;
 
-    public function createStatement(
-        ?string $initialSql = null,
-        ParameterContainer|array $initialParameters = []
+    /**
+     * Prepares a statement for the given SQL without executing it.
+     */
+    public function prepareQuery(
+        string $sql,
+        ParameterContainer|array $parameters = [],
     ): Driver\StatementInterface;
 
     public function query(
         string $sql,
         ParameterContainer|array|string $parametersOrQueryMode = self::QUERY_MODE_PREPARE,
-        ?ResultSet\ResultSetInterface $resultPrototype = null
+        ?ResultSet\ResultSetInterface $resultPrototype = null,
     ): Driver\StatementInterface|ResultSet\ResultSetInterface|Driver\ResultInterface;
-
-    /**
-     * @todo 0.3.x track down this usage!!!
-     * @return array
-     */
-    public function getHelpers();
 }

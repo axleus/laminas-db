@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\Sql\Argument;
 
+use Override;
 use PhpDb\Sql\ArgumentInterface;
 use PhpDb\Sql\ArgumentType;
 
@@ -16,22 +17,24 @@ use PhpDb\Sql\ArgumentType;
 final readonly class Literal implements ArgumentInterface
 {
     public function __construct(
-        private string $literal
-    ) {
+        private string $literal,
+    ) {}
+
+    #[Override]
+    public function getSpecification(): string
+    {
+        return '%s';
     }
 
+    #[Override]
     public function getType(): ArgumentType
     {
         return ArgumentType::Literal;
     }
 
+    #[Override]
     public function getValue(): string
     {
         return $this->literal;
-    }
-
-    public function getSpecification(): string
-    {
-        return '%s';
     }
 }

@@ -8,7 +8,7 @@ use PhpDb\ResultSet\RowPrototypeInterface;
 
 interface RowGatewayInterface extends RowPrototypeInterface
 {
-    public function save(): int;
-
     public function delete(): int;
+
+    public function save(): int;
 }

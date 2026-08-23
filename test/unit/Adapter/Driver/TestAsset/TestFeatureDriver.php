@@ -22,8 +22,9 @@ class TestFeatureDriver implements DriverInterface, DriverFeatureProviderInterfa
         return true;
     }
 
+    /** @param resource $resource */
     #[Override]
-    public function getConnection(): ConnectionInterface
+    public function createResult($resource): ResultInterface
     {
         /** @phpstan-ignore return.type */
         return null;
@@ -37,20 +38,6 @@ class TestFeatureDriver implements DriverInterface, DriverFeatureProviderInterfa
         return null;
     }
 
-    /** @param resource $resource */
-    #[Override]
-    public function createResult($resource): ResultInterface
-    {
-        /** @phpstan-ignore return.type */
-        return null;
-    }
-
-    #[Override]
-    public function getPrepareType(): string
-    {
-        return self::PARAMETERIZATION_POSITIONAL;
-    }
-
     #[Override]
     public function formatParameterName(string $name, ?string $type = null): string
     {
@@ -58,8 +45,21 @@ class TestFeatureDriver implements DriverInterface, DriverFeatureProviderInterfa
     }
 
     #[Override]
+    public function getConnection(): ConnectionInterface
+    {
+        /** @phpstan-ignore return.type */
+        return null;
+    }
+
+    #[Override]
     public function getLastGeneratedValue(): string|int|false|null
     {
         return null;
+    }
+
+    #[Override]
+    public function getPrepareType(): string
+    {
+        return self::PARAMETERIZATION_POSITIONAL;
     }
 }

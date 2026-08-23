@@ -12,9 +12,7 @@ use ReturnTypeWillChange;
  */
 final class PdoMock extends PDO
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public function beginTransaction(): bool
     {

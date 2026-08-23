@@ -14,12 +14,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversMethod(Column::class, 'getExpressionData')]
 final class SmallIntegerTest extends TestCase
 {
-    public function testObjectConstruction(): void
-    {
-        $integer = new SmallInteger('foo');
-        self::assertEquals('foo', $integer->getName());
-    }
-
     public function testGetExpressionData(): void
     {
         $column         = new SmallInteger('foo');
@@ -27,7 +21,7 @@ final class SmallIntegerTest extends TestCase
 
         self::assertEquals(
             '%s %s NOT NULL',
-            $expressionData['spec']
+            $expressionData['spec'],
         );
 
         self::assertEquals(
@@ -35,7 +29,13 @@ final class SmallIntegerTest extends TestCase
                 Argument::Identifier('foo'),
                 Argument::Literal('SMALLINT'),
             ],
-            $expressionData['values']
+            $expressionData['values'],
         );
+    }
+
+    public function testObjectConstruction(): void
+    {
+        $integer = new SmallInteger('foo');
+        self::assertEquals('foo', $integer->getName());
     }
 }

@@ -63,27 +63,51 @@ final class UpdateTest extends TestCase
 
     protected Update $update;
 
-    /**
-     * Sets up the fixture, for example, opens a network connection.
-     * This method is called before a test is executed.
-     */
-    #[Override]
-    protected function setUp(): void
+    public function testCloneDeepCopiesSetWhereAndJoins(): void
     {
-        $this->update = new Update();
+        $this->update
+            ->table('foo')
+            ->set(['bar' => 'baz'])
+            ->where('x = y')
+            ->join('other', 'foo.id = other.id');
+
+        $clone = clone $this->update;
+
+        $clone->set(['bar' => 'changed']);
+        $clone->where('z = w');
+        $clone->join('another', 'foo.id = another.id');
+
+        self::assertEquals(['bar' => 'baz'], $this->update->getRawState('set'));
+        self::assertEquals(['bar' => 'changed'], $clone->getRawState('set'));
+
+        self::assertNotSame(
+            $this->update->getRawState('where'),
+            $clone->getRawState('where'),
+        );
+
+        self::assertNotSame(
+            $this->update->getRawState('joins'),
+            $clone->getRawState('joins'),
+        );
     }
 
-    /**
-     * @throws ReflectionException
-     */
-    public function testTable(): void
+    public function testCloneUpdate(): void
     {
-        $this->update->table('foo');
-        self::assertEquals('foo', $this->readAttribute($this->update, 'table'));
+        $update1 = clone $this->update;
+        $update1->table('foo')
+            ->set(['bar' => 'baz'])
+            ->where('x = y');
 
-        $tableIdentifier = new TableIdentifier('foo', 'bar');
-        $this->update->table($tableIdentifier);
-        self::assertEquals($tableIdentifier, $this->readAttribute($this->update, 'table'));
+        $update2 = clone $this->update;
+        $update2->table('foo')
+            ->set(['bar' => 'baz'])
+            ->where([
+                'id = ?' => 1,
+            ]);
+        self::assertEquals(
+            'UPDATE "foo" SET "bar" = \'baz\' WHERE id = \'1\'',
+            $update2->getSqlString(new TrustingSql92Platform()),
+        );
     }
 
     /**
@@ -95,10 +119,294 @@ final class UpdateTest extends TestCase
         self::assertEquals('foo', $this->readAttribute($update, 'table'));
     }
 
+    public function testConstructWithTableIdentifier(): void
+    {
+        $tableIdentifier = new TableIdentifier('foo', 'bar');
+        $update          = new Update($tableIdentifier);
+
+        self::assertEquals($tableIdentifier, $update->getRawState('table'));
+    }
+
+    public function testGetRawState(): void
+    {
+        $this->update
+            ->table('foo')
+            ->set(['bar' => 'baz'])
+            ->where('x = y');
+
+        self::assertEquals('foo', $this->update->getRawState('table'));
+        self::assertTrue($this->update->getRawState('emptyWhereProtection'));
+        self::assertEquals(['bar' => 'baz'], $this->update->getRawState('set'));
+        self::assertInstanceOf(Where::class, $this->update->getRawState('where'));
+    }
+
+    public function testGetRawStateReturnsAllState(): void
+    {
+        $this->update
+            ->table('foo')
+            ->set(['bar' => 'baz'])
+            ->where('x = y');
+
+        $rawState = $this->update->getRawState();
+
+        self::assertIsArray($rawState);
+        self::assertArrayHasKey('table', $rawState);
+        self::assertArrayHasKey('set', $rawState);
+        self::assertArrayHasKey('where', $rawState);
+        self::assertArrayHasKey('emptyWhereProtection', $rawState);
+        self::assertArrayHasKey('joins', $rawState);
+
+        self::assertEquals('foo', $rawState['table']);
+        self::assertEquals(['bar' => 'baz'], $rawState['set']);
+        self::assertInstanceOf(Where::class, $rawState['where']);
+        self::assertInstanceOf(Join::class, $rawState['joins']);
+        self::assertTrue($rawState['emptyWhereProtection']);
+    }
+
+    public function testGetSqlString(): void
+    {
+        $this->update
+            ->table('foo')
+            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null])
+            ->where('x = y');
+
+        self::assertEquals(
+            'UPDATE "foo" SET "bar" = \'baz\', "boo" = NOW(), "bam" = NULL WHERE x = y',
+            $this->update->getSqlString(new TrustingSql92Platform()),
+        );
+
+        // with TableIdentifier
+        $this->update = new Update();
+        $this->update
+            ->table(new TableIdentifier('foo', 'sch'))
+            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null])
+            ->where('x = y');
+
+        self::assertEquals(
+            'UPDATE "sch"."foo" SET "bar" = \'baz\', "boo" = NOW(), "bam" = NULL WHERE x = y',
+            $this->update->getSqlString(new TrustingSql92Platform()),
+        );
+    }
+
+    #[Group('6768')]
+    #[Group('6773')]
+    public function testGetSqlStringForFalseUpdateValueParameter(): void
+    {
+        $this->update = new Update();
+        $this->update
+            ->table(new TableIdentifier('foo', 'sch'))
+            ->set(['bar' => false, 'boo' => 'test', 'bam' => true])
+            ->where('x = y');
+        self::assertEquals(
+            'UPDATE "sch"."foo" SET "bar" = \'\', "boo" = \'test\', "bam" = \'1\' WHERE x = y',
+            $this->update->getSqlString(new TrustingSql92Platform()),
+        );
+    }
+
+    public function testGetSqlStringWithEmptyWhere(): void
+    {
+        $this->update->table('foo')
+            ->set(['bar' => 'baz']);
+
+        self::assertEquals(
+            'UPDATE "foo" SET "bar" = \'baz\'',
+            $this->update->getSqlString(new TrustingSql92Platform()),
+        );
+    }
+
+    public function testGetUpdate(): void
+    {
+        $getWhere = $this->update->__get('where');
+        self::assertInstanceOf(Where::class, $getWhere);
+    }
+
+    public function testGetUpdateFails(): void
+    {
+        /** @psalm-suppress UndefinedThisPropertyFetch - Ensure non-existent property returns null */
+        $getWhat = $this->update->__get('what');
+        self::assertNull($getWhat);
+    }
+
+    public function testJoin(): void
+    {
+        $this->update->table('Document');
+        $this->update
+            ->set(['x' => 'y'])
+            ->join(
+                'User', // table name
+                'User.UserId = Document.UserId', // expression to join on
+                // default JOIN INNER
+            )
+            ->join(
+                'Category',
+                'Category.CategoryId = Document.CategoryId',
+                Join::JOIN_LEFT, // (optional), one of inner, outer, left, right
+            );
+
+        self::assertEquals(
+            'UPDATE "Document" INNER JOIN "User" ON "User"."UserId" = "Document"."UserId" '
+                . 'LEFT JOIN "Category" ON "Category"."CategoryId" = "Document"."CategoryId" SET "x" = \'y\'',
+            $this->update->getSqlString(new TrustingSql92Platform()),
+        );
+    }
+
+    #[TestDox('unit test: Test join() returns Update object (is chainable)')]
+    public function testJoinChainable(): void
+    {
+        $return = $this->update->join('baz', 'foo.fooId = baz.fooId', Join::JOIN_LEFT);
+        self::assertSame($this->update, $return);
+    }
+
+    /**
+     * Here test if we want update fields from specific table.
+     * Important when we're updating fields that are existing in several tables in one query.
+     * The same test as above but here we will specify table in update params
+     */
+    public function testJoinMultiUpdate(): void
+    {
+        $this->update->table('Document');
+        $this->update
+            ->set(['Documents.x' => 'y'])
+            ->join(
+                'User',
+                'User.UserId = Document.UserId',
+            )
+            ->join(
+                'Category',
+                'Category.CategoryId = Document.CategoryId',
+                Join::JOIN_LEFT,
+            );
+
+        self::assertEquals(
+            'UPDATE "Document" INNER JOIN "User" ON "User"."UserId" = "Document"."UserId" '
+                . 'LEFT JOIN "Category" ON "Category"."CategoryId" = "Document"."CategoryId" SET "Documents"."x" = \'y\'',
+            $this->update->getSqlString(new TrustingSql92Platform()),
+        );
+    }
+
+    public function testJoinWithTableIdentifier(): void
+    {
+        $this->update
+            ->table('foo')
+            ->set(['x' => 'y'])
+            ->join(new TableIdentifier('bar', 'schema'), 'foo.id = bar.foo_id');
+
+        $sql = $this->update->getSqlString(new TrustingSql92Platform());
+        self::assertStringContainsString('JOIN "schema"."bar"', $sql);
+    }
+
+    #[Group('Laminas-240')]
+    public function testPassingMultipleKeyValueInWhereClause(): void
+    {
+        $update = clone $this->update;
+        $update->table('table');
+        $update->set(['fld1' => 'val1']);
+        $update->where(['id1' => 'val1', 'id2' => 'val2']);
+        self::assertEquals(
+            'UPDATE "table" SET "fld1" = \'val1\' WHERE "id1" = \'val1\' AND "id2" = \'val2\'',
+            $update->getSqlString(new TrustingSql92Platform()),
+        );
+    }
+
+    public function testPrepareStatement(): void
+    {
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
+        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $pContainer    = new ParameterContainer([]);
+        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
+
+        $mockStatement->expects($this->once())
+            ->method('setSql')
+            ->with($this->equalTo('UPDATE "foo" SET "bar" = ?, "boo" = NOW() WHERE x = y'));
+
+        $this->update
+            ->table('foo')
+            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()')])
+            ->where('x = y');
+
+        $this->update->prepareStatement($mockAdapter, $mockStatement);
+
+        // with TableIdentifier
+        $this->update = new Update();
+
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
+        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $pContainer    = new ParameterContainer([]);
+        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
+
+        $mockStatement->expects($this->once())
+            ->method('setSql')
+            ->with($this->equalTo('UPDATE "sch"."foo" SET "bar" = ?, "boo" = NOW() WHERE x = y'));
+
+        $this->update
+            ->table(new TableIdentifier('foo', 'sch'))
+            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()')])
+            ->where('x = y');
+
+        $this->update->prepareStatement($mockAdapter, $mockStatement);
+    }
+
+    public function testProcessSetWithPdoDriverUsesDriverColumnQuoting(): void
+    {
+        $mockDriver = $this->getMockBuilder(PdoDriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
+        $mockDriver->expects($this->any())
+            ->method('formatParameterName')
+            ->willReturnCallback(static fn(string $name): string => ":{$name}");
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = new StatementContainer();
+
+        $this->update->table('foo')
+            ->set(['bar' => 'baz', 'boo' => 'qux']);
+
+        $this->update->prepareStatement($mockAdapter, $mockStatement);
+
+        $sql = $mockStatement->getSql();
+        self::assertStringContainsString(':c_0', $sql);
+        self::assertStringContainsString(':c_1', $sql);
+    }
+
     public function testSet(): void
     {
         $this->update->set(['foo' => 'bar']);
         self::assertEquals(['foo' => 'bar'], $this->update->getRawState('set'));
+    }
+
+    public function testSetWithMergeFlag(): void
+    {
+        $this->update->set(['foo' => 'bar']);
+        $this->update->set(['baz' => 'qux'], Update::VALUES_MERGE);
+
+        $set = $this->update->getRawState('set');
+        self::assertEquals(['foo' => 'bar', 'baz' => 'qux'], $set);
+    }
+
+    public function testSetWithNonStringKeyThrowsException(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('set() expects a string for the value key');
+
+        /** @psalm-suppress InvalidArgument - Testing invalid argument handling */
+        $this->update->set([0 => 'value']);
+    }
+
+    public function testSetWithNumericPriority(): void
+    {
+        $this->update->set(['three' => 'c'], 30);
+        $this->update->set(['one' => 'a'], 10);
+        $this->update->set(['two' => 'b'], 20);
+
+        $set = $this->update->getRawState('set');
+        self::assertEquals(['one' => 'a', 'two' => 'b', 'three' => 'c'], $set);
     }
 
     public function testSortableSet(): void
@@ -115,8 +423,74 @@ final class UpdateTest extends TestCase
                 'two'   => 'с_two',
                 'three' => 'с_three',
             ],
-            $this->update->getRawState('set')
+            $this->update->getRawState('set'),
         );
+    }
+
+    #[CoversNothing]
+    public function testSpecificationconstantsCouldBeOverridedByExtensionInGetSqlString(): void
+    {
+        $this->update = new UpdateIgnore();
+
+        $this->update
+            ->table('foo')
+            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null])
+            ->where('x = y');
+
+        self::assertEquals(
+            'UPDATE IGNORE "foo" SET "bar" = \'baz\', "boo" = NOW(), "bam" = NULL WHERE x = y',
+            $this->update->getSqlString(new TrustingSql92Platform()),
+        );
+
+        // with TableIdentifier
+        $this->update = new UpdateIgnore();
+        $this->update
+            ->table(new TableIdentifier('foo', 'sch'))
+            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null])
+            ->where('x = y');
+
+        self::assertEquals(
+            'UPDATE IGNORE "sch"."foo" SET "bar" = \'baz\', "boo" = NOW(), "bam" = NULL WHERE x = y',
+            $this->update->getSqlString(new TrustingSql92Platform()),
+        );
+    }
+
+    #[CoversNothing]
+    public function testSpecificationconstantsCouldBeOverridedByExtensionInPrepareStatement(): void
+    {
+        $updateIgnore = new UpdateIgnore();
+
+        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
+        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
+        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
+        $mockAdapter = $this->createMockAdapter($mockDriver);
+
+        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
+        $pContainer    = new ParameterContainer([]);
+        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
+
+        $mockStatement->expects($this->once())
+            ->method('setSql')
+            ->with($this->equalTo('UPDATE IGNORE "foo" SET "bar" = ?, "boo" = NOW() WHERE x = y'));
+
+        $updateIgnore->table('foo')
+            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()')])
+            ->where('x = y');
+
+        $updateIgnore->prepareStatement($mockAdapter, $mockStatement);
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    public function testTable(): void
+    {
+        $this->update->table('foo');
+        self::assertEquals('foo', $this->readAttribute($this->update, 'table'));
+
+        $tableIdentifier = new TableIdentifier('foo', 'bar');
+        $this->update->table($tableIdentifier);
+        self::assertEquals($tableIdentifier, $this->readAttribute($this->update, 'table'));
     }
 
     /**
@@ -163,7 +537,7 @@ final class UpdateTest extends TestCase
         $this->update->where($where);
         self::assertSame($where, $this->update->where);
 
-        $this->update->where(function (Where $what) use ($where): void {
+        $this->update->where(static function (Where $what) use ($where): void {
             self::assertSame($where, $what);
         });
 
@@ -172,333 +546,11 @@ final class UpdateTest extends TestCase
         $this->update->where(null);
     }
 
-    #[Group('Laminas-240')]
-    public function testPassingMultipleKeyValueInWhereClause(): void
-    {
-        $update = clone $this->update;
-        $update->table('table');
-        $update->set(['fld1' => 'val1']);
-        $update->where(['id1' => 'val1', 'id2' => 'val2']);
-        self::assertEquals(
-            'UPDATE "table" SET "fld1" = \'val1\' WHERE "id1" = \'val1\' AND "id2" = \'val2\'',
-            $update->getSqlString(new TrustingSql92Platform())
-        );
-    }
-
-    public function testGetRawState(): void
-    {
-        $this->update->table('foo')
-            ->set(['bar' => 'baz'])
-            ->where('x = y');
-
-        self::assertEquals('foo', $this->update->getRawState('table'));
-        self::assertTrue($this->update->getRawState('emptyWhereProtection'));
-        self::assertEquals(['bar' => 'baz'], $this->update->getRawState('set'));
-        self::assertInstanceOf(Where::class, $this->update->getRawState('where'));
-    }
-
-    public function testPrepareStatement(): void
-    {
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
-        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $pContainer    = new ParameterContainer([]);
-        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
-
-        $mockStatement->expects($this->once())
-            ->method('setSql')
-            ->with($this->equalTo('UPDATE "foo" SET "bar" = ?, "boo" = NOW() WHERE x = y'));
-
-        $this->update->table('foo')
-            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()')])
-            ->where('x = y');
-
-        $this->update->prepareStatement($mockAdapter, $mockStatement);
-
-        // with TableIdentifier
-        $this->update = new Update();
-
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
-        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $pContainer    = new ParameterContainer([]);
-        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
-
-        $mockStatement->expects($this->once())
-            ->method('setSql')
-            ->with($this->equalTo('UPDATE "sch"."foo" SET "bar" = ?, "boo" = NOW() WHERE x = y'));
-
-        $this->update->table(new TableIdentifier('foo', 'sch'))
-            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()')])
-            ->where('x = y');
-
-        $this->update->prepareStatement($mockAdapter, $mockStatement);
-    }
-
-    public function testGetSqlString(): void
-    {
-        $this->update->table('foo')
-            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null])
-            ->where('x = y');
-
-        self::assertEquals(
-            'UPDATE "foo" SET "bar" = \'baz\', "boo" = NOW(), "bam" = NULL WHERE x = y',
-            $this->update->getSqlString(new TrustingSql92Platform())
-        );
-
-        // with TableIdentifier
-        $this->update = new Update();
-        $this->update->table(new TableIdentifier('foo', 'sch'))
-            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null])
-            ->where('x = y');
-
-        self::assertEquals(
-            'UPDATE "sch"."foo" SET "bar" = \'baz\', "boo" = NOW(), "bam" = NULL WHERE x = y',
-            $this->update->getSqlString(new TrustingSql92Platform())
-        );
-    }
-
-    #[Group('6768')]
-    #[Group('6773')]
-    public function testGetSqlStringForFalseUpdateValueParameter(): void
-    {
-        $this->update = new Update();
-        $this->update->table(new TableIdentifier('foo', 'sch'))
-            ->set(['bar' => false, 'boo' => 'test', 'bam' => true])
-            ->where('x = y');
-        self::assertEquals(
-            'UPDATE "sch"."foo" SET "bar" = \'\', "boo" = \'test\', "bam" = \'1\' WHERE x = y',
-            $this->update->getSqlString(new TrustingSql92Platform())
-        );
-    }
-
-    public function testGetUpdate(): void
-    {
-        $getWhere = $this->update->__get('where');
-        self::assertInstanceOf(Where::class, $getWhere);
-    }
-
-    public function testGetUpdateFails(): void
-    {
-        /** @psalm-suppress UndefinedThisPropertyFetch - Ensure non-existent property returns null */
-        $getWhat = $this->update->__get('what');
-        self::assertNull($getWhat);
-    }
-
-    public function testCloneUpdate(): void
-    {
-        $update1 = clone $this->update;
-        $update1->table('foo')
-                ->set(['bar' => 'baz'])
-                ->where('x = y');
-
-        $update2 = clone $this->update;
-        $update2->table('foo')
-            ->set(['bar' => 'baz'])
-            ->where([
-                'id = ?' => 1,
-            ]);
-        self::assertEquals(
-            'UPDATE "foo" SET "bar" = \'baz\' WHERE id = \'1\'',
-            $update2->getSqlString(new TrustingSql92Platform())
-        );
-    }
-
-    #[CoversNothing]
-    public function testSpecificationconstantsCouldBeOverridedByExtensionInPrepareStatement(): void
-    {
-        $updateIgnore = new UpdateIgnore();
-
-        $mockDriver = $this->getMockBuilder(DriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
-        $mockDriver->expects($this->any())->method('formatParameterName')->willReturn('?');
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = $this->getMockBuilder(StatementInterface::class)->getMock();
-        $pContainer    = new ParameterContainer([]);
-        $mockStatement->expects($this->any())->method('getParameterContainer')->willReturn($pContainer);
-
-        $mockStatement->expects($this->once())
-            ->method('setSql')
-            ->with($this->equalTo('UPDATE IGNORE "foo" SET "bar" = ?, "boo" = NOW() WHERE x = y'));
-
-        $updateIgnore->table('foo')
-            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()')])
-            ->where('x = y');
-
-        $updateIgnore->prepareStatement($mockAdapter, $mockStatement);
-    }
-
-    #[CoversNothing]
-    public function testSpecificationconstantsCouldBeOverridedByExtensionInGetSqlString(): void
-    {
-        $this->update = new UpdateIgnore();
-
-        $this->update->table('foo')
-            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null])
-            ->where('x = y');
-
-        self::assertEquals(
-            'UPDATE IGNORE "foo" SET "bar" = \'baz\', "boo" = NOW(), "bam" = NULL WHERE x = y',
-            $this->update->getSqlString(new TrustingSql92Platform())
-        );
-
-        // with TableIdentifier
-        $this->update = new UpdateIgnore();
-        $this->update->table(new TableIdentifier('foo', 'sch'))
-            ->set(['bar' => 'baz', 'boo' => new Expression('NOW()'), 'bam' => null])
-            ->where('x = y');
-
-        self::assertEquals(
-            'UPDATE IGNORE "sch"."foo" SET "bar" = \'baz\', "boo" = NOW(), "bam" = NULL WHERE x = y',
-            $this->update->getSqlString(new TrustingSql92Platform())
-        );
-    }
-
-    public function testJoin(): void
-    {
-        $this->update->table('Document');
-        $this->update->set(['x' => 'y'])
-            ->join(
-                'User', // table name
-                'User.UserId = Document.UserId' // expression to join on
-                // default JOIN INNER
-            )
-            ->join(
-                'Category',
-                'Category.CategoryId = Document.CategoryId',
-                Join::JOIN_LEFT // (optional), one of inner, outer, left, right
-            );
-
-        self::assertEquals(
-            'UPDATE "Document" INNER JOIN "User" ON "User"."UserId" = "Document"."UserId" '
-            . 'LEFT JOIN "Category" ON "Category"."CategoryId" = "Document"."CategoryId" SET "x" = \'y\'',
-            $this->update->getSqlString(new TrustingSql92Platform())
-        );
-    }
-
-    /**
-     * Here test if we want update fields from specific table.
-     * Important when we're updating fields that are existing in several tables in one query.
-     * The same test as above but here we will specify table in update params
-     */
-    public function testJoinMultiUpdate(): void
-    {
-        $this->update->table('Document');
-        $this->update->set(['Documents.x' => 'y'])
-            ->join(
-                'User',
-                'User.UserId = Document.UserId'
-            )
-            ->join(
-                'Category',
-                'Category.CategoryId = Document.CategoryId',
-                Join::JOIN_LEFT
-            );
-
-        self::assertEquals(
-            'UPDATE "Document" INNER JOIN "User" ON "User"."UserId" = "Document"."UserId" '
-            . 'LEFT JOIN "Category" ON "Category"."CategoryId" = "Document"."CategoryId" SET "Documents"."x" = \'y\'',
-            $this->update->getSqlString(new TrustingSql92Platform())
-        );
-    }
-
-    #[TestDox('unit test: Test join() returns Update object (is chainable)')]
-    public function testJoinChainable(): void
-    {
-        $return = $this->update->join('baz', 'foo.fooId = baz.fooId', Join::JOIN_LEFT);
-        self::assertSame($this->update, $return);
-    }
-
-    public function testSetWithNonStringKeyThrowsException(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('set() expects a string for the value key');
-
-        /** @psalm-suppress InvalidArgument - Testing invalid argument handling */
-        $this->update->set([0 => 'value']);
-    }
-
-    public function testSetWithMergeFlag(): void
-    {
-        $this->update->set(['foo' => 'bar']);
-        $this->update->set(['baz' => 'qux'], Update::VALUES_MERGE);
-
-        $set = $this->update->getRawState('set');
-        self::assertEquals(['foo' => 'bar', 'baz' => 'qux'], $set);
-    }
-
-    public function testSetWithNumericPriority(): void
-    {
-        $this->update->set(['three' => 'c'], 30);
-        $this->update->set(['one' => 'a'], 10);
-        $this->update->set(['two' => 'b'], 20);
-
-        $set = $this->update->getRawState('set');
-        self::assertEquals(['one' => 'a', 'two' => 'b', 'three' => 'c'], $set);
-    }
-
-    public function testConstructWithTableIdentifier(): void
-    {
-        $tableIdentifier = new TableIdentifier('foo', 'bar');
-        $update          = new Update($tableIdentifier);
-
-        self::assertEquals($tableIdentifier, $update->getRawState('table'));
-    }
-
-    public function testGetSqlStringWithEmptyWhere(): void
-    {
-        $this->update->table('foo')
-            ->set(['bar' => 'baz']);
-
-        self::assertEquals(
-            'UPDATE "foo" SET "bar" = \'baz\'',
-            $this->update->getSqlString(new TrustingSql92Platform())
-        );
-    }
-
-    public function testGetRawStateReturnsAllState(): void
-    {
-        $this->update->table('foo')
-            ->set(['bar' => 'baz'])
-            ->where('x = y');
-
-        $rawState = $this->update->getRawState();
-
-        self::assertIsArray($rawState);
-        self::assertArrayHasKey('table', $rawState);
-        self::assertArrayHasKey('set', $rawState);
-        self::assertArrayHasKey('where', $rawState);
-        self::assertArrayHasKey('emptyWhereProtection', $rawState);
-        self::assertArrayHasKey('joins', $rawState);
-
-        self::assertEquals('foo', $rawState['table']);
-        self::assertEquals(['bar' => 'baz'], $rawState['set']);
-        self::assertInstanceOf(Where::class, $rawState['where']);
-        self::assertInstanceOf(Join::class, $rawState['joins']);
-        self::assertTrue($rawState['emptyWhereProtection']);
-    }
-
-    public function testJoinWithTableIdentifier(): void
-    {
-        $this->update->table('foo')
-            ->set(['x' => 'y'])
-            ->join(new TableIdentifier('bar', 'schema'), 'foo.id = bar.foo_id');
-
-        $sql = $this->update->getSqlString(new TrustingSql92Platform());
-        self::assertStringContainsString('JOIN "schema"."bar"', $sql);
-    }
-
     #[TestDox('unit test: Test where() accepts Expression (ExpressionInterface) in array')]
     public function testWhereAcceptsExpressionInterface(): void
     {
-        $this->update->table('foo')
+        $this->update
+            ->table('foo')
             ->set(['bar' => 'baz'])
             ->where([
                 new Expression('COUNT(?) > ?', [new Identifier('id'), new Value(5)]),
@@ -509,51 +561,13 @@ final class UpdateTest extends TestCase
         self::assertEquals(1, $where->count());
     }
 
-    public function testProcessSetWithPdoDriverUsesDriverColumnQuoting(): void
+    /**
+     * Sets up the fixture, for example, opens a network connection.
+     * This method is called before a test is executed.
+     */
+    #[Override]
+    protected function setUp(): void
     {
-        $mockDriver = $this->getMockBuilder(PdoDriverInterface::class)->getMock();
-        $mockDriver->expects($this->any())->method('getPrepareType')->willReturn('positional');
-        $mockDriver->expects($this->any())
-            ->method('formatParameterName')
-            ->willReturnCallback(fn(string $name): string => ':' . $name);
-        $mockAdapter = $this->createMockAdapter($mockDriver);
-
-        $mockStatement = new StatementContainer();
-
-        $this->update->table('foo')
-            ->set(['bar' => 'baz', 'boo' => 'qux']);
-
-        $this->update->prepareStatement($mockAdapter, $mockStatement);
-
-        $sql = $mockStatement->getSql();
-        self::assertStringContainsString(':c_0', $sql);
-        self::assertStringContainsString(':c_1', $sql);
-    }
-
-    public function testCloneDeepCopiesSetWhereAndJoins(): void
-    {
-        $this->update->table('foo')
-            ->set(['bar' => 'baz'])
-            ->where('x = y')
-            ->join('other', 'foo.id = other.id');
-
-        $clone = clone $this->update;
-
-        $clone->set(['bar' => 'changed']);
-        $clone->where('z = w');
-        $clone->join('another', 'foo.id = another.id');
-
-        self::assertEquals(['bar' => 'baz'], $this->update->getRawState('set'));
-        self::assertEquals(['bar' => 'changed'], $clone->getRawState('set'));
-
-        self::assertNotSame(
-            $this->update->getRawState('where'),
-            $clone->getRawState('where')
-        );
-
-        self::assertNotSame(
-            $this->update->getRawState('joins'),
-            $clone->getRawState('joins')
-        );
+        $this->update = new Update();
     }
 }

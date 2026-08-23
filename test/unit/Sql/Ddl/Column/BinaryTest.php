@@ -14,15 +14,18 @@ final class BinaryTest extends TestCase
 {
     public function testGetExpressionData(): void
     {
-        $column = new Binary('foo', 10000000);
+        $column = new Binary('foo', 10_000_000);
 
         $expressionData = $column->getExpressionData();
 
         self::assertEquals('%s %s(%s) NOT NULL', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('foo'),
-            Argument::literal('BINARY'),
-            Argument::literal('10000000'),
-        ], $expressionData['values']);
+        self::assertEquals(
+            [
+                Argument::identifier('foo'),
+                Argument::literal('BINARY'),
+                Argument::literal('10000000'),
+            ],
+            $expressionData['values'],
+        );
     }
 }

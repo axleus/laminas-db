@@ -19,27 +19,42 @@ final readonly class TableIdentifier
     ) {
         if ('' === $table) {
             throw new Exception\InvalidArgumentException(
-                '$table must be a valid table name, empty string given'
+                '$table must be a valid table name, empty string given',
             );
         }
 
         if ('' === $schema) {
             throw new Exception\InvalidArgumentException(
-                '$schema must be a valid schema name or null, empty string given'
+                '$schema must be a valid schema name or null, empty string given',
             );
         }
 
         if ('' === $prefix) {
             throw new Exception\InvalidArgumentException(
-                '$prefix must be a valid table prefix or null, empty string given'
+                '$prefix must be a valid table prefix or null, empty string given',
             );
         }
 
         if ('' === $separator) {
             throw new Exception\InvalidArgumentException(
-                '$separator must be a valid table separator, empty string given'
+                '$separator must be a valid table separator, empty string given',
             );
         }
+    }
+
+    public function getPrefix(): ?string
+    {
+        return $this->prefix;
+    }
+
+    public function getSchema(): ?string
+    {
+        return $this->schema;
+    }
+
+    public function getSeparator(): string
+    {
+        return $this->separator ?? self::SEPARATOR;
     }
 
     /**
@@ -48,11 +63,17 @@ final readonly class TableIdentifier
      */
     public function getTable(): string
     {
-        if ($this->prefix === null) {
+        if (null === $this->prefix) {
             return $this->table;
         }
 
-        return $this->prefix . $this->separator . $this->table;
+        return $this->prefix . $this->getSeparator() . $this->table;
+    }
+
+    /** @return array{0: string, 1: null|string} */
+    public function getTableAndSchema(): array
+    {
+        return [$this->getTable(), $this->schema];
     }
 
     /**
@@ -61,26 +82,5 @@ final readonly class TableIdentifier
     public function getUnprefixedTable(): string
     {
         return $this->table;
-    }
-
-    public function getPrefix(): ?string
-    {
-        return $this->prefix;
-    }
-
-    public function getSeparator(): string
-    {
-        return $this->separator;
-    }
-
-    public function getSchema(): ?string
-    {
-        return $this->schema;
-    }
-
-    /** @return array{0: string, 1: null|string} */
-    public function getTableAndSchema(): array
-    {
-        return [$this->getTable(), $this->schema];
     }
 }

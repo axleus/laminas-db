@@ -26,18 +26,18 @@ final class AdapterInterfaceFactory
             throw ContainerException::forService(
                 $requestedName,
                 self::class,
-                'Container is missing a config service'
+                'Container is missing a config service',
             );
         }
 
         $config        = $container->get('config') ?? [];
         $adapterConfig = $config[AdapterInterface::class] ?? $config[Adapter::class] ?? [];
 
-        if ($adapterConfig === []) {
+        if ([] === $adapterConfig) {
             throw ContainerException::forService(
                 AdapterInterface::class,
                 self::class,
-                'No configuration found for ' . $requestedName
+                "No configuration found for {$requestedName}",
             );
         }
 

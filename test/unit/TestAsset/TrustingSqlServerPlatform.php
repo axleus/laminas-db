@@ -12,18 +12,18 @@ final class TrustingSqlServerPlatform extends Sql92
     /** @var array{string, string} */
     protected array $quoteIdentifier = ['[', ']'];
 
+    #[Override]
+    public function getName(): string
+    {
+        return 'sqlserver';
+    }
+
     /**
      * @param string $value
      */
     #[Override]
     public function quoteValue($value): string
     {
-        return "'" . $value . "'";
-    }
-
-    #[Override]
-    public function getName(): string
-    {
-        return 'sqlserver';
+        return "'{$value}'";
     }
 }

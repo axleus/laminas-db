@@ -19,17 +19,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversMethod(DriverFeatureProviderTrait::class, 'getFeature')]
 final class DriverFeatureProviderTraitTest extends TestCase
 {
-    public function testAddFeatureSetsDriverAndStoresFeature(): void
-    {
-        $driver  = new TestFeatureDriver();
-        $feature = $this->createMock(DriverFeatureInterface::class);
-        $feature->expects(self::once())->method('setDriver')->with($driver);
-
-        $driver->addFeature($feature);
-
-        self::assertSame($feature, $driver->getFeature($feature::class));
-    }
-
     public function testAddFeaturesAddsMultipleFeatures(): void
     {
         $driver   = new TestFeatureDriver();
@@ -41,21 +30,15 @@ final class DriverFeatureProviderTraitTest extends TestCase
         self::assertNotFalse($driver->getFeature($feature1::class));
     }
 
-    public function testGetFeatureReturnsFeatureByClassName(): void
+    public function testAddFeatureSetsDriverAndStoresFeature(): void
     {
         $driver  = new TestFeatureDriver();
         $feature = $this->createMock(DriverFeatureInterface::class);
+        $feature->expects(self::once())->method('setDriver')->with($driver);
 
         $driver->addFeature($feature);
 
         self::assertSame($feature, $driver->getFeature($feature::class));
-    }
-
-    public function testGetFeatureReturnsFalseWhenNotFound(): void
-    {
-        $driver = new TestFeatureDriver();
-
-        self::assertFalse($driver->getFeature('NonExistent'));
     }
 
     public function testAddFeatureThrowsWhenUsedOutsideDriverInterface(): void
@@ -70,5 +53,22 @@ final class DriverFeatureProviderTraitTest extends TestCase
         $this->expectExceptionMessage('can only be composed into');
 
         $nonDriver->addFeature($feature);
+    }
+
+    public function testGetFeatureReturnsFalseWhenNotFound(): void
+    {
+        $driver = new TestFeatureDriver();
+
+        self::assertFalse($driver->getFeature('NonExistent'));
+    }
+
+    public function testGetFeatureReturnsFeatureByClassName(): void
+    {
+        $driver  = new TestFeatureDriver();
+        $feature = $this->createMock(DriverFeatureInterface::class);
+
+        $driver->addFeature($feature);
+
+        self::assertSame($feature, $driver->getFeature($feature::class));
     }
 }

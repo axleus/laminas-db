@@ -10,6 +10,6 @@ use PhpDb\Sql\SqlInterface;
 interface PlatformDecoratorInterface
 {
     public function setSubject(
-        SqlInterface|PreparableSqlInterface|null $subject
-    ): PlatformDecoratorInterface;
+        SqlInterface|PreparableSqlInterface|null $subject,
+    ): self;
 }

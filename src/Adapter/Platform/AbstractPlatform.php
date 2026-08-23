@@ -40,63 +40,9 @@ abstract class AbstractPlatform implements PlatformInterface
      * {@inheritDoc}
      */
     #[Override]
-    public function quoteIdentifierInFragment(string $identifier, array $additionalSafeWords = []): string
+    public function getIdentifierSeparator(): string
     {
-        if (! $this->quoteIdentifiers) {
-            return $identifier;
-        }
-
-        $safeWords = self::SAFE_WORDS;
-        foreach ($additionalSafeWords as $sWord) {
-            $safeWords[strtolower($sWord)] = true;
-        }
-
-        $parts = preg_split(
-            $this->quoteIdentifierFragmentPattern,
-            $identifier,
-            -1,
-            PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
-        );
-
-        $quoteStart = $this->quoteIdentifier[0];
-        $quoteEnd   = $this->quoteIdentifier[1];
-        $quoteTo    = $this->quoteIdentifierTo;
-        $result     = '';
-
-        foreach ($parts as $part) {
-            $lowerPart = strtolower($part);
-            if (isset($safeWords[$lowerPart])) {
-                $result .= $part;
-            } else {
-                $result .= $quoteStart . str_replace($quoteStart, $quoteTo, $part) . $quoteEnd;
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    #[Override]
-    public function quoteIdentifier(string $identifier): string
-    {
-        if (! $this->quoteIdentifiers) {
-            return $identifier;
-        }
-
-        return $this->quoteIdentifier[0]
-            . str_replace($this->quoteIdentifier[0], $this->quoteIdentifierTo, $identifier)
-            . $this->quoteIdentifier[1];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    #[Override]
-    public function quoteIdentifierChain(array|string $identifierChain): string
-    {
-        return '"' . implode('"."', (array) str_replace('"', '\\"', $identifierChain)) . '"';
+        return '.';
     }
 
     /**
@@ -121,15 +67,65 @@ abstract class AbstractPlatform implements PlatformInterface
      * {@inheritDoc}
      */
     #[Override]
-    public function quoteValue(string $value): string
+    public function quoteIdentifier(string $identifier): string
     {
-        if (! isset($this->driver)) {
-            throw VunerablePlatformQuoteException::forPlatformAndMethod(
-                static::class,
-                __METHOD__
-            );
+        if (! $this->quoteIdentifiers) {
+            return $identifier;
         }
-        return '\'' . addcslashes($value, "\x00\n\r\\'\"\x1a") . '\'';
+
+        return (
+            $this->quoteIdentifier[0]
+                . str_replace($this->quoteIdentifier[0], $this->quoteIdentifierTo, $identifier)
+                . $this->quoteIdentifier[1]
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    #[Override]
+    public function quoteIdentifierChain(array|string $identifierChain): string
+    {
+        return '"' . implode('"."', (array) str_replace('"', '\\"', $identifierChain)) . '"';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    #[Override]
+    public function quoteIdentifierInFragment(string $identifier, array $additionalSafeWords = []): string
+    {
+        if (! $this->quoteIdentifiers) {
+            return $identifier;
+        }
+
+        $safeWords = self::SAFE_WORDS;
+        foreach ($additionalSafeWords as $sWord) {
+            $safeWords[strtolower($sWord)] = true;
+        }
+
+        $parts = preg_split(
+            $this->quoteIdentifierFragmentPattern,
+            $identifier,
+            -1,
+            PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY,
+        );
+
+        $quoteStart = $this->quoteIdentifier[0];
+        $quoteEnd   = $this->quoteIdentifier[1];
+        $quoteTo    = $this->quoteIdentifierTo;
+        $result     = '';
+
+        foreach ($parts as $part) {
+            $lowerPart = strtolower($part);
+            if (isset($safeWords[$lowerPart])) {
+                $result .= $part;
+            } else {
+                $result .= $quoteStart . str_replace($quoteStart, $quoteTo, $part) . $quoteEnd;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -145,17 +141,23 @@ abstract class AbstractPlatform implements PlatformInterface
      * {@inheritDoc}
      */
     #[Override]
-    public function quoteValueList(array|string $valueList): string
+    public function quoteValue(string $value): string
     {
-        return implode(', ', array_map([$this, 'quoteValue'], (array) $valueList));
+        if (! isset($this->driver)) {
+            throw VunerablePlatformQuoteException::forPlatformAndMethod(
+                static::class,
+                __METHOD__,
+            );
+        }
+        return '\'' . addcslashes($value, "\x00\n\r\\'\"\x1a") . '\'';
     }
 
     /**
      * {@inheritDoc}
      */
     #[Override]
-    public function getIdentifierSeparator(): string
+    public function quoteValueList(array|string $valueList): string
     {
-        return '.';
+        return implode(', ', array_map([$this, 'quoteValue'], (array) $valueList));
     }
 }

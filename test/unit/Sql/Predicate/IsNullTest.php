@@ -23,18 +23,6 @@ use PHPUnit\Framework\TestCase;
 #[Group('unit')]
 final class IsNullTest extends TestCase
 {
-    public function testEmptyConstructorYieldsNullIdentifier(): void
-    {
-        $isNotNull = new IsNotNull();
-        self::assertNull($isNotNull->getIdentifier());
-    }
-
-    public function testSpecificationIsNullByDefault(): void
-    {
-        $isNotNull = new IsNotNull();
-        self::assertNull($isNotNull->getSpecification());
-    }
-
     public function testCanPassIdentifierToConstructor(): void
     {
         $isnull = new IsNotNull('foo.bar');
@@ -44,6 +32,21 @@ final class IsNullTest extends TestCase
         self::assertInstanceOf(ArgumentInterface::class, $identifier);
         self::assertEquals('foo.bar', $identifier->getValue());
         self::assertEquals(ArgumentType::Identifier, $identifier->getType());
+    }
+
+    public function testEmptyConstructorYieldsNullIdentifier(): void
+    {
+        $isNotNull = new IsNotNull();
+        self::assertNull($isNotNull->getIdentifier());
+    }
+
+    public function testGetExpressionDataThrowsExceptionWhenIdentifierNotSet(): void
+    {
+        $isNull = new IsNull();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Identifier must be specified');
+        $isNull->getExpressionData();
     }
 
     public function testIdentifierIsMutable(): void
@@ -72,13 +75,6 @@ final class IsNullTest extends TestCase
         self::assertEquals(ArgumentType::Identifier, $identifier2->getType());
     }
 
-    public function testSpecificationIsMutable(): void
-    {
-        $isNotNull = new IsNotNull();
-        $isNotNull->setSpecification('%1$s NOT NULL');
-        self::assertEquals('%1$s NOT NULL', $isNotNull->getSpecification());
-    }
-
     public function testRetrievingWherePartsReturnsSpecificationArrayOfIdentifierAndArrayOfTypes(): void
     {
         $isNotNull = new IsNotNull();
@@ -99,13 +95,14 @@ final class IsNullTest extends TestCase
         self::assertEquals(ArgumentType::Identifier, $values[0]->getType());
     }
 
-    public function testGetExpressionDataThrowsExceptionWhenIdentifierNotSet(): void
+    public function testSetIdentifierWithArgumentInterfacePassesThrough(): void
     {
-        $isNull = new IsNull();
+        $isNull     = new IsNull();
+        $identifier = new Identifier('bar');
 
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Identifier must be specified');
-        $isNull->getExpressionData();
+        $isNull->setIdentifier($identifier);
+
+        self::assertSame($identifier, $isNull->getIdentifier());
     }
 
     public function testSetIdentifierWithStringConvertsToIdentifier(): void
@@ -119,13 +116,16 @@ final class IsNullTest extends TestCase
         self::assertSame('foo', $identifier->getValue());
     }
 
-    public function testSetIdentifierWithArgumentInterfacePassesThrough(): void
+    public function testSpecificationIsMutable(): void
     {
-        $isNull     = new IsNull();
-        $identifier = new Identifier('bar');
+        $isNotNull = new IsNotNull();
+        $isNotNull->setSpecification('%1$s NOT NULL');
+        self::assertEquals('%1$s NOT NULL', $isNotNull->getSpecification());
+    }
 
-        $isNull->setIdentifier($identifier);
-
-        self::assertSame($identifier, $isNull->getIdentifier());
+    public function testSpecificationIsNullByDefault(): void
+    {
+        $isNotNull = new IsNotNull();
+        self::assertNull($isNotNull->getSpecification());
     }
 }

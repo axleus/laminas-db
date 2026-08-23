@@ -15,27 +15,16 @@ use ReflectionProperty;
 
 class GlobalAdapterFeatureTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        // Reset the static adapters before each test
-        $reflection = new ReflectionProperty(GlobalAdapterFeature::class, 'staticAdapters');
-        $reflection->setValue(null, []);
-    }
-
-    protected function tearDown(): void
-    {
-        // Clean up static adapters after each test
-        $reflection = new ReflectionProperty(GlobalAdapterFeature::class, 'staticAdapters');
-        $reflection->setValue(null, []);
-    }
-
-    public function testSetStaticAdapter(): void
+    public function testGetStaticAdapterReturnsDefaultAdapterWhenClassSpecificNotSet(): void
     {
         $adapter = $this->createMock(AdapterInterface::class);
 
+        // Set adapter on the base class
         GlobalAdapterFeature::setStaticAdapter($adapter);
 
+        // Get adapter should return the default adapter
         $result = GlobalAdapterFeature::getStaticAdapter();
+
         self::assertSame($adapter, $result);
     }
 
@@ -69,16 +58,13 @@ class GlobalAdapterFeatureTest extends TestCase
         self::assertSame($adapter, $result);
     }
 
-    public function testGetStaticAdapterReturnsDefaultAdapterWhenClassSpecificNotSet(): void
+    public function testSetStaticAdapter(): void
     {
         $adapter = $this->createMock(AdapterInterface::class);
 
-        // Set adapter on the base class
         GlobalAdapterFeature::setStaticAdapter($adapter);
 
-        // Get adapter should return the default adapter
         $result = GlobalAdapterFeature::getStaticAdapter();
-
         self::assertSame($adapter, $result);
     }
 
@@ -119,5 +105,19 @@ class GlobalAdapterFeatureTest extends TestCase
         $this->expectExceptionMessage('No database adapter was found in the static registry.');
 
         TestGlobalAdapterFeatureSubclass::getStaticAdapter();
+    }
+
+    protected function setUp(): void
+    {
+        // Reset the static adapters before each test
+        $reflection = new ReflectionProperty(GlobalAdapterFeature::class, 'staticAdapters');
+        $reflection->setValue(null, []);
+    }
+
+    protected function tearDown(): void
+    {
+        // Clean up static adapters after each test
+        $reflection = new ReflectionProperty(GlobalAdapterFeature::class, 'staticAdapters');
+        $reflection->setValue(null, []);
     }
 }

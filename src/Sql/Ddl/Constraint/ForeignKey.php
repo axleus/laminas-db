@@ -39,24 +39,63 @@ class ForeignKey extends AbstractConstraint
         string|array $columns,
         string $referenceTable,
         array|string|null $referenceColumn,
-        null|string $onDeleteRule = null,
-        null|string $onUpdateRule = null
+        ?string $onDeleteRule = null,
+        ?string $onUpdateRule = null,
     ) {
         parent::__construct($columns, $name);
 
         $this->setReferenceTable($referenceTable);
 
-        if ($referenceColumn !== null) {
+        if (null !== $referenceColumn) {
             $this->setReferenceColumn($referenceColumn);
         }
 
-        if ($onDeleteRule !== null) {
+        if (null !== $onDeleteRule) {
             $this->setOnDeleteRule($onDeleteRule);
         }
 
-        if ($onUpdateRule !== null) {
+        if (null !== $onUpdateRule) {
             $this->setOnUpdateRule($onUpdateRule);
         }
+    }
+
+    /** @inheritDoc */
+    #[Override]
+    public function getExpressionData(): array
+    {
+        $expressionData = parent::getExpressionData();
+        $colCount       = count($this->referenceColumn);
+
+        $expressionData['spec']     .= " {$this->referenceSpecification[0]}";
+        $expressionData['values'][] = new Identifier($this->referenceTable);
+
+        if (0 !== $colCount) {
+            $expressionData['spec'] .= ' (' . implode(', ', array_fill(0, $colCount, '%s')) . ')';
+            foreach ($this->referenceColumn as $column) {
+                $expressionData['values'][] = new Identifier($column);
+            }
+        }
+
+        $expressionData['spec']     .= " {$this->referenceSpecification[1]}";
+        $expressionData['values'][] = new Literal($this->onDeleteRule);
+        $expressionData['values'][] = new Literal($this->onUpdateRule);
+
+        return $expressionData;
+    }
+
+    public function getOnDeleteRule(): string
+    {
+        return $this->onDeleteRule;
+    }
+
+    public function getOnUpdateRule(): string
+    {
+        return $this->onUpdateRule;
+    }
+
+    public function getReferenceColumn(): array
+    {
+        return $this->referenceColumn;
     }
 
     public function getReferenceTable(): string
@@ -64,16 +103,18 @@ class ForeignKey extends AbstractConstraint
         return $this->referenceTable;
     }
 
-    public function setReferenceTable(string $referenceTable): static
+    public function setOnDeleteRule(string $onDeleteRule): static
     {
-        $this->referenceTable = $referenceTable;
+        $this->onDeleteRule = $onDeleteRule;
 
         return $this;
     }
 
-    public function getReferenceColumn(): array
+    public function setOnUpdateRule(string $onUpdateRule): static
     {
-        return $this->referenceColumn;
+        $this->onUpdateRule = $onUpdateRule;
+
+        return $this;
     }
 
     /**
@@ -86,51 +127,10 @@ class ForeignKey extends AbstractConstraint
         return $this;
     }
 
-    public function getOnDeleteRule(): string
+    public function setReferenceTable(string $referenceTable): static
     {
-        return $this->onDeleteRule;
-    }
-
-    public function setOnDeleteRule(string $onDeleteRule): static
-    {
-        $this->onDeleteRule = $onDeleteRule;
+        $this->referenceTable = $referenceTable;
 
         return $this;
-    }
-
-    public function getOnUpdateRule(): string
-    {
-        return $this->onUpdateRule;
-    }
-
-    public function setOnUpdateRule(string $onUpdateRule): static
-    {
-        $this->onUpdateRule = $onUpdateRule;
-
-        return $this;
-    }
-
-    /** @inheritDoc */
-    #[Override]
-    public function getExpressionData(): array
-    {
-        $expressionData = parent::getExpressionData();
-        $colCount       = count($this->referenceColumn);
-
-        $expressionData['spec']    .= ' ' . $this->referenceSpecification[0];
-        $expressionData['values'][] = new Identifier($this->referenceTable);
-
-        if ($colCount !== 0) {
-            $expressionData['spec'] .= ' (' . implode(', ', array_fill(0, $colCount, '%s')) . ')';
-            foreach ($this->referenceColumn as $column) {
-                $expressionData['values'][] = new Identifier($column);
-            }
-        }
-
-        $expressionData['spec']    .= ' ' . $this->referenceSpecification[1];
-        $expressionData['values'][] = new Literal($this->onDeleteRule);
-        $expressionData['values'][] = new Literal($this->onUpdateRule);
-
-        return $expressionData;
     }
 }

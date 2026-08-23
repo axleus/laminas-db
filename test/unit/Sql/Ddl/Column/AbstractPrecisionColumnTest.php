@@ -20,15 +20,13 @@ final class AbstractPrecisionColumnTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testSetDigits(): void
+    public function testGetDecimal(): void
     {
         $column = $this->getMockBuilder(AbstractPrecisionColumn::class)
-            ->setConstructorArgs(['foo', 10])
+            ->setConstructorArgs(['foo', 10, 5])
             ->onlyMethods([])
             ->getMock();
-        self::assertEquals(10, $column->getDigits());
-        self::assertSame($column, $column->setDigits(12));
-        self::assertEquals(12, $column->getDigits());
+        self::assertEquals(5, $column->getDecimal());
     }
 
     /**
@@ -41,6 +39,29 @@ final class AbstractPrecisionColumnTest extends TestCase
             ->onlyMethods([])
             ->getMock();
         self::assertEquals(10, $column->getDigits());
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testGetExpressionData(): void
+    {
+        $column = $this->getMockBuilder(AbstractPrecisionColumn::class)
+            ->setConstructorArgs(['foo', 10, 5])
+            ->onlyMethods([])
+            ->getMock();
+
+        $expressionData = $column->getExpressionData();
+
+        self::assertEquals('%s %s(%s) NOT NULL', $expressionData['spec']);
+        self::assertEquals(
+            [
+                Argument::identifier('foo'),
+                Argument::literal('INTEGER'),
+                Argument::literal('10,5'),
+            ],
+            $expressionData['values'],
+        );
     }
 
     /**
@@ -60,32 +81,14 @@ final class AbstractPrecisionColumnTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testGetDecimal(): void
+    public function testSetDigits(): void
     {
         $column = $this->getMockBuilder(AbstractPrecisionColumn::class)
-            ->setConstructorArgs(['foo', 10, 5])
+            ->setConstructorArgs(['foo', 10])
             ->onlyMethods([])
             ->getMock();
-        self::assertEquals(5, $column->getDecimal());
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function testGetExpressionData(): void
-    {
-        $column = $this->getMockBuilder(AbstractPrecisionColumn::class)
-            ->setConstructorArgs(['foo', 10, 5])
-            ->onlyMethods([])
-            ->getMock();
-
-        $expressionData = $column->getExpressionData();
-
-        self::assertEquals('%s %s(%s) NOT NULL', $expressionData['spec']);
-        self::assertEquals([
-            Argument::identifier('foo'),
-            Argument::literal('INTEGER'),
-            Argument::literal('10,5'),
-        ], $expressionData['values']);
+        self::assertEquals(10, $column->getDigits());
+        self::assertSame($column, $column->setDigits(12));
+        self::assertEquals(12, $column->getDigits());
     }
 }

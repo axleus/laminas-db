@@ -39,21 +39,12 @@ class MasterSlaveFeature extends AbstractFeature
     public function postInitialize(): void
     {
         $this->masterSql = $this->tableGateway->sql;
-        if ($this->slaveSql === null) {
+        if (null === $this->slaveSql) {
             $this->slaveSql = new Sql(
                 $this->slaveAdapter,
-                $this->tableGateway->sql->getTable()
+                $this->tableGateway->sql->getTable(),
             );
         }
-    }
-
-    /**
-     * preSelect()
-     * Replace adapter with slave temporarily
-     */
-    public function preSelect(): void
-    {
-        $this->tableGateway->sql = $this->slaveSql;
     }
 
     /**
@@ -63,5 +54,14 @@ class MasterSlaveFeature extends AbstractFeature
     public function postSelect(): void
     {
         $this->tableGateway->sql = $this->masterSql;
+    }
+
+    /**
+     * preSelect()
+     * Replace adapter with slave temporarily
+     */
+    public function preSelect(): void
+    {
+        $this->tableGateway->sql = $this->slaveSql;
     }
 }

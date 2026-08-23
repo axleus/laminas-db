@@ -31,52 +31,15 @@ class JoinTest extends TestCase
 {
     use DeprecatedAssertionsTrait;
 
-    /**
-     * @throws ReflectionException
-     */
-    public function testInitialPositionIsZero(): void
+    #[TestDox('unit test: Test count() returns correct count')]
+    public function testCount(): void
     {
         $join = new Join();
+        $join->join('baz', 'foo.fooId = baz.fooId', Join::JOIN_LEFT);
+        $join->join('bar', 'foo.fooId = bar.fooId', Join::JOIN_LEFT);
 
-        self::assertAttributeEquals(0, 'position', $join);
-    }
-
-    /**
-     * @throws ReflectionException
-     */
-    public function testNextIncrementsThePosition(): void
-    {
-        $join = new Join();
-
-        $join->next();
-
-        self::assertAttributeEquals(1, 'position', $join);
-    }
-
-    /**
-     * @throws ReflectionException
-     */
-    public function testRewindResetsPositionToZero(): void
-    {
-        $join = new Join();
-
-        $join->next();
-        $join->next();
-        self::assertAttributeEquals(2, 'position', $join);
-
-        $join->rewind();
-        self::assertAttributeEquals(0, 'position', $join);
-    }
-
-    public function testKeyReturnsTheCurrentPosition(): void
-    {
-        $join = new Join();
-
-        $join->next();
-        $join->next();
-        $join->next();
-
-        self::assertEquals(3, $join->key());
+        self::assertEquals(2, $join->count());
+        self::assertCount($join->count(), $join->getJoins());
     }
 
     public function testCurrentReturnsTheCurrentJoinSpecification(): void
@@ -97,16 +60,14 @@ class JoinTest extends TestCase
         self::assertEquals($expectedSpecification, $join->current());
     }
 
-    public function testValidReturnsTrueIfTheIteratorIsAtAValidPositionAndFalseIfNot(): void
+    /**
+     * @throws ReflectionException
+     */
+    public function testInitialPositionIsZero(): void
     {
         $join = new Join();
-        $join->join('baz', 'foo.id = baz.id');
 
-        self::assertTrue($join->valid());
-
-        $join->next();
-
-        self::assertFalse($join->valid());
+        self::assertAttributeEquals(0, 'position', $join);
     }
 
     #[TestDox('unit test: Test join() returns Join object (is chainable)')]
@@ -124,6 +85,15 @@ class JoinTest extends TestCase
         self::assertSame($join, $return);
     }
 
+    public function testJoinThrowsOnInvalidMultiElementArray(): void
+    {
+        $join = new Join();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("expects 'b' as a single element associative array");
+        $join->join(['a' => 'b', 'c' => 'd'], 'on');
+    }
+
     public function testJoinWillThrowAnExceptionIfNameIsNoValid(): void
     {
         $join = new Join();
@@ -133,15 +103,27 @@ class JoinTest extends TestCase
         $join->join([], false);
     }
 
-    #[TestDox('unit test: Test count() returns correct count')]
-    public function testCount(): void
+    public function testKeyReturnsTheCurrentPosition(): void
     {
         $join = new Join();
-        $join->join('baz', 'foo.fooId = baz.fooId', Join::JOIN_LEFT);
-        $join->join('bar', 'foo.fooId = bar.fooId', Join::JOIN_LEFT);
 
-        self::assertEquals(2, $join->count());
-        self::assertCount($join->count(), $join->getJoins());
+        $join->next();
+        $join->next();
+        $join->next();
+
+        self::assertEquals(3, $join->key());
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    public function testNextIncrementsThePosition(): void
+    {
+        $join = new Join();
+
+        $join->next();
+
+        self::assertAttributeEquals(1, 'position', $join);
     }
 
     #[TestDox('unit test: Test reset() resets the joins')]
@@ -155,12 +137,30 @@ class JoinTest extends TestCase
         self::assertEquals(0, $join->count());
     }
 
-    public function testJoinThrowsOnInvalidMultiElementArray(): void
+    /**
+     * @throws ReflectionException
+     */
+    public function testRewindResetsPositionToZero(): void
     {
         $join = new Join();
 
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("expects 'b' as a single element associative array");
-        $join->join(['a' => 'b', 'c' => 'd'], 'on');
+        $join->next();
+        $join->next();
+        self::assertAttributeEquals(2, 'position', $join);
+
+        $join->rewind();
+        self::assertAttributeEquals(0, 'position', $join);
+    }
+
+    public function testValidReturnsTrueIfTheIteratorIsAtAValidPositionAndFalseIfNot(): void
+    {
+        $join = new Join();
+        $join->join('baz', 'foo.id = baz.id');
+
+        self::assertTrue($join->valid());
+
+        $join->next();
+
+        self::assertFalse($join->valid());
     }
 }

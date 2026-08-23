@@ -36,24 +36,6 @@ abstract class AbstractPdo implements PdoDriverInterface, ProfilerAwareInterface
     /** @internal */
     protected ?ProfilerInterface $profiler;
 
-    #[Override]
-    public function setProfiler(ProfilerInterface $profiler): ProfilerAwareInterface
-    {
-        $this->profiler = $profiler;
-        if ($this->connection instanceof ProfilerAwareInterface) {
-            $this->connection->setProfiler($profiler);
-        }
-        if ($this->statementPrototype instanceof ProfilerAwareInterface) {
-            $this->statementPrototype->setProfiler($profiler);
-        }
-        return $this;
-    }
-
-    public function getProfiler(): ?ProfilerInterface
-    {
-        return $this->profiler;
-    }
-
     /**
      * Check environment
      */
@@ -63,17 +45,12 @@ abstract class AbstractPdo implements PdoDriverInterface, ProfilerAwareInterface
         if (! extension_loaded('PDO')) {
             // @codeCoverageIgnoreStart
             throw new Exception\RuntimeException(
-                'The PDO extension is required for this adapter but the extension is not loaded'
+                'The PDO extension is required for this adapter but the extension is not loaded',
             );
+
             // @codeCoverageIgnoreEnd
         }
         return true;
-    }
-
-    #[Override]
-    public function getConnection(): PdoConnectionInterface
-    {
-        return $this->connection;
     }
 
     /**
@@ -105,9 +82,44 @@ abstract class AbstractPdo implements PdoDriverInterface, ProfilerAwareInterface
     /**
      * {@inheritDoc}
      */
-    public function getResultPrototype(): ?ResultInterface
+    #[Override]
+    public function formatParameterName(string|int $name, ?string $type = null): string
     {
-        return $this->resultPrototype;
+        if (null === $type && ! is_numeric($name) || self::PARAMETERIZATION_NAMED === $type) {
+            // proposed fix for passing $name as int with type self::PARAMETERIZATION_NAMED
+            if (is_int($name) && self::PARAMETERIZATION_NAMED === $type) {
+                $name = (string) $name;
+            }
+            // end proposed fix
+            $name = ltrim($name, ':');
+            // @see https://bugs.php.net/bug.php?id=43130
+            if (preg_match('/[^a-zA-Z0-9_]/', $name)) {
+                throw new Exception\RuntimeException(sprintf(
+                    'The PDO param %s contains invalid characters.'
+                        . ' Only alphabetic characters, digits, and underscores (_)'
+                        . ' are allowed.',
+                    $name,
+                ));
+            }
+            return ":{$name}";
+        }
+
+        return '?';
+    }
+
+    #[Override]
+    public function getConnection(): PdoConnectionInterface
+    {
+        return $this->connection;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    #[Override]
+    public function getLastGeneratedValue(?string $name = null): string|int|false|null
+    {
+        return $this->connection->getLastGeneratedValue($name);
     }
 
     /**
@@ -119,40 +131,29 @@ abstract class AbstractPdo implements PdoDriverInterface, ProfilerAwareInterface
         return self::PARAMETERIZATION_NAMED;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    #[Override]
-    public function formatParameterName(string|int $name, ?string $type = null): string
+    public function getProfiler(): ?ProfilerInterface
     {
-        if ($type === null && ! is_numeric($name) || $type === self::PARAMETERIZATION_NAMED) {
-            // proposed fix for passing $name as int with type self::PARAMETERIZATION_NAMED
-            if (is_int($name) && $type === self::PARAMETERIZATION_NAMED) {
-                $name = (string) $name;
-            }
-            // end proposed fix
-            $name = ltrim($name, ':');
-            // @see https://bugs.php.net/bug.php?id=43130
-            if (preg_match('/[^a-zA-Z0-9_]/', $name)) {
-                throw new Exception\RuntimeException(sprintf(
-                    'The PDO param %s contains invalid characters.'
-                    . ' Only alphabetic characters, digits, and underscores (_)'
-                    . ' are allowed.',
-                    $name
-                ));
-            }
-            return ':' . $name;
-        }
-
-        return '?';
+        return $this->profiler;
     }
 
     /**
      * {@inheritDoc}
      */
-    #[Override]
-    public function getLastGeneratedValue(?string $name = null): string|int|false|null
+    public function getResultPrototype(): ?ResultInterface
     {
-        return $this->connection->getLastGeneratedValue($name);
+        return $this->resultPrototype;
+    }
+
+    #[Override]
+    public function setProfiler(ProfilerInterface $profiler): ProfilerAwareInterface
+    {
+        $this->profiler = $profiler;
+        if ($this->connection instanceof ProfilerAwareInterface) {
+            $this->connection->setProfiler($profiler);
+        }
+        if ($this->statementPrototype instanceof ProfilerAwareInterface) {
+            $this->statementPrototype->setProfiler($profiler);
+        }
+        return $this;
     }
 }

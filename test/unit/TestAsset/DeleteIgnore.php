@@ -22,7 +22,7 @@ class DeleteIgnore extends Delete
     protected function processdeleteIgnore(
         PlatformInterface $platform,
         ?DriverInterface $driver = null,
-        ?ParameterContainer $parameterContainer = null
+        ?ParameterContainer $parameterContainer = null,
     ): string {
         return parent::processDelete($platform, $driver, $parameterContainer);
     }

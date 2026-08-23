@@ -97,16 +97,16 @@ class AlterTable extends AbstractSql
         }
     }
 
-    public function setTable(string|TableIdentifier $name): static
+    public function addColumn(Column\ColumnInterface $column): static
     {
-        $this->table = $name;
+        $this->addColumns[] = $column;
 
         return $this;
     }
 
-    public function addColumn(Column\ColumnInterface $column): static
+    public function addConstraint(Constraint\ConstraintInterface $constraint): static
     {
-        $this->addColumns[] = $column;
+        $this->addConstraints[] = $constraint;
 
         return $this;
     }
@@ -132,13 +132,6 @@ class AlterTable extends AbstractSql
         return $this;
     }
 
-    public function addConstraint(Constraint\ConstraintInterface $constraint): static
-    {
-        $this->addConstraints[] = $constraint;
-
-        return $this;
-    }
-
     /**
      * @return static Provides a fluent interface
      */
@@ -146,18 +139,6 @@ class AlterTable extends AbstractSql
     {
         $this->dropIndexes[] = $name;
 
-        return $this;
-    }
-
-    public function setOption(string $name, Literal|bool|int|string $value): static
-    {
-        $this->options[$name] = $value;
-        return $this;
-    }
-
-    public function setOptions(array $options): static
-    {
-        $this->options = $options;
         return $this;
     }
 
@@ -182,10 +163,23 @@ class AlterTable extends AbstractSql
         return isset($key) && array_key_exists($key, $rawState) ? $rawState[$key] : $rawState;
     }
 
-    /** @return string[] */
-    protected function processTable(?PlatformInterface $adapterPlatform = null): array
+    public function setOption(string $name, Literal|bool|int|string $value): static
     {
-        return [$this->resolveTable($this->table, $adapterPlatform)];
+        $this->options[$name] = $value;
+        return $this;
+    }
+
+    public function setOptions(array $options): static
+    {
+        $this->options = $options;
+        return $this;
+    }
+
+    public function setTable(string|TableIdentifier $name): static
+    {
+        $this->table = $name;
+
+        return $this;
     }
 
     /**
@@ -197,6 +191,20 @@ class AlterTable extends AbstractSql
         $sqls = [];
         foreach ($this->addColumns as $column) {
             $sqls[] = $this->processExpression($column, $adapterPlatform);
+        }
+
+        return [$sqls];
+    }
+
+    /**
+     * @return string[][]
+     * @psalm-return list{list{0?: string,...}}
+     */
+    protected function processAddConstraints(?PlatformInterface $adapterPlatform = null): array
+    {
+        $sqls = [];
+        foreach ($this->addConstraints as $constraint) {
+            $sqls[] = $this->processExpression($constraint, $adapterPlatform);
         }
 
         return [$sqls];
@@ -237,20 +245,6 @@ class AlterTable extends AbstractSql
      * @return string[][]
      * @psalm-return list{list{0?: string,...}}
      */
-    protected function processAddConstraints(?PlatformInterface $adapterPlatform = null): array
-    {
-        $sqls = [];
-        foreach ($this->addConstraints as $constraint) {
-            $sqls[] = $this->processExpression($constraint, $adapterPlatform);
-        }
-
-        return [$sqls];
-    }
-
-    /**
-     * @return string[][]
-     * @psalm-return list{list{0?: string,...}}
-     */
     protected function processDropConstraints(?PlatformInterface $adapterPlatform = null): array
     {
         $sqls = [];
@@ -275,6 +269,12 @@ class AlterTable extends AbstractSql
         return [$sqls];
     }
 
+    /** @return string[] */
+    protected function processTable(?PlatformInterface $adapterPlatform = null): array
+    {
+        return [$this->resolveTable($this->table, $adapterPlatform)];
+    }
+
     /**
      * @return string[][]|null
      */
@@ -296,7 +296,7 @@ class AlterTable extends AbstractSql
             } else {
                 $value = $adapterPlatform->quoteTrustedValue($value);
             }
-            $sqls[] = $key . ' = ' . $value;
+            $sqls[] = "{$key} = {$value}";
         }
 
         return [$sqls];

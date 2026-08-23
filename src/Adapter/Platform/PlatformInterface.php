@@ -9,9 +9,24 @@ use PhpDb\Sql\Platform\PlatformDecoratorInterface;
 interface PlatformInterface
 {
     /**
+     * Get identifier separator
+     */
+    public function getIdentifierSeparator(): string;
+
+    /**
      * Get name
      */
     public function getName(): string;
+
+    /**
+     * Get quote identifier symbol
+     */
+    public function getQuoteIdentifierSymbol(): string;
+
+    /**
+     * Get quote value symbol
+     */
+    public function getQuoteValueSymbol(): string;
 
     /**
      * Get Sql platform decorator
@@ -20,11 +35,6 @@ interface PlatformInterface
      * PhpDb\Sql\Platform\AbstractPlatform implements this interface
      */
     public function getSqlPlatformDecorator(): PlatformDecoratorInterface;
-
-    /**
-     * Get quote identifier symbol
-     */
-    public function getQuoteIdentifierSymbol(): string;
 
     /**
      * Quote identifier
@@ -39,16 +49,9 @@ interface PlatformInterface
     public function quoteIdentifierChain(array|string $identifierChain): string;
 
     /**
-     * Get quote value symbol
+     * Quote identifier in fragment
      */
-    public function getQuoteValueSymbol(): string;
-
-    /**
-     * Quote value
-     *
-     * Will throw a notice when used in a workflow that can be considered "unsafe"
-     */
-    public function quoteValue(string $value): string;
+    public function quoteIdentifierInFragment(string $identifier, array $additionalSafeWords = []): string;
 
     /**
      * Quote Trusted Value
@@ -58,19 +61,16 @@ interface PlatformInterface
     public function quoteTrustedValue(int|float|string|bool $value): ?string;
 
     /**
+     * Quote value
+     *
+     * Will throw a notice when used in a workflow that can be considered "unsafe"
+     */
+    public function quoteValue(string $value): string;
+
+    /**
      * Quote value list
      *
      * @param string|string[] $valueList
      */
     public function quoteValueList(array|string $valueList): string;
-
-    /**
-     * Get identifier separator
-     */
-    public function getIdentifierSeparator(): string;
-
-    /**
-     * Quote identifier in fragment
-     */
-    public function quoteIdentifierInFragment(string $identifier, array $additionalSafeWords = []): string;
 }
