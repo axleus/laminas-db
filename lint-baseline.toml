@@ -2809,6 +2809,66 @@ message = "Use `#[Test]` attribute instead of `test` prefix on method `testInvok
 count = 1
 
 [[issues]]
+file = "test/unit/Container/TableIdentifierFactoryFactoryTest.php"
+code = "assertion-style"
+message = "Inconsistent assertions style."
+count = 9
+
+[[issues]]
+file = "test/unit/Container/TableIdentifierFactoryFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testInvokeCreatesFactoryWithConfiguredPrefix`."
+count = 1
+
+[[issues]]
+file = "test/unit/Container/TableIdentifierFactoryFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testInvokeCreatesFactoryWithConfiguredSeparatorWithoutPrefix`."
+count = 1
+
+[[issues]]
+file = "test/unit/Container/TableIdentifierFactoryFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testInvokeCreatesFactoryWithConfiguredSeparator`."
+count = 1
+
+[[issues]]
+file = "test/unit/Container/TableIdentifierFactoryFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testInvokeCreatesFactoryWithoutPrefixWhenConfigIsEmpty`."
+count = 1
+
+[[issues]]
+file = "test/unit/Container/TableIdentifierFactoryFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testInvokeCreatesFactoryWithoutPrefixWhenConfigServiceIsNull`."
+count = 1
+
+[[issues]]
+file = "test/unit/Container/TableIdentifierFactoryFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testInvokeCreatesFactoryWithoutPrefixWhenContainerHasNoConfig`."
+count = 1
+
+[[issues]]
+file = "test/unit/Container/TableIdentifierFactoryFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testInvokeCreatesFactoryWithoutPrefixWhenPrefixKeyIsAbsent`."
+count = 1
+
+[[issues]]
+file = "test/unit/Container/TableIdentifierFactoryFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testInvokeRejectsEmptyStringSeparatorFromConfig`."
+count = 1
+
+[[issues]]
+file = "test/unit/Container/TableIdentifierFactoryFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testInvokeUsesDefaultSeparatorWhenSeparatorKeyIsAbsent`."
+count = 1
+
+[[issues]]
 file = "test/unit/Exception/ContainerExceptionTest.php"
 code = "assertion-style"
 message = "Inconsistent assertions style."
@@ -7669,15 +7729,195 @@ message = "Use strict assertions in PHPUnit tests."
 count = 1
 
 [[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "assertion-style"
+message = "Inconsistent assertions style."
+count = 25
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "literal-named-argument"
+message = "Literal argument `''` should be passed as a named argument for clarity."
+count = 2
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "literal-named-argument"
+message = "Literal argument `'_'` should be passed as a named argument for clarity."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "literal-named-argument"
+message = "Literal argument `'__'` should be passed as a named argument for clarity."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "literal-named-argument"
+message = "Literal argument `'archive'` should be passed as a named argument for clarity."
+count = 3
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "literal-named-argument"
+message = "Literal argument `'public'` should be passed as a named argument for clarity."
+count = 2
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "literal-named-argument"
+message = "Literal argument `null` should be passed as a named argument for clarity."
+count = 8
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testCallTimePrefixIsAppliedWhenNonePreconfigured`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testCallTimePrefixOverridesConfiguredPrefix`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testCallTimeSeparatorIsAppliedWhenNonePreconfigured`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testCallTimeSeparatorOverridesConfiguredSeparator`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testConfiguredSeparatorIsCarriedButUnusedWhenNoPrefixApplies`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testCreatesIdentifierWithConfiguredPrefix`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testCreatesIdentifierWithConfiguredSeparator`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testCreatesIdentifierWithSchema`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testCreatesIdentifierWithoutPrefixWhenNoneConfigured`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testPrefixIsNullByDefault`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testRejectsEmptyStringCallTimePrefix`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testRejectsEmptyStringCallTimeSeparator`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testRejectsEmptyStringPrefix`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testRejectsEmptyStringSeparatorWithoutPrefix`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testRejectsEmptyStringSeparator`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testReturnsConfiguredPrefix`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testReturnsConfiguredSeparator`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testSeparatorDefaultsToUnderscoreWhenNoPrefixConfigured`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testSeparatorDefaultsToUnderscore`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierFactoryTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testSeparatorFallsBackToDefaultWhenPassedAsNull`."
+count = 1
+
+[[issues]]
 file = "test/unit/Sql/TableIdentifierTest.php"
 code = "assertion-style"
 message = "Inconsistent assertions style."
-count = 7
+count = 17
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetDefaultPrefix`."
+count = 1
 
 [[issues]]
 file = "test/unit/Sql/TableIdentifierTest.php"
 code = "prefer-test-attribute"
 message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetDefaultSchema`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetDefaultSeparator`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetPrefix`."
 count = 1
 
 [[issues]]
@@ -7695,7 +7935,43 @@ count = 1
 [[issues]]
 file = "test/unit/Sql/TableIdentifierTest.php"
 code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetSeparator`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetTableAndSchemaAppliesPrefix`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetTableAndSchemaWithoutPrefix`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetTableAppliesPrefixWithCustomSeparator`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetTableAppliesPrefixWithDefaultSeparator`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
 message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetTableFromObjectStringCast`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetTableIgnoresSeparatorWithoutPrefix`."
 count = 1
 
 [[issues]]
@@ -7707,7 +7983,31 @@ count = 1
 [[issues]]
 file = "test/unit/Sql/TableIdentifierTest.php"
 code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetUnprefixedTableReturnsTableAsGiven`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testRejectsEmptyStringSeparatorWithoutPrefix`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testRejectsInvalidPrefix`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
 message = "Use `#[Test]` attribute instead of `test` prefix on method `testRejectsInvalidSchema`."
+count = 1
+
+[[issues]]
+file = "test/unit/Sql/TableIdentifierTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testRejectsInvalidSeparator`."
 count = 1
 
 [[issues]]

@@ -430,6 +430,68 @@ $fk = new ForeignKey(
 );
 ```
 
+### Table Prefixes
+
+`TableIdentifier` accepts an optional prefix and separator. When a prefix is
+set, `getTable()` and `getTableAndSchema()` return the prefixed table name;
+`getUnprefixedTable()` returns the table name as given:
+
+```php title="Prefixed Table Identifiers"
+use PhpDb\Sql\TableIdentifier;
+
+$identifier = new TableIdentifier('users', null, 'backup');
+$identifier->getTable();           // 'backup_users'
+$identifier->getUnprefixedTable(); // 'users'
+
+// Custom separator
+$identifier = new TableIdentifier('users', null, 'backup', '__');
+$identifier->getTable();           // 'backup__users'
+```
+
+The prefix must be a non-empty string or `null`. The separator defaults to
+`'_'` and must also be a non-empty string; passing `''` for either throws
+`PhpDb\Sql\Exception\InvalidArgumentException`.
+
+### The TableIdentifierFactory
+
+`PhpDb\Sql\TableIdentifierFactory` is a callable factory that creates
+`TableIdentifier` instances sharing a preconfigured prefix and separator:
+
+```php title="Creating Identifiers via the Factory"
+use PhpDb\Sql\TableIdentifierFactory;
+
+$factory = new TableIdentifierFactory('backup');
+
+$factory('users')->getTable();           // 'backup_users'
+$factory('orders', 'sales')->getTable(); // 'backup_orders'
+
+// A prefix or separator passed at call time overrides the configured one
+$factory('users', null, 'archive')->getTable(); // 'archive_users'
+```
+
+The configured separator is only applied when a prefix is passed, so a factory
+created with a separator but no prefix produces unprefixed identifiers. Passing
+`null` as the separator falls back to the default `'_'`; passing `''` — at
+construction or at call time — throws
+`PhpDb\Sql\Exception\InvalidArgumentException`.
+
+`PhpDb\ConfigProvider` registers the factory as a container service. Configure
+the prefix and separator through the application config:
+
+```php title="Configuring the Factory Service"
+use PhpDb\Sql\TableIdentifierFactory;
+
+return [
+    TableIdentifierFactory::class => [
+        'prefix'    => 'backup',
+        'separator' => '_',
+    ],
+];
+```
+
+When no configuration is present the service is created without a prefix, and
+the separator defaults to `'_'`.
+
 ## Nullable and Default Values
 
 ### Setting Nullable

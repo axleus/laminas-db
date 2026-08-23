@@ -13,7 +13,7 @@ Two web server options are supported: **Nginx with PHP-FPM**
 Create a `Dockerfile` in your project root:
 
 ```dockerfile
-FROM php:8.2-fpm-alpine
+FROM php:8.3-fpm-alpine
 
 RUN apk add --no-cache git zip unzip \
     && docker-php-ext-install pdo_mysql
@@ -55,7 +55,7 @@ server {
 Create a `Dockerfile` in your project root:
 
 ```dockerfile
-FROM php:8.2-apache
+FROM php:8.3-apache
 
 RUN apt-get update \
     && apt-get install -y git zlib1g-dev libzip-dev \

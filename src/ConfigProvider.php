@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb;
 
-final class ConfigProvider
+final readonly class ConfigProvider
 {
     public const NAMED_ADAPTER_KEY = 'adapters';
 
@@ -18,7 +18,8 @@ final class ConfigProvider
                 Adapter\AdapterInterface::class => Adapter\Adapter::class,
             ],
             'factories'          => [
-                Adapter\Adapter::class => Container\AdapterInterfaceFactory::class,
+                Adapter\Adapter::class            => Container\AdapterInterfaceFactory::class,
+                Sql\TableIdentifierFactory::class => Container\TableIdentifierFactoryFactory::class,
             ],
         ];
     }
