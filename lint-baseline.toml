@@ -2,27 +2,9 @@ variant = "loose"
 
 [[issues]]
 file = "src/Adapter/Adapter.php"
-code = "no-else-clause"
-message = "Avoid `else` clauses."
-count = 4
-
-[[issues]]
-file = "src/Adapter/Adapter.php"
-code = "no-else-clause"
-message = "Avoid `elseif` clauses."
-count = 1
-
-[[issues]]
-file = "src/Adapter/Adapter.php"
 code = "prefer-first-class-callable"
 message = "Use first-class callable syntax `...` instead of a closure."
 count = 2
-
-[[issues]]
-file = "src/Adapter/Adapter.php"
-code = "strict-behavior"
-message = "Call to `in_array` must enforce strict comparison."
-count = 1
 
 [[issues]]
 file = "src/Adapter/AdapterAwareInterface.php"
@@ -1138,7 +1120,7 @@ count = 1
 file = "test/unit/Adapter/AdapterTest.php"
 code = "assertion-style"
 message = "Inconsistent assertions style."
-count = 28
+count = 33
 
 [[issues]]
 file = "test/unit/Adapter/AdapterTest.php"
@@ -1156,6 +1138,30 @@ count = 1
 file = "test/unit/Adapter/AdapterTest.php"
 code = "prefer-test-attribute"
 message = "Use `#[Test]` attribute instead of `test` prefix on method `testCreateStatementDelegatesToDriver`."
+count = 1
+
+[[issues]]
+file = "test/unit/Adapter/AdapterTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testExecuteQueryReturnsRawResultWithoutWrappingQueryResults`."
+count = 1
+
+[[issues]]
+file = "test/unit/Adapter/AdapterTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testExecuteQueryThrowsWhenExecutionDoesNotProduceAResult`."
+count = 1
+
+[[issues]]
+file = "test/unit/Adapter/AdapterTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testExecuteQueryWithRawSqlDelegatesToConnectionExecute`."
+count = 1
+
+[[issues]]
+file = "test/unit/Adapter/AdapterTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testExecuteQueryWithStatementExecutesStatement`."
 count = 1
 
 [[issues]]
@@ -1228,6 +1234,24 @@ count = 1
 file = "test/unit/Adapter/AdapterTest.php"
 code = "prefer-test-attribute"
 message = "Use `#[Test]` attribute instead of `test` prefix on method `testMagicGetReturnsDriverAndPlatformCaseInsensitively`."
+count = 1
+
+[[issues]]
+file = "test/unit/Adapter/AdapterTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testPrepareQueryBindsParameterArray`."
+count = 1
+
+[[issues]]
+file = "test/unit/Adapter/AdapterTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testPrepareQueryBindsParameterContainerDirectly`."
+count = 1
+
+[[issues]]
+file = "test/unit/Adapter/AdapterTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testPrepareQueryPreparesStatementWithoutExecuting`."
 count = 1
 
 [[issues]]
@@ -1852,7 +1876,7 @@ count = 1
 file = "test/unit/Adapter/Driver/Pdo/ResultTest.php"
 code = "assertion-style"
 message = "Inconsistent assertions style."
-count = 35
+count = 39
 
 [[issues]]
 file = "test/unit/Adapter/Driver/Pdo/ResultTest.php"
@@ -1942,6 +1966,30 @@ count = 1
 file = "test/unit/Adapter/Driver/Pdo/ResultTest.php"
 code = "prefer-test-attribute"
 message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetGeneratedValueReturnsNullByDefault`."
+count = 1
+
+[[issues]]
+file = "test/unit/Adapter/Driver/Pdo/ResultTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetQueryResultClonesGivenPrototypeRatherThanMutatingIt`."
+count = 1
+
+[[issues]]
+file = "test/unit/Adapter/Driver/Pdo/ResultTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetQueryResultInitializesReturnedResultSetWithThisResult`."
+count = 1
+
+[[issues]]
+file = "test/unit/Adapter/Driver/Pdo/ResultTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetQueryResultReturnsDefaultResultSetPrototypeWhenNoneGiven`."
+count = 1
+
+[[issues]]
+file = "test/unit/Adapter/Driver/Pdo/ResultTest.php"
+code = "prefer-test-attribute"
+message = "Use `#[Test]` attribute instead of `test` prefix on method `testGetQueryResultThrowsWhenResultIsNotAQueryResult`."
 count = 1
 
 [[issues]]

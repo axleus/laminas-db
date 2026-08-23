@@ -170,55 +170,6 @@ final class ResultTest extends TestCase
         self::assertInstanceOf('stdClass', $result->current());
     }
 
-    public function testGetQueryResultThrowsWhenResultIsNotAQueryResult(): void
-    {
-        $stub = $this->createMock(PDOStatement::class);
-        $stub->method('columnCount')->willReturn(0);
-
-        $result = new Result();
-        $result->initialize($stub, null);
-
-        $this->expectException(RuntimeException::class);
-        $result->getQueryResult();
-    }
-
-    public function testGetQueryResultReturnsDefaultResultSetPrototypeWhenNoneGiven(): void
-    {
-        $stub = $this->createMock(PDOStatement::class);
-        $stub->method('columnCount')->willReturn(3);
-
-        $result = new Result();
-        $result->initialize($stub, null);
-
-        self::assertInstanceOf(ResultSet::class, $result->getQueryResult());
-    }
-
-    public function testGetQueryResultClonesGivenPrototypeRatherThanMutatingIt(): void
-    {
-        $stub = $this->createMock(PDOStatement::class);
-        $stub->method('columnCount')->willReturn(3);
-
-        $result = new Result();
-        $result->initialize($stub, null);
-        $prototype = new TemporaryResultSet();
-
-        $returned = $result->getQueryResult($prototype);
-
-        self::assertInstanceOf(TemporaryResultSet::class, $returned);
-        self::assertNotSame($prototype, $returned);
-    }
-
-    public function testGetQueryResultInitializesReturnedResultSetWithThisResult(): void
-    {
-        $stub = $this->createMock(PDOStatement::class);
-        $stub->method('columnCount')->willReturn(3);
-
-        $result = new Result();
-        $result->initialize($stub, null);
-
-        self::assertSame($result->getFieldCount(), $result->getQueryResult()->getFieldCount());
-    }
-
     public function testGetAffectedRowsDelegatesToRowCount(): void
     {
         $stub = $this->createMock(PDOStatement::class);
@@ -262,6 +213,55 @@ final class ResultTest extends TestCase
         $result = new Result();
 
         self::assertNull($result->getGeneratedValue());
+    }
+
+    public function testGetQueryResultClonesGivenPrototypeRatherThanMutatingIt(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('columnCount')->willReturn(3);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+        $prototype = new TemporaryResultSet();
+
+        $returned = $result->getQueryResult($prototype);
+
+        self::assertInstanceOf(TemporaryResultSet::class, $returned);
+        self::assertNotSame($prototype, $returned);
+    }
+
+    public function testGetQueryResultInitializesReturnedResultSetWithThisResult(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('columnCount')->willReturn(3);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        self::assertSame($result->getFieldCount(), $result->getQueryResult()->getFieldCount());
+    }
+
+    public function testGetQueryResultReturnsDefaultResultSetPrototypeWhenNoneGiven(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('columnCount')->willReturn(3);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        self::assertInstanceOf(ResultSet::class, $result->getQueryResult());
+    }
+
+    public function testGetQueryResultThrowsWhenResultIsNotAQueryResult(): void
+    {
+        $stub = $this->createMock(PDOStatement::class);
+        $stub->method('columnCount')->willReturn(0);
+
+        $result = new Result();
+        $result->initialize($stub, null);
+
+        $this->expectException(RuntimeException::class);
+        $result->getQueryResult();
     }
 
     public function testGetResourceReturnsPdoStatement(): void
