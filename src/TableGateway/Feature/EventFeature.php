@@ -7,6 +7,7 @@ namespace PhpDb\TableGateway\Feature;
 use Laminas\EventManager\EventManager;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\EventsCapableInterface;
+use Override;
 use PhpDb\Adapter\Driver\ResultInterface;
 use PhpDb\Adapter\Driver\StatementInterface;
 use PhpDb\ResultSet\ResultSetInterface;
@@ -50,6 +51,7 @@ class EventFeature extends AbstractFeature implements EventFeatureEventsInterfac
     /**
      * Retrieve composed event manager instance
      */
+    #[Override]
     public function getEventManager(): EventManagerInterface
     {
         return $this->eventManager;

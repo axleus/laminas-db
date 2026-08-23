@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\Sql\Argument;
 
+use Override;
 use PhpDb\Sql\ArgumentInterface;
 use PhpDb\Sql\ArgumentType;
 
@@ -21,16 +22,19 @@ final readonly class Value implements ArgumentInterface
         private string|int|float|bool|null $value,
     ) {}
 
+    #[Override]
     public function getSpecification(): string
     {
         return '%s';
     }
 
+    #[Override]
     public function getType(): ArgumentType
     {
         return ArgumentType::Value;
     }
 
+    #[Override]
     public function getValue(): string|int|float|bool|null
     {
         return $this->value;

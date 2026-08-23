@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\Sql\Platform;
 
+use Override;
 use PhpDb\Adapter\AdapterInterface;
 use PhpDb\Adapter\Platform\PlatformInterface;
 use PhpDb\Adapter\StatementContainerInterface;
@@ -30,6 +31,7 @@ class AbstractPlatform implements PlatformDecoratorInterface, PreparableSqlInter
      *
      * @throws Exception\RuntimeException
      */
+    #[Override]
     public function getSqlString(?PlatformInterface $adapterPlatform = null): string
     {
         if (! $this->subject instanceof SqlInterface) {
@@ -61,6 +63,7 @@ class AbstractPlatform implements PlatformDecoratorInterface, PreparableSqlInter
     /**
      * @throws Exception\RuntimeException
      */
+    #[Override]
     public function prepareStatement(
         AdapterInterface $adapter,
         StatementContainerInterface $statementContainer,
@@ -80,6 +83,7 @@ class AbstractPlatform implements PlatformDecoratorInterface, PreparableSqlInter
     /**
      * {@inheritDoc}
      */
+    #[Override]
     public function setSubject($subject): static
     {
         $this->subject = $subject;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\Sql\Platform;
 
+use Override;
 use PhpDb\Adapter\AdapterInterface;
 use PhpDb\Adapter\Platform\PlatformInterface;
 use PhpDb\Adapter\StatementContainerInterface;
@@ -44,6 +45,7 @@ class Platform extends AbstractPlatform
         $this->defaultPlatform = $platform;
     }
 
+    #[Override]
     public function getDecorators(): array
     {
         $platformName = $this->resolvePlatformName($this->getDefaultPlatform());
@@ -56,6 +58,7 @@ class Platform extends AbstractPlatform
      *
      * @throws Exception\RuntimeException
      */
+    #[Override]
     public function getSqlString(?PlatformInterface $adapterPlatform = null): string
     {
         if (! $this->subject instanceof SqlInterface) {
@@ -70,6 +73,7 @@ class Platform extends AbstractPlatform
         return $this->getTypeDecorator($this->subject, $adapterPlatform)->getSqlString($adapterPlatform);
     }
 
+    #[Override]
     public function getTypeDecorator(
         PreparableSqlInterface|SqlInterface $subject,
         AdapterInterface|PlatformInterface|null $adapterOrPlatform = null,
@@ -105,6 +109,7 @@ class Platform extends AbstractPlatform
      *
      * @throws Exception\RuntimeException
      */
+    #[Override]
     public function prepareStatement(
         AdapterInterface $adapter,
         StatementContainerInterface $statementContainer,
@@ -121,6 +126,7 @@ class Platform extends AbstractPlatform
         return $statementContainer;
     }
 
+    #[Override]
     public function setTypeDecorator(
         string $type,
         PlatformDecoratorInterface $decorator,

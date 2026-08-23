@@ -26,12 +26,6 @@ count = 1
 
 [[issues]]
 file = "src/Adapter/Adapter.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\Adapter::getHelpers`.'
-count = 1
-
-[[issues]]
-file = "src/Adapter/Adapter.php"
 code = "mixed-argument"
 message = 'Invalid argument type for argument #1 of `PhpDb\Adapter\Platform\PlatformInterface::quoteIdentifier`: expected `string`, but found `mixed`.'
 count = 1
@@ -178,12 +172,6 @@ count = 1
 file = "src/Adapter/Driver/AbstractConnection.php"
 code = "missing-api-or-internal"
 message = 'Abstract class `PhpDb\Adapter\Driver\AbstractConnection` is missing an `@api` or `@internal` annotation.'
-count = 1
-
-[[issues]]
-file = "src/Adapter/Driver/AbstractConnection.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\Driver\AbstractConnection::setConnectionParameters`.'
 count = 1
 
 [[issues]]
@@ -1196,18 +1184,6 @@ count = 1
 
 [[issues]]
 file = "src/Adapter/Profiler/Profiler.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\Profiler\Profiler::profilerFinish`.'
-count = 1
-
-[[issues]]
-file = "src/Adapter/Profiler/Profiler.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\Profiler\Profiler::profilerStart`.'
-count = 1
-
-[[issues]]
-file = "src/Adapter/Profiler/Profiler.php"
 code = "missing-property-type"
 message = "Property `$currentIndex` is missing a type hint."
 count = 1
@@ -1273,30 +1249,6 @@ message = 'Parameter `$sql` of `PhpDb\Adapter\StatementContainer::setsql()` expe
 count = 1
 
 [[issues]]
-file = "src/Adapter/StatementContainer.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\StatementContainer::getParameterContainer`.'
-count = 1
-
-[[issues]]
-file = "src/Adapter/StatementContainer.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\StatementContainer::getSql`.'
-count = 1
-
-[[issues]]
-file = "src/Adapter/StatementContainer.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\StatementContainer::setParameterContainer`.'
-count = 1
-
-[[issues]]
-file = "src/Adapter/StatementContainer.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Adapter\StatementContainer::setSql`.'
-count = 1
-
-[[issues]]
 file = "src/Adapter/StatementContainerInterface.php"
 code = "missing-api-or-internal"
 message = 'Interface `PhpDb\Adapter\StatementContainerInterface` is missing an `@api` or `@internal` annotation.'
@@ -1348,18 +1300,6 @@ count = 1
 file = "src/Container/AbstractAdapterInterfaceFactory.php"
 code = "invalid-return-statement"
 message = 'Invalid return type for function `PhpDb\Container\AbstractAdapterInterfaceFactory::getConfig`: expected `array<array-key, mixed>`, but found `array<array-key, mixed>|null`.'
-count = 1
-
-[[issues]]
-file = "src/Container/AbstractAdapterInterfaceFactory.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Container\AbstractAdapterInterfaceFactory::__invoke`.'
-count = 1
-
-[[issues]]
-file = "src/Container/AbstractAdapterInterfaceFactory.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Container\AbstractAdapterInterfaceFactory::canCreate`.'
 count = 1
 
 [[issues]]
@@ -2504,18 +2444,6 @@ count = 1
 
 [[issues]]
 file = "src/RowGateway/AbstractRowGateway.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\AbstractRowGateway::exchangeArray`.'
-count = 1
-
-[[issues]]
-file = "src/RowGateway/AbstractRowGateway.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\AbstractRowGateway::toArray`.'
-count = 1
-
-[[issues]]
-file = "src/RowGateway/AbstractRowGateway.php"
 code = "missing-template-parameter"
 message = "Too few template arguments for `ArrayAccess`: expected at least 2, but found 0."
 count = 1
@@ -2656,30 +2584,6 @@ count = 1
 file = "src/RowGateway/Feature/AbstractFeature.php"
 code = "missing-api-or-internal"
 message = 'Abstract class `PhpDb\RowGateway\Feature\AbstractFeature` is missing an `@api` or `@internal` annotation.'
-count = 1
-
-[[issues]]
-file = "src/RowGateway/Feature/AbstractFeature.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\Feature\AbstractFeature::getMagicMethodSpecifications`.'
-count = 1
-
-[[issues]]
-file = "src/RowGateway/Feature/AbstractFeature.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\Feature\AbstractFeature::getName`.'
-count = 1
-
-[[issues]]
-file = "src/RowGateway/Feature/AbstractFeature.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\Feature\AbstractFeature::initialize`.'
-count = 1
-
-[[issues]]
-file = "src/RowGateway/Feature/AbstractFeature.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\Feature\AbstractFeature::setRowGateway`.'
 count = 1
 
 [[issues]]
@@ -3082,114 +2986,6 @@ count = 1
 file = "src/Sql/Argument.php"
 code = "possibly-invalid-argument"
 message = 'Possible argument type mismatch for argument #1 of `PhpDb\Sql\Argument\Values::__construct`: expected `list<bool|float|int|null|string>`, but possibly received `array<array-key, mixed>`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Identifier.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Identifier::getSpecification`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Identifier.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Identifier::getType`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Identifier.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Identifier::getValue`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Identifiers.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Identifiers::getSpecification`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Identifiers.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Identifiers::getType`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Identifiers.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Identifiers::getValue`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Literal.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Literal::getSpecification`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Literal.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Literal::getType`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Literal.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Literal::getValue`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Select.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Select::getSpecification`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Select.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Select::getType`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Select.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Select::getValue`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Value.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Value::getSpecification`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Value.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Value::getType`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Value.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Value::getValue`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Values.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Values::getSpecification`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Values.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Values::getType`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Argument/Values.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Argument\Values::getValue`.'
 count = 1
 
 [[issues]]
@@ -4646,24 +4442,6 @@ count = 1
 
 [[issues]]
 file = "src/Sql/Platform/AbstractPlatform.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\AbstractPlatform::getSqlString`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Platform/AbstractPlatform.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\AbstractPlatform::prepareStatement`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Platform/AbstractPlatform.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\AbstractPlatform::setSubject`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Platform/AbstractPlatform.php"
 code = "mixed-assignment"
 message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
 count = 1
@@ -4726,36 +4504,6 @@ count = 1
 file = "src/Sql/Platform/Platform.php"
 code = "invalid-iterator"
 message = "The expression provided to `foreach` is not iterable. It resolved to type `nonnull`, which is not iterable."
-count = 1
-
-[[issues]]
-file = "src/Sql/Platform/Platform.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\Platform::getDecorators`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Platform/Platform.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\Platform::getSqlString`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Platform/Platform.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\Platform::getTypeDecorator`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Platform/Platform.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\Platform::prepareStatement`.'
-count = 1
-
-[[issues]]
-file = "src/Sql/Platform/Platform.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Platform\Platform::setTypeDecorator`.'
 count = 1
 
 [[issues]]
@@ -5566,12 +5314,6 @@ count = 1
 file = "src/Sql/Select.php"
 code = "missing-constant-type"
 message = "Class constant `WHERE` is missing a type hint."
-count = 1
-
-[[issues]]
-file = "src/Sql/Select.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\Sql\Select::resolveTable`.'
 count = 1
 
 [[issues]]
@@ -6410,30 +6152,6 @@ count = 1
 
 [[issues]]
 file = "src/TableGateway/Feature/AbstractFeature.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\AbstractFeature::getMagicMethodSpecifications`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/AbstractFeature.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\AbstractFeature::getName`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/AbstractFeature.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\AbstractFeature::initialize`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/AbstractFeature.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\AbstractFeature::setTableGateway`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/AbstractFeature.php"
 code = "uninitialized-property"
 message = 'Property `$tableGateway` is not initialized in the constructor of class `PhpDb\TableGateway\Feature\EventFeature`.'
 count = 1
@@ -6476,12 +6194,6 @@ count = 1
 
 [[issues]]
 file = "src/TableGateway/Feature/EventFeature.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature::getEventManager`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/EventFeature.php"
 code = "nullable-return-statement"
 message = 'Function `PhpDb\TableGateway\Feature\EventFeature::getEvent` is declared to return `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent` but possibly returns a nullable value (inferred as `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent|null`).'
 count = 1
@@ -6508,66 +6220,6 @@ count = 1
 file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
 code = "imprecise-type"
 message = "Type `array` in property `$params` is imprecise, equivalent to `array<array-key, mixed>`."
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::getName`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::getParam`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::getParams`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::getTarget`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::propagationIsStopped`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::setName`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::setParam`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::setParams`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::setTarget`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/EventFeature/TableGatewayEvent.php"
-code = "missing-override-attribute"
-message = 'Missing `#[Override]` attribute on overriding method `PhpDb\TableGateway\Feature\EventFeature\TableGatewayEvent::stopPropagation`.'
 count = 1
 
 [[issues]]

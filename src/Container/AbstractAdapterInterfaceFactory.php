@@ -6,6 +6,7 @@ namespace PhpDb\Container;
 
 use Laminas\ServiceManager\Factory\AbstractFactoryInterface;
 use Laminas\ServiceManager\ServiceManager;
+use Override;
 use PhpDb\Adapter\Adapter;
 use PhpDb\Adapter\AdapterInterface;
 use PhpDb\Adapter\Driver\DriverInterface;
@@ -36,6 +37,7 @@ final class AbstractAdapterInterfaceFactory implements AbstractFactoryInterface
      *
      * @param string $requestedName
      */
+    #[Override]
     public function canCreate(ContainerInterface $container, $requestedName): bool
     {
         $config = $this->getConfig($container);
@@ -76,6 +78,7 @@ final class AbstractAdapterInterfaceFactory implements AbstractFactoryInterface
      * @phpstan-param ContainerInterface&ServiceManager $container
      * @param string $requestedName
      */
+    #[Override]
     public function __invoke(
         ContainerInterface|ServiceManager $container,
         $requestedName,

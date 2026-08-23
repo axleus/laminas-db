@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\Adapter\Profiler;
 
+use Override;
 use PhpDb\Adapter\Exception;
 use PhpDb\Adapter\Exception\InvalidArgumentException;
 use PhpDb\Adapter\ParameterContainer;
@@ -50,6 +51,7 @@ class Profiler implements ProfilerInterface
     /**
      * @return $this Provides a fluent interface
      */
+    #[Override]
     public function profilerFinish(): ProfilerInterface
     {
         if (! isset($this->profiles[$this->currentIndex])) {
@@ -68,6 +70,7 @@ class Profiler implements ProfilerInterface
      * @throws InvalidArgumentException
      * @return $this Provides a fluent interface
      */
+    #[Override]
     public function profilerStart(string|StatementContainerInterface $target): ProfilerInterface
     {
         $profileInformation = [

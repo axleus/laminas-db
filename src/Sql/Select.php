@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpDb\Sql;
 
 use Closure;
+use Override;
 use PhpDb\Adapter\Driver\DriverInterface;
 use PhpDb\Adapter\ParameterContainer;
 use PhpDb\Adapter\Platform\PlatformInterface;
@@ -717,6 +718,7 @@ class Select extends AbstractPreparableSql
      * @return array{0: string|null, 1: string}
      * @phpstan-return array{0: string|null, 1: string}
      */
+    #[Override]
     protected function resolveTable(
         Select|string|array|TableIdentifier|null $table,
         PlatformInterface $platform,

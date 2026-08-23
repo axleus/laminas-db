@@ -67,6 +67,7 @@ abstract class AbstractRowGateway implements ArrayAccess, Countable, RowGatewayI
      *
      * @return array<string, mixed>
      */
+    #[Override]
     public function exchangeArray(array $array): array
     {
         $oldData = $this->data;
@@ -248,6 +249,7 @@ abstract class AbstractRowGateway implements ArrayAccess, Countable, RowGatewayI
         return $rowsAffected;
     }
 
+    #[Override]
     public function toArray(): array
     {
         return $this->data;

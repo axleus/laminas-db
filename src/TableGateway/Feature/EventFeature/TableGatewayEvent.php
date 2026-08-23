@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpDb\TableGateway\Feature\EventFeature;
 
 use Laminas\EventManager\EventInterface;
+use Override;
 use PhpDb\TableGateway\AbstractTableGateway;
 
 class TableGatewayEvent implements EventInterface
@@ -15,6 +16,7 @@ class TableGatewayEvent implements EventInterface
 
     protected array|object $params = [];
 
+    #[Override]
     public function getName(): ?string
     {
         return $this->name;
@@ -26,6 +28,7 @@ class TableGatewayEvent implements EventInterface
      * @param string|int $name
      * @param mixed $default Default value to return if parameter does not exist
      */
+    #[Override]
     public function getParam($name, $default = null): mixed
     {
         return $this->params[$name] ?? $default;
@@ -34,6 +37,7 @@ class TableGatewayEvent implements EventInterface
     /**
      * Get parameters passed to the event
      */
+    #[Override]
     public function getParams(): array|object
     {
         return $this->params;
@@ -42,6 +46,7 @@ class TableGatewayEvent implements EventInterface
     /**
      * Get target/context from which event was triggered
      */
+    #[Override]
     public function getTarget(): ?AbstractTableGateway
     {
         return $this->target;
@@ -50,6 +55,7 @@ class TableGatewayEvent implements EventInterface
     /**
      * Has this event indicated event propagation should stop?
      */
+    #[Override]
     public function propagationIsStopped(): false
     {
         return false;
@@ -60,6 +66,7 @@ class TableGatewayEvent implements EventInterface
      *
      * @param string $name
      */
+    #[Override]
     public function setName($name): void
     {
         $this->name = $name;
@@ -71,6 +78,7 @@ class TableGatewayEvent implements EventInterface
      * @param string|int $name
      * @param mixed $value
      */
+    #[Override]
     public function setParam($name, $value): void
     {
         $this->params[$name] = $value;
@@ -82,6 +90,7 @@ class TableGatewayEvent implements EventInterface
      * @param array|object $params
      * @phpstan-ignore selfOut.type
      */
+    #[Override]
     public function setParams($params): void
     {
         $this->params = $params;
@@ -93,6 +102,7 @@ class TableGatewayEvent implements EventInterface
      * @param object|string|null $target
      * @phpstan-ignore selfOut.type
      */
+    #[Override]
     public function setTarget($target): void
     {
         $this->target = $target;
@@ -103,5 +113,6 @@ class TableGatewayEvent implements EventInterface
      *
      * @param bool $flag
      */
+    #[Override]
     public function stopPropagation($flag = true): void {}
 }

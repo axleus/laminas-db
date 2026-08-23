@@ -84,6 +84,7 @@ class Adapter implements AdapterInterface, Profiler\ProfilerAwareInterface, Sche
     /**
      * {@inheritDoc}
      */
+    #[Override]
     public function getHelpers()
     {
         $functions = [];

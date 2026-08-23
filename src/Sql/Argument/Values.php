@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\Sql\Argument;
 
+use Override;
 use PhpDb\Sql\ArgumentInterface;
 use PhpDb\Sql\ArgumentType;
 
@@ -31,6 +32,7 @@ final readonly class Values implements ArgumentInterface
         $this->values = array_values($values);
     }
 
+    #[Override]
     public function getSpecification(): string
     {
         $count = count($this->values);
@@ -39,6 +41,7 @@ final readonly class Values implements ArgumentInterface
             : '(NULL)';
     }
 
+    #[Override]
     public function getType(): ArgumentType
     {
         return ArgumentType::Values;
@@ -47,6 +50,7 @@ final readonly class Values implements ArgumentInterface
     /**
      * @return list<null|string|int|float|bool>
      */
+    #[Override]
     public function getValue(): array
     {
         return $this->values;

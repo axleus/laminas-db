@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpDb\TableGateway\Feature;
 
+use Override;
 use PhpDb\TableGateway\AbstractTableGateway;
 
 abstract class AbstractFeature extends AbstractTableGateway implements FeatureInterface
@@ -13,21 +14,25 @@ abstract class AbstractFeature extends AbstractTableGateway implements FeatureIn
     protected array $sharedData = [];
 
     /** @return array<string, string[]> */
+    #[Override]
     public function getMagicMethodSpecifications(): array
     {
         return [];
     }
 
+    #[Override]
     public function getName(): string
     {
         return static::class;
     }
 
+    #[Override]
     public function initialize(): void
     {
         // No-op
     }
 
+    #[Override]
     public function setTableGateway(AbstractTableGateway $tableGateway): void
     {
         $this->tableGateway = $tableGateway;
