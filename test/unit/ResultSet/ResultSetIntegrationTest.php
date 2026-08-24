@@ -32,6 +32,10 @@ use function var_export;
 #[CoversMethod(ResultSet::class, 'getReturnType')]
 #[CoversMethod(ResultSet::class, '__construct')]
 #[CoversMethod(ResultSet::class, 'getArrayObjectPrototype')]
+#[CoversMethod(ResultSet::class, 'getRowPrototype')]
+#[CoversMethod(ResultSet::class, 'setArrayObjectPrototype')]
+#[CoversMethod(ResultSet::class, 'setRowPrototype')]
+#[CoversMethod(ResultSet::class, 'toArray')]
 #[Group('unit')]
 final class ResultSetIntegrationTest extends TestCase
 {
