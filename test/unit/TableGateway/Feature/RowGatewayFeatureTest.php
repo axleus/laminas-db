@@ -13,13 +13,15 @@ use PhpDb\TableGateway\Exception\RuntimeException;
 use PhpDb\TableGateway\Feature\FeatureSet;
 use PhpDb\TableGateway\Feature\MetadataFeature;
 use PhpDb\TableGateway\Feature\RowGatewayFeature;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 
 class RowGatewayFeatureTest extends TestCase
 {
-    public function testConstructorStoresArguments(): void
+    #[Test]
+    public function constructorStoresArguments(): void
     {
         $feature = new RowGatewayFeature('id');
 
@@ -27,10 +29,11 @@ class RowGatewayFeatureTest extends TestCase
         $property = new ReflectionProperty(RowGatewayFeature::class, 'constructorArguments');
         $args     = $property->getValue($feature);
 
-        self::assertEquals(['id'], $args);
+        static::assertEquals(['id'], $args);
     }
 
-    public function testConstructorStoresRowGatewayInstance(): void
+    #[Test]
+    public function constructorStoresRowGatewayInstance(): void
     {
         /** @var RowGatewayInterface&MockObject $rowGateway */
         $rowGateway = $this->createMock(RowGatewayInterface::class);
@@ -41,10 +44,11 @@ class RowGatewayFeatureTest extends TestCase
         $property = new ReflectionProperty(RowGatewayFeature::class, 'constructorArguments');
         $args     = $property->getValue($feature);
 
-        self::assertSame($rowGateway, $args[0]);
+        static::assertSame($rowGateway, $args[0]);
     }
 
-    public function testConstructorWithNoArguments(): void
+    #[Test]
+    public function constructorWithNoArguments(): void
     {
         $feature = new RowGatewayFeature();
 
@@ -52,10 +56,11 @@ class RowGatewayFeatureTest extends TestCase
         $property = new ReflectionProperty(RowGatewayFeature::class, 'constructorArguments');
         $args     = $property->getValue($feature);
 
-        self::assertEquals([], $args);
+        static::assertEquals([], $args);
     }
 
-    public function testPostInitializeThrowsExceptionForNonResultSet(): void
+    #[Test]
+    public function postInitializeThrowsExceptionForNonResultSet(): void
     {
         $resultSet    = $this->createMock(ResultSetInterface::class);
         $tableGateway = $this->createTableGatewayMock($resultSet);
@@ -69,7 +74,8 @@ class RowGatewayFeatureTest extends TestCase
         $feature->postInitialize();
     }
 
-    public function testPostInitializeThrowsExceptionWhenMetadataHasNoMetadataKey(): void
+    #[Test]
+    public function postInitializeThrowsExceptionWhenMetadataHasNoMetadataKey(): void
     {
         $resultSet = $this->createInitialResultSet();
 
@@ -99,7 +105,8 @@ class RowGatewayFeatureTest extends TestCase
         $feature->postInitialize();
     }
 
-    public function testPostInitializeThrowsExceptionWhenNoMetadataAndNoPrimaryKey(): void
+    #[Test]
+    public function postInitializeThrowsExceptionWhenNoMetadataAndNoPrimaryKey(): void
     {
         $resultSet = $this->createInitialResultSet();
 
@@ -120,7 +127,8 @@ class RowGatewayFeatureTest extends TestCase
         $feature->postInitialize();
     }
 
-    public function testPostInitializeWithMetadataFeature(): void
+    #[Test]
+    public function postInitializeWithMetadataFeature(): void
     {
         $resultSet = $this->createInitialResultSet();
 
@@ -149,10 +157,11 @@ class RowGatewayFeatureTest extends TestCase
         $feature->postInitialize();
 
         $prototype = $resultSet->getRowPrototype();
-        self::assertInstanceOf(RowGatewayInterface::class, $prototype);
+        static::assertInstanceOf(RowGatewayInterface::class, $prototype);
     }
 
-    public function testPostInitializeWithRowGatewayInstance(): void
+    #[Test]
+    public function postInitializeWithRowGatewayInstance(): void
     {
         $resultSet = $this->createInitialResultSet();
 
@@ -166,10 +175,11 @@ class RowGatewayFeatureTest extends TestCase
 
         $feature->postInitialize();
 
-        self::assertSame($rowGateway, $resultSet->getRowPrototype());
+        static::assertSame($rowGateway, $resultSet->getRowPrototype());
     }
 
-    public function testPostInitializeWithStringPrimaryKey(): void
+    #[Test]
+    public function postInitializeWithStringPrimaryKey(): void
     {
         $resultSet    = $this->createInitialResultSet();
         $tableGateway = $this->createTableGatewayMock($resultSet);
@@ -180,7 +190,7 @@ class RowGatewayFeatureTest extends TestCase
         $feature->postInitialize();
 
         $prototype = $resultSet->getRowPrototype();
-        self::assertInstanceOf(RowGatewayInterface::class, $prototype);
+        static::assertInstanceOf(RowGatewayInterface::class, $prototype);
     }
 
     /**

@@ -15,6 +15,7 @@ use PhpDb\TableGateway\AbstractTableGateway;
 use PhpDb\TableGateway\Feature\SequenceFeature;
 use PhpDb\TableGateway\TableGateway;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -50,18 +51,20 @@ final class SequenceFeatureTest extends TestCase
         ];
     }
 
+    #[Test]
     #[DataProvider('lastSequenceIdProvider')]
-    public function testLastSequenceId(string $platformName): void
+    public function lastSequenceId(string $platformName): void
     {
         $tableGateway = $this->createTableGatewayWithPlatform($platformName, 55);
         $this->feature->setTableGateway($tableGateway);
 
         $result = $this->feature->lastSequenceId();
 
-        self::assertEquals(55, $result);
+        static::assertSame(55, $result);
     }
 
-    public function testLastSequenceIdThrowsExceptionForUnsupportedPlatform(): void
+    #[Test]
+    public function lastSequenceIdThrowsExceptionForUnsupportedPlatform(): void
     {
         $tableGateway = $this->createTableGatewayWithPlatform('MySQL');
         $this->feature->setTableGateway($tableGateway);
@@ -75,8 +78,9 @@ final class SequenceFeatureTest extends TestCase
     /**
      * @throws Exception
      */
+    #[Test]
     #[DataProvider('nextSequenceIdProvider')]
-    public function testNextSequenceId(string $platformName, string $statementSql): void
+    public function nextSequenceId(string $platformName, string $statementSql): void
     {
         $platform = $this->createMock(PlatformInterface::class);
         $platform->expects($this->any())
@@ -114,7 +118,8 @@ final class SequenceFeatureTest extends TestCase
         $this->feature->nextSequenceId();
     }
 
-    public function testNextSequenceIdThrowsExceptionForUnsupportedPlatform(): void
+    #[Test]
+    public function nextSequenceIdThrowsExceptionForUnsupportedPlatform(): void
     {
         $tableGateway = $this->createTableGatewayWithPlatform('MySQL');
         $this->feature->setTableGateway($tableGateway);
@@ -125,7 +130,8 @@ final class SequenceFeatureTest extends TestCase
         $this->feature->nextSequenceId();
     }
 
-    public function testPostInsertDoesNotSetLastInsertValueWhenSequenceValueIsNull(): void
+    #[Test]
+    public function postInsertDoesNotSetLastInsertValueWhenSequenceValueIsNull(): void
     {
         $tableGateway = $this->createTableGatewayWithPlatform('PostgreSQL');
         $this->feature->setTableGateway($tableGateway);
@@ -138,10 +144,11 @@ final class SequenceFeatureTest extends TestCase
 
         $this->feature->postInsert($statement, $result);
 
-        self::assertEquals(999, $lastInsertValueProp->getValue($tableGateway));
+        static::assertSame(999, $lastInsertValueProp->getValue($tableGateway));
     }
 
-    public function testPostInsertSetsLastInsertValue(): void
+    #[Test]
+    public function postInsertSetsLastInsertValue(): void
     {
         $tableGateway = $this->createTableGatewayWithPlatform('PostgreSQL', 123);
         $this->feature->setTableGateway($tableGateway);
@@ -156,10 +163,11 @@ final class SequenceFeatureTest extends TestCase
 
         $this->feature->postInsert($statement, $result);
 
-        self::assertEquals(123, $tableGateway->lastInsertValue);
+        static::assertSame(123, $tableGateway->lastInsertValue);
     }
 
-    public function testPreInsertGeneratesSequenceWhenPrimaryKeyNotInValues(): void
+    #[Test]
+    public function preInsertGeneratesSequenceWhenPrimaryKeyNotInValues(): void
     {
         $tableGateway = $this->createTableGatewayWithPlatform('PostgreSQL', 99);
         $this->feature->setTableGateway($tableGateway);
@@ -170,16 +178,17 @@ final class SequenceFeatureTest extends TestCase
 
         $result = $this->feature->preInsert($insert);
 
-        self::assertSame($insert, $result);
+        static::assertSame($insert, $result);
 
         $sequenceValueProp = new ReflectionProperty(SequenceFeature::class, 'sequenceValue');
-        self::assertEquals(99, $sequenceValueProp->getValue($this->feature));
+        static::assertSame(99, $sequenceValueProp->getValue($this->feature));
 
         $rawState = $insert->getRawState();
-        self::assertContains('id', $rawState['columns']);
+        static::assertContains('id', $rawState['columns']);
     }
 
-    public function testPreInsertReturnsEarlyWhenNextSequenceIdReturnsNull(): void
+    #[Test]
+    public function preInsertReturnsEarlyWhenNextSequenceIdReturnsNull(): void
     {
         $tableGateway = $this->createTableGatewayWithPlatform('PostgreSQL');
 
@@ -200,16 +209,17 @@ final class SequenceFeatureTest extends TestCase
 
         $result = $feature->preInsert($insert);
 
-        self::assertSame($insert, $result);
+        static::assertSame($insert, $result);
 
         $sequenceValueProp = new ReflectionProperty(SequenceFeature::class, 'sequenceValue');
-        self::assertNull($sequenceValueProp->getValue($feature));
+        static::assertNull($sequenceValueProp->getValue($feature));
 
         $rawState = $insert->getRawState();
-        self::assertNotContains('id', $rawState['columns']);
+        static::assertNotContains('id', $rawState['columns']);
     }
 
-    public function testPreInsertWhenPrimaryKeyAlreadyInValues(): void
+    #[Test]
+    public function preInsertWhenPrimaryKeyAlreadyInValues(): void
     {
         $tableGateway = $this->createTableGatewayWithPlatform('PostgreSQL');
         $this->feature->setTableGateway($tableGateway);
@@ -220,13 +230,14 @@ final class SequenceFeatureTest extends TestCase
 
         $result = $this->feature->preInsert($insert);
 
-        self::assertSame($insert, $result);
+        static::assertSame($insert, $result);
 
         $sequenceValueProp = new ReflectionProperty(SequenceFeature::class, 'sequenceValue');
-        self::assertEquals(42, $sequenceValueProp->getValue($this->feature));
+        static::assertSame(42, $sequenceValueProp->getValue($this->feature));
     }
 
-    public function testPreInsertWithPrimaryKeyColumnButNullValue(): void
+    #[Test]
+    public function preInsertWithPrimaryKeyColumnButNullValue(): void
     {
         $tableGateway = $this->createTableGatewayWithPlatform('PostgreSQL');
         $this->feature->setTableGateway($tableGateway);
@@ -237,10 +248,10 @@ final class SequenceFeatureTest extends TestCase
 
         $result = $this->feature->preInsert($insert);
 
-        self::assertSame($insert, $result);
+        static::assertSame($insert, $result);
 
         $sequenceValueProp = new ReflectionProperty(SequenceFeature::class, 'sequenceValue');
-        self::assertNull($sequenceValueProp->getValue($this->feature));
+        static::assertNull($sequenceValueProp->getValue($this->feature));
     }
 
     #[Override]

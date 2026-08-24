@@ -13,6 +13,7 @@ use PhpDb\Adapter\Platform\Sql92;
 use PhpDb\Sql\Sql;
 use PhpDb\TableGateway\Feature\MasterSlaveFeature;
 use PhpDb\TableGateway\TableGateway;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -28,36 +29,40 @@ final class MasterSlaveFeatureTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testConstructorWithSlaveSql(): void
+    #[Test]
+    public function constructorWithSlaveSql(): void
     {
         $slaveSql = new Sql($this->mockSlaveAdapter, 'foo');
         $feature  = new MasterSlaveFeature($this->mockSlaveAdapter, $slaveSql);
 
-        self::assertSame($slaveSql, $feature->getSlaveSql());
+        static::assertSame($slaveSql, $feature->getSlaveSql());
     }
 
-    public function testGetSlaveAdapter(): void
+    #[Test]
+    public function getSlaveAdapter(): void
     {
-        self::assertSame($this->mockSlaveAdapter, $this->feature->getSlaveAdapter());
+        static::assertSame($this->mockSlaveAdapter, $this->feature->getSlaveAdapter());
     }
 
     /**
      * @throws Exception
      */
-    public function testPostInitialize(): void
+    #[Test]
+    public function postInitialize(): void
     {
         $this->getMockBuilder(TableGateway::class)
             ->setConstructorArgs(['foo', $this->mockMasterAdapter, $this->feature])
             ->onlyMethods([])
             ->getMock();
         // postInitialize is run
-        self::assertSame($this->mockSlaveAdapter, $this->feature->getSlaveSql()->getAdapter());
+        static::assertSame($this->mockSlaveAdapter, $this->feature->getSlaveSql()->getAdapter());
     }
 
     /**
      * @throws Exception
      */
-    public function testPostInitializeWithProvidedSlaveSql(): void
+    #[Test]
+    public function postInitializeWithProvidedSlaveSql(): void
     {
         $slaveSql = new Sql($this->mockSlaveAdapter, 'foo');
         $feature  = new MasterSlaveFeature($this->mockSlaveAdapter, $slaveSql);
@@ -68,13 +73,14 @@ final class MasterSlaveFeatureTest extends TestCase
             ->getMock();
 
         // The provided slaveSql should be used instead of creating a new one
-        self::assertSame($slaveSql, $feature->getSlaveSql());
+        static::assertSame($slaveSql, $feature->getSlaveSql());
     }
 
     /**
      * @throws Exception
      */
-    public function testPostSelect(): void
+    #[Test]
+    public function postSelect(): void
     {
         $table = $this->getMockBuilder(TableGateway::class)
             ->setConstructorArgs(['foo', $this->mockMasterAdapter, $this->feature])
@@ -98,13 +104,14 @@ final class MasterSlaveFeatureTest extends TestCase
         $table->select('foo = bar');
 
         // test that the sql object is restored
-        self::assertSame($masterSql, $table->getSql());
+        static::assertSame($masterSql, $table->getSql());
     }
 
     /**
      * @throws Exception
      */
-    public function testPreSelect(): void
+    #[Test]
+    public function preSelect(): void
     {
         $this->expectNotToPerformAssertions();
 
