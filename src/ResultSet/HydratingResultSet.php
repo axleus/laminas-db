@@ -11,7 +11,7 @@ use Override;
 
 use function is_array;
 
-class HydratingResultSet extends AbstractResultSet
+class HydratingResultSet extends AbstractResultSet implements HydratingResultSetInterface
 {
     public function __construct(
         private ?HydratorInterface $hydrator = null,
@@ -24,7 +24,7 @@ class HydratingResultSet extends AbstractResultSet
     #[Override]
     public function current(): ?object
     {
-        if (null === $this->buffer) {
+        if ($this->buffer === null) {
             $this->buffer = -2; // implicitly disable buffering from here on
         } elseif (is_array($this->buffer) && isset($this->buffer[$this->position])) {
             return $this->buffer[$this->position];
@@ -77,7 +77,7 @@ class HydratingResultSet extends AbstractResultSet
 
     /** {@inheritDoc} */
     #[Override]
-    public function setRowPrototype(object $rowPrototype): ResultSetInterface
+    public function setRowPrototype(object $rowPrototype): ResultSetInterface&HydratingResultSetInterface
     {
         $this->rowPrototype = $rowPrototype;
         return $this;

@@ -19,7 +19,6 @@ use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use stdClass;
 use TypeError;
 
 use function assert;
@@ -35,7 +34,6 @@ use function assert;
 #[CoversMethod(AbstractResultSet::class, 'valid')]
 #[CoversMethod(AbstractResultSet::class, 'rewind')]
 #[CoversMethod(AbstractResultSet::class, 'count')]
-#[CoversMethod(AbstractResultSet::class, 'toArray')]
 final class AbstractResultSetTest extends TestCase
 {
     protected MockObject|AbstractResultSet $resultSet;
@@ -387,7 +385,7 @@ final class AbstractResultSetTest extends TestCase
         assert($stub instanceof PDOStatement); // to suppress IDE type warnings
         $stub->expects($this->any())
             ->method('fetch')
-            ->willReturnCallback(static function () use ($data) {
+            ->willReturnCallback(function () use ($data) {
                 $r = $data->current();
                 $data->next();
                 return $r;
@@ -485,50 +483,6 @@ final class AbstractResultSetTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testToArray(): void
-    {
-        $resultSet = $this->createResultSetMock();
-        $resultSet->initialize(new ArrayIterator([
-            ['id' => 1, 'name' => 'one'],
-            ['id' => 2, 'name' => 'two'],
-            ['id' => 3, 'name' => 'three'],
-        ]));
-        // Verify toArray() returns all rows as array
-        self::assertEquals(
-            [
-                ['id' => 1, 'name' => 'one'],
-                ['id' => 2, 'name' => 'two'],
-                ['id' => 3, 'name' => 'three'],
-            ],
-            $resultSet->toArray(),
-        );
-    }
-
-    public function testToArrayConvertsArrayObjectsViaGetArrayCopy(): void
-    {
-        $resultSet = $this->createResultSetMock();
-        $resultSet->initialize([
-            new ArrayObject(['id' => 1, 'name' => 'one']),
-        ]);
-
-        $result = $resultSet->toArray();
-
-        self::assertSame([['id' => 1, 'name' => 'one']], $result);
-    }
-
-    public function testToArrayThrowsOnNonCastableRows(): void
-    {
-        $resultSet = $this->createResultSetMock();
-        $resultSet->initialize(new ArrayIterator([new stdClass()]));
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('cannot be cast to an array');
-        $resultSet->toArray();
-    }
-
-    /**
-     * @throws Exception
-     */
     public function testValid(): void
     {
         $resultSet = $this->createResultSetMock();
@@ -587,7 +541,7 @@ final class AbstractResultSetTest extends TestCase
     private function createResultSetMock(): MockObject|AbstractResultSet
     {
         return $this->getMockBuilder(AbstractResultSet::class)
-            ->onlyMethods(['setRowPrototype', 'getRowPrototype'])
+            ->onlyMethods(['toArray'])
             ->getMock();
     }
 }

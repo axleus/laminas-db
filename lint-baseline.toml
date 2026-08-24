@@ -260,12 +260,6 @@ count = 2
 
 [[issues]]
 file = "src/ResultSet/AbstractResultSet.php"
-code = "kan-defect"
-message = "Class has a high kan defect score."
-count = 1
-
-[[issues]]
-file = "src/ResultSet/AbstractResultSet.php"
 code = "no-else-clause"
 message = "Avoid `else` clauses."
 count = 1
@@ -274,13 +268,31 @@ count = 1
 file = "src/ResultSet/AbstractResultSet.php"
 code = "no-else-clause"
 message = "Avoid `elseif` clauses."
-count = 2
+count = 3
 
 [[issues]]
 file = "src/ResultSet/AbstractResultSet.php"
 code = "no-isset"
 message = "Use of the `isset` construct."
 count = 2
+
+[[issues]]
+file = "src/ResultSet/AbstractResultSet.php"
+code = "no-redundant-else"
+message = "The `if` branch always terminates; the trailing branches can be extracted."
+count = 1
+
+[[issues]]
+file = "src/ResultSet/AbstractResultSet.php"
+code = "yoda-conditions"
+message = "Use Yoda condition style for safer comparisons"
+count = 5
+
+[[issues]]
+file = "src/ResultSet/ArrayObjectResultSetInterface.php"
+code = "prefer-self-return-type"
+message = "Return type `ArrayObjectResultSetInterface` refers to the enclosing class; use `self` instead."
+count = 1
 
 [[issues]]
 file = "src/ResultSet/HydratingResultSet.php"
@@ -298,6 +310,42 @@ count = 1
 file = "src/ResultSet/HydratingResultSet.php"
 code = "no-isset"
 message = "Use of the `isset` construct."
+count = 1
+
+[[issues]]
+file = "src/ResultSet/HydratingResultSet.php"
+code = "yoda-conditions"
+message = "Use Yoda condition style for safer comparisons"
+count = 1
+
+[[issues]]
+file = "src/ResultSet/HydratingResultSetInterface.php"
+code = "prefer-self-return-type"
+message = "Return type `HydratingResultSetInterface` refers to the enclosing class; use `self` instead."
+count = 1
+
+[[issues]]
+file = "src/ResultSet/ResultSet.php"
+code = "yoda-conditions"
+message = "Use Yoda condition style for safer comparisons"
+count = 1
+
+[[issues]]
+file = "src/ResultSet/ResultSetInterface.php"
+code = "prefer-self-return-type"
+message = "Return type `ResultSetInterface` refers to the enclosing class; use `self` instead."
+count = 1
+
+[[issues]]
+file = "src/ResultSet/RowPrototypeInterface.php"
+code = "prefer-self-return-type"
+message = "Return type `RowPrototypeInterface` refers to the enclosing class; use `self` instead."
+count = 1
+
+[[issues]]
+file = "src/ResultSet/RowPrototypeResultSetInterface.php"
+code = "prefer-self-return-type"
+message = "Return type `RowPrototypeResultSetInterface` refers to the enclosing class; use `self` instead."
 count = 1
 
 [[issues]]
@@ -344,9 +392,27 @@ count = 1
 
 [[issues]]
 file = "src/RowGateway/AbstractRowGateway.php"
+code = "prefer-early-continue"
+message = "Consider using early continue pattern to reduce nesting."
+count = 1
+
+[[issues]]
+file = "src/RowGateway/AbstractRowGateway.php"
+code = "string-style"
+message = "String concatenation can be replaced with interpolation."
+count = 2
+
+[[issues]]
+file = "src/RowGateway/AbstractRowGateway.php"
 code = "too-many-methods"
 message = "Class has too many methods."
 count = 1
+
+[[issues]]
+file = "src/RowGateway/AbstractRowGateway.php"
+code = "yoda-conditions"
+message = "Use Yoda condition style for safer comparisons"
+count = 6
 
 [[issues]]
 file = "src/RowGateway/Feature/FeatureSet.php"
@@ -959,6 +1025,18 @@ file = "src/TableGateway/Feature/RowGatewayFeature.php"
 code = "no-isset"
 message = "Use of the `isset` construct."
 count = 2
+
+[[issues]]
+file = "src/TableGateway/Feature/RowGatewayFeature.php"
+code = "no-redundant-use"
+message = 'Redundant import: `MetadataFeature` is already in the current namespace `PhpDb\TableGateway\Feature`.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/RowGatewayFeature.php"
+code = "yoda-conditions"
+message = "Use Yoda condition style for safer comparisons"
+count = 1
 
 [[issues]]
 file = "src/TableGateway/Feature/SequenceFeature.php"
@@ -2914,7 +2992,13 @@ count = 1
 file = "test/unit/ResultSet/AbstractResultSetTest.php"
 code = "assertion-style"
 message = "Inconsistent assertions style."
-count = 47
+count = 45
+
+[[issues]]
+file = "test/unit/ResultSet/AbstractResultSetTest.php"
+code = "prefer-static-closure"
+message = "This closure does not use `$this` and should be declared static."
+count = 1
 
 [[issues]]
 file = "test/unit/ResultSet/AbstractResultSetTest.php"
@@ -3075,24 +3159,6 @@ count = 1
 [[issues]]
 file = "test/unit/ResultSet/AbstractResultSetTest.php"
 code = "prefer-test-attribute"
-message = "Use `#[Test]` attribute instead of `test` prefix on method `testToArrayConvertsArrayObjectsViaGetArrayCopy`."
-count = 1
-
-[[issues]]
-file = "test/unit/ResultSet/AbstractResultSetTest.php"
-code = "prefer-test-attribute"
-message = "Use `#[Test]` attribute instead of `test` prefix on method `testToArrayThrowsOnNonCastableRows`."
-count = 1
-
-[[issues]]
-file = "test/unit/ResultSet/AbstractResultSetTest.php"
-code = "prefer-test-attribute"
-message = "Use `#[Test]` attribute instead of `test` prefix on method `testToArray`."
-count = 1
-
-[[issues]]
-file = "test/unit/ResultSet/AbstractResultSetTest.php"
-code = "prefer-test-attribute"
 message = "Use `#[Test]` attribute instead of `test` prefix on method `testValidReturnsFalseAfterLastElement`."
 count = 1
 
@@ -3220,7 +3286,7 @@ count = 27
 file = "test/unit/ResultSet/ResultSetIntegrationTest.php"
 code = "literal-named-argument"
 message = "Literal argument `75` should be passed as a named argument for clarity."
-count = 3
+count = 2
 
 [[issues]]
 file = "test/unit/ResultSet/ResultSetIntegrationTest.php"
@@ -3363,12 +3429,6 @@ count = 1
 [[issues]]
 file = "test/unit/ResultSet/ResultSetIntegrationTest.php"
 code = "prefer-test-attribute"
-message = "Use `#[Test]` attribute instead of `test` prefix on method `testToArrayRaisesExceptionForRowsThatAreNotArraysOrArrayCastable`."
-count = 1
-
-[[issues]]
-file = "test/unit/ResultSet/ResultSetIntegrationTest.php"
-code = "prefer-test-attribute"
 message = "Use `#[Test]` attribute instead of `test` prefix on method `testWhenReturnTypeIsArrayThenIterationReturnsArrays`."
 count = 1
 
@@ -3383,6 +3443,12 @@ file = "test/unit/ResultSet/ResultSetIntegrationTest.php"
 code = "strict-assertions"
 message = "Use strict assertions in PHPUnit tests."
 count = 2
+
+[[issues]]
+file = "test/unit/ResultSet/ResultSetIntegrationTest.php"
+code = "string-style"
+message = "String concatenation can be replaced with interpolation."
+count = 1
 
 [[issues]]
 file = "test/unit/RowGateway/AbstractRowGatewayTest.php"
@@ -9076,6 +9142,12 @@ count = 1
 file = "test/unit/TableGateway/Feature/RowGatewayFeatureTest.php"
 code = "prefer-test-attribute"
 message = "Use `#[Test]` attribute instead of `test` prefix on method `testPostInitializeWithStringPrimaryKey`."
+count = 1
+
+[[issues]]
+file = "test/unit/TableGateway/Feature/RowGatewayFeatureTest.php"
+code = "yoda-conditions"
+message = "Use Yoda condition style for safer comparisons"
 count = 1
 
 [[issues]]

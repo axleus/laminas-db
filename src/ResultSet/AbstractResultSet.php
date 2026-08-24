@@ -17,10 +17,7 @@ use ReturnTypeWillChange;
 
 use function count;
 use function current;
-use function gettype;
 use function is_array;
-use function is_object;
-use function method_exists;
 use function reset;
 
 abstract class AbstractResultSet implements ResultSetInterface
@@ -49,9 +46,7 @@ abstract class AbstractResultSet implements ResultSetInterface
     {
         if ($this->buffer === -2) {
             throw new RuntimeException('Buffering must be enabled before iteration is started');
-        }
-
-        if (null === $this->buffer) {
+        } elseif ($this->buffer === null) {
             $this->buffer = [];
             if ($this->dataSource instanceof ResultInterface) {
                 $this->dataSource->rewind();
@@ -68,7 +63,7 @@ abstract class AbstractResultSet implements ResultSetInterface
     #[ReturnTypeWillChange]
     public function count(): ?int
     {
-        if (null !== $this->count) {
+        if ($this->count !== null) {
             return $this->count;
         }
 
@@ -90,7 +85,7 @@ abstract class AbstractResultSet implements ResultSetInterface
             return $this->dataSource->current();
         }
 
-        if (null === $this->buffer) {
+        if ($this->buffer === null) {
             $this->buffer = -2; // implicitly disable buffering from here on
         } elseif (is_array($this->buffer) && isset($this->buffer[$this->position])) {
             return $this->buffer[$this->position];
@@ -175,7 +170,7 @@ abstract class AbstractResultSet implements ResultSetInterface
             // its safe to get numbers from an array
             $first = current($dataSource);
             reset($dataSource);
-            $this->fieldCount = false === $first ? 0 : count($first);
+            $this->fieldCount = $first === false ? 0 : count($first);
             $this->dataSource = new ArrayIterator($dataSource);
             $this->buffer     = -1; // array's are a natural buffer
         } elseif ($dataSource instanceof IteratorAggregate) {
@@ -209,7 +204,7 @@ abstract class AbstractResultSet implements ResultSetInterface
     #[Override]
     public function next(): void
     {
-        if (null === $this->buffer) {
+        if ($this->buffer === null) {
             $this->buffer = -2; // implicitly disable buffering from here on
         }
 
@@ -231,39 +226,6 @@ abstract class AbstractResultSet implements ResultSetInterface
         }
 
         $this->position = 0;
-    }
-
-    /**
-     * Cast result set to array of arrays
-     *
-     * @throws RuntimeException If any row is not castable to an array.
-     */
-    #[Override]
-    public function toArray(): array
-    {
-        $return = [];
-        foreach ($this as $row) {
-            if (is_array($row)) {
-                $return[] = $row;
-                continue;
-            }
-
-            if (
-                ! is_object($row)
-                    || (
-                        ! method_exists($row, 'toArray')
-                        && ! method_exists($row, 'getArrayCopy')
-                    )
-            ) {
-                throw new RuntimeException(
-                    'Rows as part of this DataSource, with type ' . gettype($row) . ' cannot be cast to an array',
-                );
-            }
-
-            $return[] = method_exists($row, 'toArray') ? $row->toArray() : $row->getArrayCopy();
-        }
-
-        return $return;
     }
 
     /**

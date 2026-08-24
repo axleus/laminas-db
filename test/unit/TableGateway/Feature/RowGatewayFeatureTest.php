@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace PhpDbTest\TableGateway\Feature;
 
 use PhpDb\Adapter\AdapterInterface;
-use PhpDb\ResultSet\ResultSet;
 use PhpDb\ResultSet\ResultSetInterface;
+use PhpDb\ResultSet\RowPrototypeResultSet;
 use PhpDb\RowGateway\RowGatewayInterface;
 use PhpDb\TableGateway\AbstractTableGateway;
 use PhpDb\TableGateway\Exception\RuntimeException;
@@ -71,7 +71,7 @@ class RowGatewayFeatureTest extends TestCase
 
     public function testPostInitializeThrowsExceptionWhenMetadataHasNoMetadataKey(): void
     {
-        $resultSet = new ResultSet();
+        $resultSet = $this->createInitialResultSet();
 
         // Create a MetadataFeature mock without the metadata key in sharedData
         $metadataFeature = $this->getMockBuilder(MetadataFeature::class)
@@ -101,7 +101,7 @@ class RowGatewayFeatureTest extends TestCase
 
     public function testPostInitializeThrowsExceptionWhenNoMetadataAndNoPrimaryKey(): void
     {
-        $resultSet = new ResultSet();
+        $resultSet = $this->createInitialResultSet();
 
         $featureSet = $this->createMock(FeatureSet::class);
         $featureSet->expects($this->once())
@@ -122,7 +122,7 @@ class RowGatewayFeatureTest extends TestCase
 
     public function testPostInitializeWithMetadataFeature(): void
     {
-        $resultSet = new ResultSet();
+        $resultSet = $this->createInitialResultSet();
 
         // Create a MetadataFeature mock with primary key in sharedData
         $metadataFeature = $this->getMockBuilder(MetadataFeature::class)
@@ -154,7 +154,7 @@ class RowGatewayFeatureTest extends TestCase
 
     public function testPostInitializeWithRowGatewayInstance(): void
     {
-        $resultSet = new ResultSet();
+        $resultSet = $this->createInitialResultSet();
 
         /** @var RowGatewayInterface&MockObject $rowGateway */
         $rowGateway = $this->createMock(RowGatewayInterface::class);
@@ -171,7 +171,7 @@ class RowGatewayFeatureTest extends TestCase
 
     public function testPostInitializeWithStringPrimaryKey(): void
     {
-        $resultSet    = new ResultSet();
+        $resultSet    = $this->createInitialResultSet();
         $tableGateway = $this->createTableGatewayMock($resultSet);
 
         $feature = new RowGatewayFeature('id');
@@ -181,6 +181,14 @@ class RowGatewayFeatureTest extends TestCase
 
         $prototype = $resultSet->getRowPrototype();
         self::assertInstanceOf(RowGatewayInterface::class, $prototype);
+    }
+
+    /**
+     * RowPrototypeResultSet requires a prototype up front; postInitialize() always replaces it.
+     */
+    private function createInitialResultSet(): RowPrototypeResultSet
+    {
+        return new RowPrototypeResultSet($this->createMock(RowGatewayInterface::class));
     }
 
     private function createTableGatewayMock(
@@ -203,7 +211,7 @@ class RowGatewayFeatureTest extends TestCase
         $resultSetProperty = new ReflectionProperty(AbstractTableGateway::class, 'resultSetPrototype');
         $resultSetProperty->setValue($tableGateway, $resultSetPrototype);
 
-        if (null !== $featureSet) {
+        if ($featureSet !== null) {
             $featureSetProperty = new ReflectionProperty(AbstractTableGateway::class, 'featureSet');
             $featureSetProperty->setValue($tableGateway, $featureSet);
         }

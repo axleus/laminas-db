@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpDb\ResultSet;
 
-use ArrayObject;
 use Countable;
 use Iterator;
 
@@ -18,26 +17,12 @@ interface ResultSetInterface extends Iterator, Countable
     public function getFieldCount(): int;
 
     /**
-     * Get the row object prototype
-     */
-    public function getRowPrototype(): ?object;
-
-    /**
      * Can be anything iterable|array
      */
-    public function initialize(iterable $dataSource): self;
-
-    /**
-     * Set the row object prototype
-     *
-     * @throws Exception\InvalidArgumentException
-     */
-    public function setRowPrototype(ArrayObject|RowPrototypeInterface $rowPrototype): self;
+    public function initialize(iterable $dataSource): ResultSetInterface;
 
     /**
      * Get all rows as an array
-     *
-     * @return RowPrototypeInterface[]|ArrayObject[]|array[]
      */
     public function toArray(): array;
 }
