@@ -7,6 +7,9 @@ namespace PhpDb\TableGateway\Feature;
 use PhpDb\Adapter\AdapterInterface;
 use PhpDb\TableGateway\Exception;
 
+/**
+ * @api
+ */
 class GlobalAdapterFeature extends AbstractFeature
 {
     /** @var AdapterInterface[] */

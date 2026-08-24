@@ -12,8 +12,9 @@ use PhpDb\TableGateway\Feature\MetadataFeature;
 
 use function is_string;
 
-class RowGatewayFeature extends AbstractFeature
+final class RowGatewayFeature extends AbstractFeature
 {
+    /** @var array<array-key, mixed> */
     protected array $constructorArguments = [];
 
     public function __construct(mixed ...$constructorArguments)

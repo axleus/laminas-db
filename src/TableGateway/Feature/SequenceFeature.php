@@ -11,6 +11,9 @@ use PhpDb\Sql\Insert;
 
 use function array_search;
 
+/**
+ * @api
+ */
 class SequenceFeature extends AbstractFeature
 {
     protected string $primaryKeyField;
@@ -29,6 +32,8 @@ class SequenceFeature extends AbstractFeature
      * Return the most recent value from the specified sequence in the database.
      *
      * @throws RuntimeException
+     *
+     * @mago-expect analysis:mixed-assignment
      */
     public function lastSequenceId(): int
     {
@@ -56,6 +61,8 @@ class SequenceFeature extends AbstractFeature
      * Generate a new value from the specified sequence in the database, and return it.
      *
      * @throws RuntimeException
+     *
+     * @mago-expect analysis:mixed-assignment
      */
     public function nextSequenceId(): ?int
     {
@@ -78,6 +85,9 @@ class SequenceFeature extends AbstractFeature
         return $sequence['nextval'];
     }
 
+    /**
+     * @mago-expect analysis:unused-parameter
+     */
     public function postInsert(StatementInterface $statement, ResultInterface $result): void
     {
         if (null !== $this->sequenceValue) {
