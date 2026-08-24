@@ -7,7 +7,7 @@ namespace PhpDb\TableGateway\Feature;
 use PhpDb\Adapter\AdapterInterface;
 use PhpDb\Sql\Sql;
 
-class MasterSlaveFeature extends AbstractFeature
+final class MasterSlaveFeature extends AbstractFeature
 {
     protected AdapterInterface $slaveAdapter;
 

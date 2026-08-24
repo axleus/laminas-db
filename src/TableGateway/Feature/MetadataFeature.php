@@ -13,6 +13,9 @@ use function count;
 use function current;
 use function is_array;
 
+/**
+ * @api
+ */
 class MetadataFeature extends AbstractFeature
 {
     /**

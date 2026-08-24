@@ -19,6 +19,9 @@ use PhpDb\TableGateway\TableGateway;
 
 use function get_class;
 
+/**
+ * @api
+ */
 class EventFeature extends AbstractFeature implements EventFeatureEventsInterface, EventsCapableInterface
 {
     protected EventManagerInterface $eventManager;
