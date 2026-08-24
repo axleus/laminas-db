@@ -74,10 +74,7 @@ final class RowGatewayFeature extends AbstractFeature
      */
     private function primaryKeyFromMetadata(): string|array
     {
-        $featureSet = $this->tableGateway->featureSet;
-        $metadata   = $featureSet instanceof FeatureSet
-            ? $featureSet->getFeatureByClassName(MetadataFeature::class)
-            : null;
+        $metadata = $this->tableGateway->featureSet?->getFeatureByClassName(MetadataFeature::class);
 
         $metadataData = $metadata instanceof MetadataFeature
             ? $metadata->sharedData['metadata'] ?? null

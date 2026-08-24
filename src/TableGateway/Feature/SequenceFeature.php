@@ -42,7 +42,7 @@ class SequenceFeature extends AbstractFeature
         $platform     = $this->tableGateway->adapter->getPlatform();
         $platformName = $platform->getName();
 
-        // todo: Remove string usage
+        // TODO(@simon-mundy): Remove string usage
         $sql = match ($platformName) {
             'Oracle'     => "SELECT {$platform->quoteIdentifier($this->sequenceName)}.CURRVAL as \"currval\" FROM dual",
             'PostgreSQL' => 'SELECT LAST_INSERT_ROWID() as "currval"',
