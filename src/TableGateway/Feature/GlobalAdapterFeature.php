@@ -24,17 +24,13 @@ class GlobalAdapterFeature extends AbstractFeature
     {
         $class = static::class;
 
-        // class specific adapter
-        if (isset(static::$staticAdapters[$class])) {
-            return static::$staticAdapters[$class];
+        $adapter = static::$staticAdapters[$class] ?? static::$staticAdapters[self::class] ?? null;
+
+        if (! $adapter instanceof AdapterInterface) {
+            throw new Exception\RuntimeException('No database adapter was found in the static registry.');
         }
 
-        // default adapter
-        if (isset(static::$staticAdapters[self::class])) {
-            return static::$staticAdapters[self::class];
-        }
-
-        throw new Exception\RuntimeException('No database adapter was found in the static registry.');
+        return $adapter;
     }
 
     /**
