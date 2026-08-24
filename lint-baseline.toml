@@ -8483,3 +8483,27 @@ file = "test/unit/TableGateway/TableGatewayTest.php"
 code = "strict-assertions"
 message = "Use strict assertions in PHPUnit tests."
 count = 2
+
+[[issues]]
+file = "src/RowGateway/Feature/FeatureSet.php"
+code = "too-many-methods"
+message = 'Class has too many methods.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/FeatureSet.php"
+code = "kan-defect"
+message = 'Class has a high kan defect score.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/FeatureSet.php"
+code = "too-many-methods"
+message = 'Class has too many methods.'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/Feature/EventFeature.php"
+code = "too-many-methods"
+message = 'Class has too many methods.'
+count = 1

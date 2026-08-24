@@ -5294,12 +5294,6 @@ count = 1
 
 [[issues]]
 file = "src/TableGateway/AbstractTableGateway.php"
-code = "invalid-array-access"
-message = 'Cannot access array index on object `PhpDb\Sql\TableIdentifier` that does not implement `ArrayAccess`.'
-count = 2
-
-[[issues]]
-file = "src/TableGateway/AbstractTableGateway.php"
 code = "invalid-clone"
 message = "Invalid `clone` operation on non-cloneable type `never`."
 count = 1
@@ -5504,12 +5498,6 @@ count = 1
 
 [[issues]]
 file = "src/TableGateway/AbstractTableGateway.php"
-code = "possibly-undefined-string-array-index"
-message = "Possibly undefined array key `string('table')` accessed on `array<array-key, mixed>`."
-count = 2
-
-[[issues]]
-file = "src/TableGateway/AbstractTableGateway.php"
 code = "redundant-comparison"
 message = "Redundant `===` comparison: left-hand side is never identical to right-hand side."
 count = 2
@@ -5579,3 +5567,28 @@ file = "src/TableGateway/TableGatewayInterface.php"
 code = "missing-api-or-internal"
 message = 'Interface `PhpDb\TableGateway\TableGatewayInterface` is missing an `@api` or `@internal` annotation.'
 count = 1
+
+[[issues]]
+file = "src/TableGateway/AbstractTableGateway.php"
+code = "nullable-return-statement"
+message = 'Function `PhpDb\TableGateway\AbstractTableGateway::getTable` is declared to return `PhpDb\Sql\TableIdentifier|array<array-key, mixed>|string` but possibly returns a nullable value (inferred as `PhpDb\Sql\TableIdentifier|array<array-key, mixed>|null|string`).'
+count = 1
+
+[[issues]]
+file = "src/TableGateway/AbstractTableGateway.php"
+code = "invalid-return-statement"
+message = 'Invalid return type for function `PhpDb\TableGateway\AbstractTableGateway::getTable`: expected `PhpDb\Sql\TableIdentifier|array<array-key, mixed>|string`, but found `PhpDb\Sql\TableIdentifier|array<array-key, mixed>|null|string`.'
+count = 1
+
+
+[[issues]]
+file = "src/TableGateway/AbstractTableGateway.php"
+code = "invalid-array-access"
+message = 'Cannot access array index on object `PhpDb\Sql\TableIdentifier` that does not implement `ArrayAccess`.'
+count = 3
+
+[[issues]]
+file = "src/TableGateway/AbstractTableGateway.php"
+code = "possibly-undefined-string-array-index"
+message = "Possibly undefined array key `string('table')` accessed on `array<array-key, mixed>`."
+count = 3

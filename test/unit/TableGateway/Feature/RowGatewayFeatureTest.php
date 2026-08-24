@@ -62,7 +62,7 @@ class RowGatewayFeatureTest extends TestCase
     #[Test]
     public function postInitializeIgnoresAnArgumentThatIsNeitherStringNorRowGateway(): void
     {
-        $resultSet    = new ResultSet();
+        $resultSet    = $this->createInitialResultSet();
         $tableGateway = $this->createTableGatewayMock($resultSet);
         $original     = $resultSet->getRowPrototype();
 
@@ -145,7 +145,7 @@ class RowGatewayFeatureTest extends TestCase
     #[Test]
     public function postInitializeThrowsWhenMetadataIsNotAnArray(): void
     {
-        $resultSet = new ResultSet();
+        $resultSet = $this->createInitialResultSet();
 
         $metadataFeature = $this->getMockBuilder(MetadataFeature::class)
             ->disableOriginalConstructor()
@@ -172,7 +172,7 @@ class RowGatewayFeatureTest extends TestCase
     #[Test]
     public function postInitializeThrowsWhenMetadataPrimaryKeyIsUnusable(): void
     {
-        $resultSet = new ResultSet();
+        $resultSet = $this->createInitialResultSet();
 
         $metadataFeature = $this->getMockBuilder(MetadataFeature::class)
             ->disableOriginalConstructor()
@@ -203,7 +203,7 @@ class RowGatewayFeatureTest extends TestCase
     #[Test]
     public function postInitializeThrowsWhenTableGatewayHasNoFeatureSet(): void
     {
-        $resultSet    = new ResultSet();
+        $resultSet    = $this->createInitialResultSet();
         $tableGateway = $this->createTableGatewayMock($resultSet);
 
         $featureSetProperty = new ReflectionProperty(AbstractTableGateway::class, 'featureSet');
@@ -221,7 +221,7 @@ class RowGatewayFeatureTest extends TestCase
     #[Test]
     public function postInitializeThrowsWhenTableIsNotNamed(): void
     {
-        $resultSet    = new ResultSet();
+        $resultSet    = $this->createInitialResultSet();
         $tableGateway = $this->createTableGatewayMock($resultSet);
 
         $tableProperty = new ReflectionProperty(AbstractTableGateway::class, 'table');
@@ -332,7 +332,7 @@ class RowGatewayFeatureTest extends TestCase
         $resultSetProperty = new ReflectionProperty(AbstractTableGateway::class, 'resultSetPrototype');
         $resultSetProperty->setValue($tableGateway, $resultSetPrototype);
 
-        if ($featureSet !== null) {
+        if (null !== $featureSet) {
             $featureSetProperty = new ReflectionProperty(AbstractTableGateway::class, 'featureSet');
             $featureSetProperty->setValue($tableGateway, $featureSet);
         }
