@@ -11,6 +11,8 @@ use PhpDb\Adapter\Driver\ResultInterface;
 use PhpDb\Adapter\Driver\StatementInterface;
 use PhpDb\Adapter\Platform\Sql92;
 use PhpDb\Sql\Sql;
+use PhpDb\TableGateway\AbstractTableGateway;
+use PhpDb\TableGateway\Exception\RuntimeException;
 use PhpDb\TableGateway\Feature\MasterSlaveFeature;
 use PhpDb\TableGateway\TableGateway;
 use PHPUnit\Framework\Attributes\Test;
@@ -62,6 +64,25 @@ final class MasterSlaveFeatureTest extends TestCase
      * @throws Exception
      */
     #[Test]
+    public function postInitializeThrowsWhenTableGatewayHasNoSql(): void
+    {
+        $tableGateway = $this->getMockBuilder(AbstractTableGateway::class)->onlyMethods([])->getMock();
+
+        $feature = new MasterSlaveFeature($this->mockSlaveAdapter);
+        $feature->setTableGateway($tableGateway);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'The table gateway must be initialized with a Sql instance before this feature is applied.',
+        );
+
+        $feature->postInitialize();
+    }
+
+    /**
+     * @throws Exception
+     */
+    #[Test]
     public function postInitializeWithProvidedSlaveSql(): void
     {
         $slaveSql = new Sql($this->mockSlaveAdapter, 'foo');
@@ -105,6 +126,17 @@ final class MasterSlaveFeatureTest extends TestCase
 
         // test that the sql object is restored
         static::assertSame($masterSql, $table->getSql());
+    }
+
+    #[Test]
+    public function postSelectThrowsWhenPostInitializeHasNotRun(): void
+    {
+        $feature = new MasterSlaveFeature($this->mockSlaveAdapter);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('The master Sql instance is not available; postInitialize() has not been run.');
+
+        $feature->postSelect();
     }
 
     /**

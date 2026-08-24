@@ -60,6 +60,21 @@ class RowGatewayFeatureTest extends TestCase
     }
 
     #[Test]
+    public function postInitializeIgnoresAnArgumentThatIsNeitherStringNorRowGateway(): void
+    {
+        $resultSet    = new ResultSet();
+        $tableGateway = $this->createTableGatewayMock($resultSet);
+        $original     = $resultSet->getRowPrototype();
+
+        $feature = new RowGatewayFeature(42);
+        $feature->setTableGateway($tableGateway);
+
+        $feature->postInitialize();
+
+        static::assertSame($original, $resultSet->getRowPrototype());
+    }
+
+    #[Test]
     public function postInitializeThrowsExceptionForNonResultSet(): void
     {
         $resultSet    = $this->createMock(ResultSetInterface::class);
@@ -123,6 +138,102 @@ class RowGatewayFeatureTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('No information was provided to the RowGatewayFeature');
+
+        $feature->postInitialize();
+    }
+
+    #[Test]
+    public function postInitializeThrowsWhenMetadataIsNotAnArray(): void
+    {
+        $resultSet = new ResultSet();
+
+        $metadataFeature = $this->getMockBuilder(MetadataFeature::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $sharedDataProperty = new ReflectionProperty(MetadataFeature::class, 'sharedData');
+        $sharedDataProperty->setValue($metadataFeature, ['metadata' => 'not-an-array']);
+
+        $featureSet = $this->createMock(FeatureSet::class);
+        $featureSet->expects($this->once())
+            ->method('getFeatureByClassName')
+            ->with(MetadataFeature::class)
+            ->willReturn($metadataFeature);
+
+        $feature = new RowGatewayFeature();
+        $feature->setTableGateway($this->createTableGatewayMock($resultSet, $featureSet));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('The MetadataFeature did not expose its metadata as an array.');
+
+        $feature->postInitialize();
+    }
+
+    #[Test]
+    public function postInitializeThrowsWhenMetadataPrimaryKeyIsUnusable(): void
+    {
+        $resultSet = new ResultSet();
+
+        $metadataFeature = $this->getMockBuilder(MetadataFeature::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $sharedDataProperty = new ReflectionProperty(MetadataFeature::class, 'sharedData');
+        $sharedDataProperty->setValue($metadataFeature, [
+            'metadata' => ['primaryKey' => 42],
+        ]);
+
+        $featureSet = $this->createMock(FeatureSet::class);
+        $featureSet->expects($this->once())
+            ->method('getFeatureByClassName')
+            ->with(MetadataFeature::class)
+            ->willReturn($metadataFeature);
+
+        $feature = new RowGatewayFeature();
+        $feature->setTableGateway($this->createTableGatewayMock($resultSet, $featureSet));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'The MetadataFeature did not expose a usable primary key for RowGateway object creation.',
+        );
+
+        $feature->postInitialize();
+    }
+
+    #[Test]
+    public function postInitializeThrowsWhenTableGatewayHasNoFeatureSet(): void
+    {
+        $resultSet    = new ResultSet();
+        $tableGateway = $this->createTableGatewayMock($resultSet);
+
+        $featureSetProperty = new ReflectionProperty(AbstractTableGateway::class, 'featureSet');
+        $featureSetProperty->setValue($tableGateway, null);
+
+        $feature = new RowGatewayFeature();
+        $feature->setTableGateway($tableGateway);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('No information was provided to the RowGatewayFeature');
+
+        $feature->postInitialize();
+    }
+
+    #[Test]
+    public function postInitializeThrowsWhenTableIsNotNamed(): void
+    {
+        $resultSet    = new ResultSet();
+        $tableGateway = $this->createTableGatewayMock($resultSet);
+
+        $tableProperty = new ReflectionProperty(AbstractTableGateway::class, 'table');
+        $tableProperty->setValue($tableGateway, [42]);
+
+        $feature = new RowGatewayFeature('id');
+        $feature->setTableGateway($tableGateway);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'The table gateway must reference a named table before a RowGateway prototype can be created.',
+        );
 
         $feature->postInitialize();
     }

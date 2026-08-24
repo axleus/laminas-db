@@ -6,6 +6,7 @@ namespace PhpDbTest\RowGateway\Feature;
 
 use PhpDb\RowGateway\AbstractRowGateway;
 use PhpDb\RowGateway\Feature\AbstractFeature;
+use PhpDb\RowGateway\Feature\FeatureInterface;
 use PhpDb\RowGateway\Feature\FeatureSet;
 use PhpDbTest\RowGateway\Feature\TestAsset\TestRowGatewayFeature;
 use PHPUnit\Framework\Attributes\Test;
@@ -174,6 +175,17 @@ class FeatureSetTest extends TestCase
         $result = $featureSet->getFeatureByClassName(AbstractFeature::class);
 
         static::assertNull($result);
+    }
+
+    #[Test]
+    public function getFeatureByClassNameSkipsFeaturesOfAnotherClass(): void
+    {
+        $other  = $this->createMock(FeatureInterface::class);
+        $wanted = $this->createMock(AbstractFeature::class);
+
+        $featureSet = new FeatureSet([$other, $wanted]);
+
+        static::assertSame($wanted, $featureSet->getFeatureByClassName(AbstractFeature::class));
     }
 
     #[Test]

@@ -128,6 +128,49 @@ class MetadataFeatureTest extends TestCase
      * @throws \Exception
      */
     #[Test]
+    public function postInitializeSkipsConstraintsThatAreNotPrimaryKeys(): void
+    {
+        /** @var AbstractTableGateway&MockObject $tableGatewayMock */
+        $tableGatewayMock = $this->getMockBuilder(AbstractTableGateway::class)->onlyMethods([])->getMock();
+
+        $tableProperty = new ReflectionProperty(AbstractTableGateway::class, 'table');
+        $tableProperty->setValue($tableGatewayMock, 'foo');
+
+        $metadataMock = $this->getMockBuilder(MetadataInterface::class)->getMock();
+        $metadataMock->expects($this->any())->method('getColumnNames')->willReturn(['id', 'name']);
+        $metadataMock->expects($this->any())
+            ->method('getTable')
+            ->willReturn(new TableObject('foo'));
+
+        $unique = new ConstraintObject('name_unique', 'foo');
+        $unique->setColumns(['name']);
+        $unique->setType('UNIQUE');
+
+        $primary = new ConstraintObject('id_pk', 'foo');
+        $primary->setColumns(['id']);
+        $primary->setType('PRIMARY KEY');
+
+        $metadataMock->expects($this->any())->method('getConstraints')->willReturn([$unique, $primary]);
+
+        $feature = new MetadataFeature($metadataMock);
+        $feature->setTableGateway($tableGatewayMock);
+        $feature->postInitialize();
+
+        $r          = new ReflectionProperty(MetadataFeature::class, 'sharedData');
+        $sharedData = $r->getValue($feature);
+
+        static::assertIsArray($sharedData);
+        static::assertArrayHasKey('metadata', $sharedData);
+        static::assertIsArray($sharedData['metadata']);
+        static::assertArrayHasKey('primaryKey', $sharedData['metadata']);
+        static::assertSame('id', $sharedData['metadata']['primaryKey']);
+    }
+
+    /**
+     * @throws Exception
+     * @throws \Exception
+     */
+    #[Test]
     public function postInitializeSkipsPrimaryKeyCheckIfNotTable(): void
     {
         /** @var AbstractTableGateway&MockObject $tableGatewayMock */
@@ -178,6 +221,29 @@ class MetadataFeatureTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('A primary key for this column could not be found in the metadata.');
+
+        $feature->postInitialize();
+    }
+
+    /**
+     * @throws Exception
+     */
+    #[Test]
+    public function postInitializeThrowsWhenTableIsNotNamed(): void
+    {
+        $metadataMock     = $this->getMockBuilder(MetadataInterface::class)->getMock();
+        $tableGatewayMock = $this->getMockBuilder(AbstractTableGateway::class)->onlyMethods([])->getMock();
+
+        $tableProperty = new ReflectionProperty(AbstractTableGateway::class, 'table');
+        $tableProperty->setValue($tableGatewayMock, [42]);
+
+        $feature = new MetadataFeature($metadataMock);
+        $feature->setTableGateway($tableGatewayMock);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'The table gateway must reference a named table before metadata can be resolved.',
+        );
 
         $feature->postInitialize();
     }

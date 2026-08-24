@@ -291,6 +291,17 @@ class FeatureSetTest extends TestCase
     }
 
     #[Test]
+    public function getFeatureByClassNameSkipsFeaturesOfAnotherClass(): void
+    {
+        $other  = new TestTableGatewayFeature();
+        $wanted = new SequenceFeature('id', 'table_sequence');
+
+        $featureSet = new FeatureSet([$other, $wanted]);
+
+        static::assertSame($wanted, $featureSet->getFeatureByClassName(SequenceFeature::class));
+    }
+
+    #[Test]
     public function setTableGateway(): void
     {
         $tableGatewayMock = $this->getMockBuilder(AbstractTableGateway::class)
