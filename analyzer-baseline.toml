@@ -1526,12 +1526,6 @@ count = 1
 
 [[issues]]
 file = "src/ResultSet/AbstractResultSet.php"
-code = "ambiguous-object-method-access"
-message = "Cannot statically verify method call on a generic `object` type."
-count = 3
-
-[[issues]]
-file = "src/ResultSet/AbstractResultSet.php"
 code = "imprecise-type"
 message = "Type `array` in property `$buffer` is imprecise, equivalent to `array<array-key, mixed>`."
 count = 1
@@ -1564,12 +1558,6 @@ count = 1
 file = "src/ResultSet/AbstractResultSet.php"
 code = "invalid-type-cast"
 message = "Casting `mixed` to `array`."
-count = 1
-
-[[issues]]
-file = "src/ResultSet/AbstractResultSet.php"
-code = "less-specific-nested-return-statement"
-message = '''Returned type `array{}|non-empty-list<mixed>` is less specific than the declared return type `array<array-key, ArrayObject<array-key, mixed>|PhpDb\ResultSet\RowPrototypeInterface|array<array-key, mixed>>` for function `PhpDb\ResultSet\AbstractResultSet::toArray` due to nested 'mixed'.'''
 count = 1
 
 [[issues]]
@@ -1657,6 +1645,24 @@ message = 'A value of a less specific type `Traversable<mixed, mixed>` is being 
 count = 1
 
 [[issues]]
+file = "src/ResultSet/ArrayObjectResultSetInterface.php"
+code = "missing-api-or-internal"
+message = 'Interface `PhpDb\ResultSet\ArrayObjectResultSetInterface` is missing an `@api` or `@internal` annotation.'
+count = 1
+
+[[issues]]
+file = "src/ResultSet/ArrayResultSet.php"
+code = "class-must-be-final"
+message = 'Class `PhpDb\ResultSet\ArrayResultSet` should be declared `final`.'
+count = 1
+
+[[issues]]
+file = "src/ResultSet/ArrayResultSet.php"
+code = "imprecise-type"
+message = "Type `array` in return type of `toArray` is imprecise, equivalent to `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
 file = "src/ResultSet/Exception/ExceptionInterface.php"
 code = "missing-api-or-internal"
 message = 'Interface `PhpDb\ResultSet\Exception\ExceptionInterface` is missing an `@api` or `@internal` annotation.'
@@ -1682,8 +1688,8 @@ count = 1
 
 [[issues]]
 file = "src/ResultSet/HydratingResultSet.php"
-code = "less-specific-argument"
-message = 'Argument type mismatch for argument #1 of `PhpDb\ResultSet\HydratingResultSet::setRowPrototype`: expected `ArrayObject<array-key, mixed>|PhpDb\ResultSet\RowPrototypeInterface`, but provided type `object` is less specific.'
+code = "imprecise-type"
+message = "Type `array` in return type of `toArray` is imprecise, equivalent to `array<array-key, mixed>`."
 count = 1
 
 [[issues]]
@@ -1723,6 +1729,12 @@ message = 'Argument #1 of method `Laminas\Hydrator\ExtractionInterface::extract`
 count = 1
 
 [[issues]]
+file = "src/ResultSet/HydratingResultSetInterface.php"
+code = "missing-api-or-internal"
+message = 'Interface `PhpDb\ResultSet\HydratingResultSetInterface` is missing an `@api` or `@internal` annotation.'
+count = 1
+
+[[issues]]
 file = "src/ResultSet/ResultSet.php"
 code = "class-must-be-final"
 message = 'Class `PhpDb\ResultSet\ResultSet` should be declared `final`.'
@@ -1736,20 +1748,20 @@ count = 1
 
 [[issues]]
 file = "src/ResultSet/ResultSet.php"
+code = "imprecise-type"
+message = "Type `array` in return type of `toArray` is imprecise, equivalent to `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
+file = "src/ResultSet/ResultSet.php"
 code = "invalid-return-statement"
 message = 'Invalid return type for function `PhpDb\ResultSet\ResultSet::getReturnType`: expected `enum(PhpDb\ResultSet\ResultSetReturnType)`, but found `enum(PhpDb\ResultSet\ResultSetReturnType)|string`.'
 count = 1
 
 [[issues]]
 file = "src/ResultSet/ResultSet.php"
-code = "invalid-return-statement"
-message = 'Invalid return type for function `PhpDb\ResultSet\ResultSet::getRowPrototype`: expected `ArrayObject<array-key, mixed>|PhpDb\ResultSet\RowPrototypeInterface`, but found `ArrayObject<array-key, mixed>|PhpDb\ResultSet\RowPrototypeInterface|null`.'
-count = 1
-
-[[issues]]
-file = "src/ResultSet/ResultSet.php"
 code = "less-specific-return-statement"
-message = 'Returned type `array<array-key, mixed>|null|object` is less specific than the declared return type `ArrayObject<array-key, mixed>|PhpDb\ResultSet\RowPrototypeInterface|array<array-key, mixed>|null` for function `PhpDb\ResultSet\ResultSet::current`.'
+message = 'Returned type `array<array-key, mixed>|null|object` is less specific than the declared return type `ArrayObject<array-key, mixed>|array<array-key, mixed>|null` for function `PhpDb\ResultSet\ResultSet::current`.'
 count = 1
 
 [[issues]]
@@ -1765,9 +1777,9 @@ message = "Class constant `TYPE_ARRAY` is missing a type hint."
 count = 1
 
 [[issues]]
-file = "src/ResultSet/ResultSet.php"
-code = "nullable-return-statement"
-message = 'Function `PhpDb\ResultSet\ResultSet::getRowPrototype` is declared to return `ArrayObject<array-key, mixed>|PhpDb\ResultSet\RowPrototypeInterface` but possibly returns a nullable value (inferred as `ArrayObject<array-key, mixed>|PhpDb\ResultSet\RowPrototypeInterface|null`).'
+file = "src/ResultSet/ResultSetInterface.php"
+code = "imprecise-type"
+message = "Type `array` in return type of `toArray` is imprecise, equivalent to `array<array-key, mixed>`."
 count = 1
 
 [[issues]]
@@ -1791,13 +1803,7 @@ count = 1
 [[issues]]
 file = "src/ResultSet/RowPrototypeInterface.php"
 code = "imprecise-type"
-message = "Type `array` in parameter `$array` is imprecise, equivalent to `array<array-key, mixed>`."
-count = 1
-
-[[issues]]
-file = "src/ResultSet/RowPrototypeInterface.php"
-code = "imprecise-type"
-message = "Type `array` in return type of `exchangeArray` is imprecise, equivalent to `array<array-key, mixed>`."
+message = "Type `array` in parameter `$data` is imprecise, equivalent to `array<array-key, mixed>`."
 count = 1
 
 [[issues]]
@@ -1810,6 +1816,36 @@ count = 1
 file = "src/ResultSet/RowPrototypeInterface.php"
 code = "missing-api-or-internal"
 message = 'Interface `PhpDb\ResultSet\RowPrototypeInterface` is missing an `@api` or `@internal` annotation.'
+count = 1
+
+[[issues]]
+file = "src/ResultSet/RowPrototypeResultSet.php"
+code = "class-must-be-final"
+message = 'Class `PhpDb\ResultSet\RowPrototypeResultSet` should be declared `final`.'
+count = 1
+
+[[issues]]
+file = "src/ResultSet/RowPrototypeResultSet.php"
+code = "imprecise-type"
+message = "Type `array` in return type of `current` is imprecise, equivalent to `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
+file = "src/ResultSet/RowPrototypeResultSet.php"
+code = "imprecise-type"
+message = "Type `array` in return type of `toArray` is imprecise, equivalent to `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
+file = "src/ResultSet/RowPrototypeResultSet.php"
+code = "less-specific-return-statement"
+message = 'Returned type `null|object` is less specific than the declared return type `PhpDb\ResultSet\RowPrototypeInterface|array<array-key, mixed>|null` for function `PhpDb\ResultSet\RowPrototypeResultSet::current`.'
+count = 1
+
+[[issues]]
+file = "src/ResultSet/RowPrototypeResultSetInterface.php"
+code = "missing-api-or-internal"
+message = 'Interface `PhpDb\ResultSet\RowPrototypeResultSetInterface` is missing an `@api` or `@internal` annotation.'
 count = 1
 
 [[issues]]
@@ -1846,6 +1882,12 @@ count = 1
 file = "src/RowGateway/AbstractRowGateway.php"
 code = "imprecise-type"
 message = "Type `array` in return type of `toArray` is imprecise, equivalent to `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
+file = "src/RowGateway/AbstractRowGateway.php"
+code = "incompatible-parameter-name"
+message = 'Parameter #1 of `PhpDb\RowGateway\AbstractRowGateway::populate()` is named `$rowData` but parent `PhpDb\ResultSet\RowPrototypeInterface::populate()` names it `$data`'
 count = 1
 
 [[issues]]
@@ -1892,6 +1934,18 @@ count = 1
 
 [[issues]]
 file = "src/RowGateway/AbstractRowGateway.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\AbstractRowGateway::populate`.'
+count = 1
+
+[[issues]]
+file = "src/RowGateway/AbstractRowGateway.php"
+code = "missing-override-attribute"
+message = 'Missing `#[Override]` attribute on overriding method `PhpDb\RowGateway\AbstractRowGateway::toArray`.'
+count = 1
+
+[[issues]]
+file = "src/RowGateway/AbstractRowGateway.php"
 code = "missing-template-parameter"
 message = "Too few template arguments for `ArrayAccess`: expected at least 2, but found 0."
 count = 1
@@ -1919,6 +1973,12 @@ file = "src/RowGateway/AbstractRowGateway.php"
 code = "mixed-method-access"
 message = "Attempting to access a method on a non-object type (`mixed`)."
 count = 14
+
+[[issues]]
+file = "src/RowGateway/AbstractRowGateway.php"
+code = "mixed-operand"
+message = "Invalid middle operand: type `mixed` cannot be reliably used in string concatenation."
+count = 1
 
 [[issues]]
 file = "src/RowGateway/AbstractRowGateway.php"
@@ -5011,12 +5071,6 @@ message = "Class constant `TYPE_VALUE` is missing a type hint."
 count = 1
 
 [[issues]]
-file = "src/Sql/TableIdentifier.php"
-code = "class-must-be-final"
-message = 'Class `PhpDb\Sql\TableIdentifier` should be declared `final`.'
-count = 1
-
-[[issues]]
 file = "src/Sql/Update.php"
 code = "class-must-be-final"
 message = 'Class `PhpDb\Sql\Update` should be declared `final`.'
@@ -5987,12 +6041,6 @@ file = "src/TableGateway/Feature/RowGatewayFeature.php"
 code = "class-must-be-final"
 message = 'Class `PhpDb\TableGateway\Feature\RowGatewayFeature` should be declared `final`.'
 count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/RowGatewayFeature.php"
-code = "deprecated-method"
-message = 'Call to deprecated method: `PhpDb\ResultSet\ResultSet::setArrayObjectPrototype`.'
-count = 3
 
 [[issues]]
 file = "src/TableGateway/Feature/RowGatewayFeature.php"
