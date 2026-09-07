@@ -20,6 +20,7 @@ use PHPUnit\Framework\TestCase;
 
 #[CoversMethod(Integer::class, '__construct')]
 #[CoversMethod(Integer::class, 'getExpressionData')]
+#[CoversMethod(Integer::class, 'normaliseDisplayWidth')]
 #[CoversMethod(Column::class, 'getExpressionData')]
 #[Group('unit')]
 final class IntegerTest extends TestCase
