@@ -1173,7 +1173,7 @@ count = 1
 [[issues]]
 file = "src/Adapter/Profiler/Profiler.php"
 code = "invalid-property-assignment-value"
-message = '''Invalid type for property `$profiles`: expected `array<array-key, array{'elapse': float|null, 'end': float|null, 'parameters': PhpDb\Adapter\ParameterContainer|null, 'sql': string, 'start': float}>`, but got `array<array-key, array{'elapse': float|null, 'end': float|null, 'parameters': PhpDb\Adapter\ParameterContainer|null, 'sql': null|string, 'start': float}>`.'''
+message = '''Invalid type for property `$profiles`: expected `array<array-key, array{'elapse': float|null, 'end': float|null, 'parameters': PhpDb\Adapter\ParameterContainer|null, 'sql': string, 'start': float}>`, but got `non-empty-array<array-key, array{'elapse': float|null, 'end': float|null, 'parameters': PhpDb\Adapter\ParameterContainer|null, 'sql': null|string, 'start': float}>`.'''
 count = 1
 
 [[issues]]
@@ -1192,24 +1192,6 @@ count = 1
 file = "src/Adapter/Profiler/Profiler.php"
 code = "missing-property-type"
 message = "Property `$profiles` is missing a type hint."
-count = 1
-
-[[issues]]
-file = "src/Adapter/Profiler/Profiler.php"
-code = "possibly-null-operand"
-message = "Right operand in arithmetic operation might be `null` (type `float|null`)."
-count = 1
-
-[[issues]]
-file = "src/Adapter/Profiler/Profiler.php"
-code = "possibly-undefined-int-array-index"
-message = '''Possibly undefined array key `int` accessed on `array<array-key, array{'elapse': float|null, 'end': float|null, 'parameters': PhpDb\Adapter\ParameterContainer|null, 'sql': string, 'start': float}>`.'''
-count = 1
-
-[[issues]]
-file = "src/Adapter/Profiler/Profiler.php"
-code = "possibly-undefined-string-array-index"
-message = '''Possibly undefined array key accessed on `array{'elapse': float|null, 'end': float, 'parameters': PhpDb\Adapter\ParameterContainer|null, 'sql': string, 'start': float}|array{'end': float}`.'''
 count = 1
 
 [[issues]]
@@ -2289,7 +2271,7 @@ count = 1
 [[issues]]
 file = "src/Sql/AbstractSql.php"
 code = "less-specific-nested-argument-type"
-message = "Argument type mismatch for argument #2 of `vsprintf`: expected `array<array-key, Stringable|null|scalar>`, but provided type `array{}|non-empty-list<mixed>` is less specific."
+message = "Argument type mismatch for argument #2 of `vsprintf`: expected `array<array-key, Stringable|null|scalar>`, but provided type `list<mixed>` is less specific."
 count = 1
 
 [[issues]]
@@ -3321,7 +3303,13 @@ count = 1
 [[issues]]
 file = "src/Sql/Ddl/CreateTable.php"
 code = "possibly-undefined-string-array-index"
-message = "Possibly undefined array key `string('combinedBy')` accessed on `array<array-key, array<array-key, mixed>|string>`."
+message = "Possibly undefined array key `string('combinedBy')` accessed on `array<array-key, array<array-key, mixed>>`."
+count = 1
+
+[[issues]]
+file = "src/Sql/Ddl/CreateTable.php"
+code = "possibly-undefined-string-array-index"
+message = "Possibly undefined array key `string('combinedBy')` accessed on `array<array-key, string>`."
 count = 1
 
 [[issues]]
@@ -4353,7 +4341,7 @@ count = 1
 [[issues]]
 file = "src/Sql/Predicate/PredicateSet.php"
 code = "less-specific-nested-argument-type"
-message = "Argument type mismatch for argument #2 of `implode`: expected `array<array-key, Stringable|null|scalar>|null`, but provided type `array{}|non-empty-list<mixed>` is less specific."
+message = "Argument type mismatch for argument #2 of `implode`: expected `array<array-key, Stringable|null|scalar>|null`, but provided type `list<mixed>` is less specific."
 count = 1
 
 [[issues]]
@@ -4365,7 +4353,7 @@ count = 1
 [[issues]]
 file = "src/Sql/Predicate/PredicateSet.php"
 code = "less-specific-nested-return-statement"
-message = '''Returned type `array{'spec': string, 'values': array{}|list<mixed>}` is less specific than the declared return type `array{'spec': string, 'values': array<array-key, PhpDb\Sql\ArgumentInterface>}` for function `PhpDb\Sql\Predicate\PredicateSet::getExpressionData` due to nested 'mixed'.'''
+message = '''Returned type `array{'spec': string, 'values': list<mixed>}` is less specific than the declared return type `array{'spec': string, 'values': array<array-key, PhpDb\Sql\ArgumentInterface>}` for function `PhpDb\Sql\Predicate\PredicateSet::getExpressionData` due to nested 'mixed'.'''
 count = 1
 
 [[issues]]
@@ -4623,7 +4611,7 @@ count = 1
 [[issues]]
 file = "src/Sql/Select.php"
 code = "invalid-property-assignment-value"
-message = "Invalid type for property `$specifications`: expected `array<array-key, array<array-key, mixed>>|array<array-key, string>`, but got `array<array-key, array<array-key, mixed>|string>`."
+message = "Invalid type for property `$specifications`: expected `array<array-key, array<array-key, mixed>>|array<array-key, string>`, but got `non-empty-array<array-key, array<array-key, mixed>|string>`."
 count = 1
 
 [[issues]]
@@ -5900,26 +5888,8 @@ count = 1
 
 [[issues]]
 file = "src/TableGateway/Feature/GlobalAdapterFeature.php"
-code = "invalid-return-statement"
-message = 'Invalid return type for function `PhpDb\TableGateway\Feature\GlobalAdapterFeature::getStaticAdapter`: expected `PhpDb\Adapter\AdapterInterface`, but found `PhpDb\Adapter\AdapterInterface|null`.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/GlobalAdapterFeature.php"
 code = "missing-constructor"
 message = 'Class `PhpDb\TableGateway\Feature\GlobalAdapterFeature` has typed properties without default values but no constructor to initialize them.'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/GlobalAdapterFeature.php"
-code = "nullable-return-statement"
-message = 'Function `PhpDb\TableGateway\Feature\GlobalAdapterFeature::getStaticAdapter` is declared to return `PhpDb\Adapter\AdapterInterface` but possibly returns a nullable value (inferred as `PhpDb\Adapter\AdapterInterface|null`).'
-count = 1
-
-[[issues]]
-file = "src/TableGateway/Feature/GlobalAdapterFeature.php"
-code = "possibly-undefined-string-array-index"
-message = '''Possibly undefined array key `class-string('PhpDb\TableGateway\Feature\GlobalAdapterFeature')` accessed on `array<array-key, PhpDb\Adapter\AdapterInterface>`.'''
 count = 1
 
 [[issues]]
